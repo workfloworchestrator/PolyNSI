@@ -1,3 +1,3 @@
-# poly_nsi
+# PolyNSI
 
-A SOAP to gRPC translating proxy server for the NSI protocol:
+A SOAP to gRPC translating proxy server for the NSI protocol.
