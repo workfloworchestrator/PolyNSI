@@ -29,3 +29,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Apache CXF generated stub code
+src/generated
+
