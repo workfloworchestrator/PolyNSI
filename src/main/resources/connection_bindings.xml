@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jaxb:bindings
+        xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+        xmlns:xs="http://www.w3.org/2000/10/XMLSchema-instance"
+        xs:schemaLocation="http://java.sun.com/xml/ns/jaxb http://java.sun.com/xml/ns/jaxb/bindingschema_2_0.xsd"
+        jaxb:version="2.0">
+    <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_connection_types_v2_0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="nl.surf.polynsi.soap.connection.types"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_framework_headers_v2_0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="nl.surf.polynsi.soap.framework.headers"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_framework_types_v2_0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="nl.surf.polynsi.soap.framework.types"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_services_definition_v2_0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="nl.surf.polynsi.soap.services.definition"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_services_p2p_v2_0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="nl.surf.polynsi.soap.services.p2p"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_services_types_v2_0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="nl.surf.polynsi.soap.services.types"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/saml-schema-assertion-2.0.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="org.oasis.saml"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/xenc-schema.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="org.w3.xmlenc"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="wsdl/connection/xmldsig-core-schema.xsd">
+        <jaxb:schemaBindings>
+            <jaxb:package name="org.w3.xmldsig"/>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+</jaxb:bindings>
