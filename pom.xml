@@ -126,6 +126,9 @@
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.provider</extraarg>
                                         <extraarg>-impl</extraarg>
+                                        <extraarg>-exsh</extraarg>
+                                        <extraarg>true</extraarg>
+                                        <extraarg>-mark-generated</extraarg>
                                     </extraargs>
                                 </wsdlOption>
                                 <wsdlOption>
@@ -136,6 +139,9 @@
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.requester</extraarg>
                                         <extraarg>-impl</extraarg>
+                                        <extraarg>-exsh</extraarg>
+                                        <extraarg>true</extraarg>
+                                        <extraarg>-mark-generated</extraarg>
                                     </extraargs>
                                 </wsdlOption>
                             </wsdlOptions>
