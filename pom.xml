@@ -128,7 +128,7 @@
                                         <extraarg>-impl</extraarg>
                                         <extraarg>-exsh</extraarg>
                                         <extraarg>true</extraarg>
-                                        <extraarg>-mark-generated</extraarg>
+                                        <extraargs>-suppress-generated-date</extraargs>
                                     </extraargs>
                                 </wsdlOption>
                                 <wsdlOption>
@@ -141,7 +141,7 @@
                                         <extraarg>-impl</extraarg>
                                         <extraarg>-exsh</extraarg>
                                         <extraarg>true</extraarg>
-                                        <extraarg>-mark-generated</extraarg>
+                                        <extraargs>-suppress-generated-date</extraargs>
                                     </extraargs>
                                 </wsdlOption>
                             </wsdlOptions>
