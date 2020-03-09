@@ -1,13 +1,15 @@
 
 package nl.surf.polynsi.soap.connection.types;
 
+import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 
 
 /**
@@ -65,9 +67,10 @@ public class NotificationBaseType {
     @XmlElement(required = true)
     protected String connectionId;
     protected long notificationId;
-    @XmlElement(required = true)
+    @XmlElement(required = true, type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar timeStamp;
+    protected Date timeStamp;
 
     /**
      * Gets the value of the connectionId property.
@@ -114,10 +117,10 @@ public class NotificationBaseType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getTimeStamp() {
+    public Date getTimeStamp() {
         return timeStamp;
     }
 
@@ -126,10 +129,10 @@ public class NotificationBaseType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setTimeStamp(XMLGregorianCalendar value) {
+    public void setTimeStamp(Date value) {
         this.timeStamp = value;
     }
 

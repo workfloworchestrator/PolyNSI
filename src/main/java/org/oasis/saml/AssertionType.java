@@ -2,6 +2,7 @@
 package org.oasis.saml;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -13,7 +14,7 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import javax.xml.datatype.XMLGregorianCalendar;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 import org.w3.xmldsig.SignatureType;
 
 
@@ -85,8 +86,9 @@ public class AssertionType {
     @XmlSchemaType(name = "ID")
     protected String id;
     @XmlAttribute(name = "IssueInstant", required = true)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar issueInstant;
+    protected Date issueInstant;
 
     /**
      * Gets the value of the issuer property.
@@ -293,10 +295,10 @@ public class AssertionType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getIssueInstant() {
+    public Date getIssueInstant() {
         return issueInstant;
     }
 
@@ -305,10 +307,10 @@ public class AssertionType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setIssueInstant(XMLGregorianCalendar value) {
+    public void setIssueInstant(Date value) {
         this.issueInstant = value;
     }
 

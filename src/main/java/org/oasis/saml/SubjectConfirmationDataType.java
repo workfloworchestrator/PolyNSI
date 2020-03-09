@@ -2,6 +2,7 @@
 package org.oasis.saml;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +17,8 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 import org.w3c.dom.Element;
 
 
@@ -59,11 +60,13 @@ public class SubjectConfirmationDataType {
     @XmlAnyElement(lax = true)
     protected List<Object> content;
     @XmlAttribute(name = "NotBefore")
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar notBefore;
+    protected Date notBefore;
     @XmlAttribute(name = "NotOnOrAfter")
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar notOnOrAfter;
+    protected Date notOnOrAfter;
     @XmlAttribute(name = "Recipient")
     @XmlSchemaType(name = "anyURI")
     protected String recipient;
@@ -112,10 +115,10 @@ public class SubjectConfirmationDataType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getNotBefore() {
+    public Date getNotBefore() {
         return notBefore;
     }
 
@@ -124,10 +127,10 @@ public class SubjectConfirmationDataType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setNotBefore(XMLGregorianCalendar value) {
+    public void setNotBefore(Date value) {
         this.notBefore = value;
     }
 
@@ -136,10 +139,10 @@ public class SubjectConfirmationDataType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getNotOnOrAfter() {
+    public Date getNotOnOrAfter() {
         return notOnOrAfter;
     }
 
@@ -148,10 +151,10 @@ public class SubjectConfirmationDataType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setNotOnOrAfter(XMLGregorianCalendar value) {
+    public void setNotOnOrAfter(Date value) {
         this.notOnOrAfter = value;
     }
 

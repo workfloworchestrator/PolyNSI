@@ -51,9 +51,9 @@ public class ConnectionServiceRequesterPortImpl implements ConnectionRequesterPo
     }
 
     /* (non-Javadoc)
-     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#querySummaryConfirmed(java.util.List<nl.surf.polynsi.soap.connection.types.QuerySummaryResultType> reservation, javax.xml.datatype.XMLGregorianCalendar lastModified, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
+     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#querySummaryConfirmed(java.util.List<nl.surf.polynsi.soap.connection.types.QuerySummaryResultType> reservation, java.util.Date lastModified, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    public void querySummaryConfirmed(java.util.List<nl.surf.polynsi.soap.connection.types.QuerySummaryResultType> reservation, javax.xml.datatype.XMLGregorianCalendar lastModified, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
+    public void querySummaryConfirmed(java.util.List<nl.surf.polynsi.soap.connection.types.QuerySummaryResultType> reservation, java.util.Date lastModified, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
         LOG.info("Executing operation querySummaryConfirmed");
         System.out.println(reservation);
         System.out.println(lastModified);
@@ -127,9 +127,9 @@ public class ConnectionServiceRequesterPortImpl implements ConnectionRequesterPo
     }
 
     /* (non-Javadoc)
-     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#errorEvent(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, nl.surf.polynsi.soap.connection.types.EventEnumType event, java.lang.String originatingConnectionId, java.lang.String originatingNSA, nl.surf.polynsi.soap.framework.types.TypeValuePairListType additionalInfo, nl.surf.polynsi.soap.framework.types.ServiceExceptionType serviceException, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
+     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#errorEvent(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, nl.surf.polynsi.soap.connection.types.EventEnumType event, java.lang.String originatingConnectionId, java.lang.String originatingNSA, nl.surf.polynsi.soap.framework.types.TypeValuePairListType additionalInfo, nl.surf.polynsi.soap.framework.types.ServiceExceptionType serviceException, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    public void errorEvent(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, nl.surf.polynsi.soap.connection.types.EventEnumType event, java.lang.String originatingConnectionId, java.lang.String originatingNSA, nl.surf.polynsi.soap.framework.types.TypeValuePairListType additionalInfo, nl.surf.polynsi.soap.framework.types.ServiceExceptionType serviceException, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
+    public void errorEvent(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, nl.surf.polynsi.soap.connection.types.EventEnumType event, java.lang.String originatingConnectionId, java.lang.String originatingNSA, nl.surf.polynsi.soap.framework.types.TypeValuePairListType additionalInfo, nl.surf.polynsi.soap.framework.types.ServiceExceptionType serviceException, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
         LOG.info("Executing operation errorEvent");
         System.out.println(connectionId);
         System.out.println(notificationId);
@@ -149,9 +149,9 @@ public class ConnectionServiceRequesterPortImpl implements ConnectionRequesterPo
     }
 
     /* (non-Javadoc)
-     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#dataPlaneStateChange(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, nl.surf.polynsi.soap.connection.types.DataPlaneStatusType dataPlaneStatus, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
+     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#dataPlaneStateChange(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, nl.surf.polynsi.soap.connection.types.DataPlaneStatusType dataPlaneStatus, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    public void dataPlaneStateChange(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, nl.surf.polynsi.soap.connection.types.DataPlaneStatusType dataPlaneStatus, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
+    public void dataPlaneStateChange(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, nl.surf.polynsi.soap.connection.types.DataPlaneStatusType dataPlaneStatus, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
         LOG.info("Executing operation dataPlaneStateChange");
         System.out.println(connectionId);
         System.out.println(notificationId);
@@ -182,9 +182,9 @@ public class ConnectionServiceRequesterPortImpl implements ConnectionRequesterPo
     }
 
     /* (non-Javadoc)
-     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#messageDeliveryTimeout(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, java.lang.String correlationId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
+     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#messageDeliveryTimeout(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, java.lang.String correlationId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    public void messageDeliveryTimeout(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, java.lang.String correlationId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
+    public void messageDeliveryTimeout(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, java.lang.String correlationId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
         LOG.info("Executing operation messageDeliveryTimeout");
         System.out.println(connectionId);
         System.out.println(notificationId);
@@ -224,7 +224,7 @@ public class ConnectionServiceRequesterPortImpl implements ConnectionRequesterPo
         System.out.println(queryNotificationConfirmed);
         System.out.println(header.value);
         try {
-            nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = new nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType();
+            nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
@@ -264,9 +264,9 @@ public class ConnectionServiceRequesterPortImpl implements ConnectionRequesterPo
     }
 
     /* (non-Javadoc)
-     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#reserveTimeout(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, int timeoutValue, java.lang.String originatingConnectionId, java.lang.String originatingNSA, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
+     * @see nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort#reserveTimeout(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, int timeoutValue, java.lang.String originatingConnectionId, java.lang.String originatingNSA, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    public void reserveTimeout(java.lang.String connectionId, long notificationId, javax.xml.datatype.XMLGregorianCalendar timeStamp, int timeoutValue, java.lang.String originatingConnectionId, java.lang.String originatingNSA, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
+    public void reserveTimeout(java.lang.String connectionId, long notificationId, java.util.Date timeStamp, int timeoutValue, java.lang.String originatingConnectionId, java.lang.String originatingNSA, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
         LOG.info("Executing operation reserveTimeout");
         System.out.println(connectionId);
         System.out.println(notificationId);

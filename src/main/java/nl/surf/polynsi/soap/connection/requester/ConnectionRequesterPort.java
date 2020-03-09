@@ -55,7 +55,7 @@ public interface ConnectionRequesterPort {
         @WebParam(name = "reservation", targetNamespace = "")
         java.util.List<nl.surf.polynsi.soap.connection.types.QuerySummaryResultType> reservation,
         @WebParam(name = "lastModified", targetNamespace = "")
-        javax.xml.datatype.XMLGregorianCalendar lastModified,
+        java.util.Date lastModified,
         @WebParam(mode = WebParam.Mode.INOUT, name = "nsiHeader", targetNamespace = "http://schemas.ogf.org/nsi/2013/12/framework/headers", header = true)
         javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header
     ) throws ServiceException;
@@ -149,7 +149,7 @@ public interface ConnectionRequesterPort {
         @WebParam(name = "notificationId", targetNamespace = "")
         long notificationId,
         @WebParam(name = "timeStamp", targetNamespace = "")
-        javax.xml.datatype.XMLGregorianCalendar timeStamp,
+        java.util.Date timeStamp,
         @WebParam(name = "event", targetNamespace = "")
         nl.surf.polynsi.soap.connection.types.EventEnumType event,
         @WebParam(name = "originatingConnectionId", targetNamespace = "")
@@ -181,7 +181,7 @@ public interface ConnectionRequesterPort {
         @WebParam(name = "notificationId", targetNamespace = "")
         long notificationId,
         @WebParam(name = "timeStamp", targetNamespace = "")
-        javax.xml.datatype.XMLGregorianCalendar timeStamp,
+        java.util.Date timeStamp,
         @WebParam(name = "dataPlaneStatus", targetNamespace = "")
         nl.surf.polynsi.soap.connection.types.DataPlaneStatusType dataPlaneStatus,
         @WebParam(mode = WebParam.Mode.INOUT, name = "nsiHeader", targetNamespace = "http://schemas.ogf.org/nsi/2013/12/framework/headers", header = true)
@@ -223,7 +223,7 @@ public interface ConnectionRequesterPort {
         @WebParam(name = "notificationId", targetNamespace = "")
         long notificationId,
         @WebParam(name = "timeStamp", targetNamespace = "")
-        javax.xml.datatype.XMLGregorianCalendar timeStamp,
+        java.util.Date timeStamp,
         @WebParam(name = "correlationId", targetNamespace = "")
         java.lang.String correlationId,
         @WebParam(mode = WebParam.Mode.INOUT, name = "nsiHeader", targetNamespace = "http://schemas.ogf.org/nsi/2013/12/framework/headers", header = true)
@@ -323,7 +323,7 @@ public interface ConnectionRequesterPort {
         @WebParam(name = "notificationId", targetNamespace = "")
         long notificationId,
         @WebParam(name = "timeStamp", targetNamespace = "")
-        javax.xml.datatype.XMLGregorianCalendar timeStamp,
+        java.util.Date timeStamp,
         @WebParam(name = "timeoutValue", targetNamespace = "")
         int timeoutValue,
         @WebParam(name = "originatingConnectionId", targetNamespace = "")

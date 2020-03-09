@@ -56,7 +56,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         System.out.println(querySummarySync);
         System.out.println(header.value);
         try {
-            nl.surf.polynsi.soap.connection.types.QuerySummaryConfirmedType _return = new nl.surf.polynsi.soap.connection.types.QuerySummaryConfirmedType();
+            nl.surf.polynsi.soap.connection.types.QuerySummaryConfirmedType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
@@ -73,7 +73,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         System.out.println(queryRecursive);
         System.out.println(header.value);
         try {
-            nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = new nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType();
+            nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
@@ -204,7 +204,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         System.out.println(querySummary);
         System.out.println(header.value);
         try {
-            nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = new nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType();
+            nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
@@ -238,7 +238,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         System.out.println(queryNotificationSync);
         System.out.println(header.value);
         try {
-            nl.surf.polynsi.soap.connection.types.QueryNotificationConfirmedType _return = new nl.surf.polynsi.soap.connection.types.QueryNotificationConfirmedType();
+            nl.surf.polynsi.soap.connection.types.QueryNotificationConfirmedType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();

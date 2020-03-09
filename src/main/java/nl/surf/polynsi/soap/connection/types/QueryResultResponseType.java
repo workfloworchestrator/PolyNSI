@@ -1,12 +1,14 @@
 
 package nl.surf.polynsi.soap.connection.types;
 
+import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 
 
 /**
@@ -100,9 +102,10 @@ public class QueryResultResponseType {
     @XmlElement(required = true)
     @XmlSchemaType(name = "anyURI")
     protected String correlationId;
-    @XmlElement(required = true)
+    @XmlElement(required = true, type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar timeStamp;
+    protected Date timeStamp;
     @XmlElement(namespace = "http://schemas.ogf.org/nsi/2013/12/connection/types")
     protected ReserveConfirmedType reserveConfirmed;
     @XmlElement(namespace = "http://schemas.ogf.org/nsi/2013/12/connection/types")
@@ -167,10 +170,10 @@ public class QueryResultResponseType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getTimeStamp() {
+    public Date getTimeStamp() {
         return timeStamp;
     }
 
@@ -179,10 +182,10 @@ public class QueryResultResponseType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setTimeStamp(XMLGregorianCalendar value) {
+    public void setTimeStamp(Date value) {
         this.timeStamp = value;
     }
 

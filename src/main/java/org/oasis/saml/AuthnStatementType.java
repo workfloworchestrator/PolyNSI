@@ -1,13 +1,15 @@
 
 package org.oasis.saml;
 
+import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 
 
 /**
@@ -47,13 +49,15 @@ public class AuthnStatementType
     @XmlElement(name = "AuthnContext", required = true)
     protected AuthnContextType authnContext;
     @XmlAttribute(name = "AuthnInstant", required = true)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar authnInstant;
+    protected Date authnInstant;
     @XmlAttribute(name = "SessionIndex")
     protected String sessionIndex;
     @XmlAttribute(name = "SessionNotOnOrAfter")
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar sessionNotOnOrAfter;
+    protected Date sessionNotOnOrAfter;
 
     /**
      * Gets the value of the subjectLocality property.
@@ -108,10 +112,10 @@ public class AuthnStatementType
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getAuthnInstant() {
+    public Date getAuthnInstant() {
         return authnInstant;
     }
 
@@ -120,10 +124,10 @@ public class AuthnStatementType
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setAuthnInstant(XMLGregorianCalendar value) {
+    public void setAuthnInstant(Date value) {
         this.authnInstant = value;
     }
 
@@ -156,10 +160,10 @@ public class AuthnStatementType
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getSessionNotOnOrAfter() {
+    public Date getSessionNotOnOrAfter() {
         return sessionNotOnOrAfter;
     }
 
@@ -168,10 +172,10 @@ public class AuthnStatementType
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setSessionNotOnOrAfter(XMLGregorianCalendar value) {
+    public void setSessionNotOnOrAfter(Date value) {
         this.sessionNotOnOrAfter = value;
     }
 

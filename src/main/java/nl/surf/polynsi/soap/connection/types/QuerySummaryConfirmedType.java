@@ -2,12 +2,15 @@
 package nl.surf.polynsi.soap.connection.types;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 
 
 /**
@@ -63,8 +66,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
 public class QuerySummaryConfirmedType {
 
     protected List<QuerySummaryResultType> reservation;
+    @XmlElement(type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar lastModified;
+    protected Date lastModified;
 
     /**
      * Gets the value of the reservation property.
@@ -100,10 +105,10 @@ public class QuerySummaryConfirmedType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getLastModified() {
+    public Date getLastModified() {
         return lastModified;
     }
 
@@ -112,10 +117,10 @@ public class QuerySummaryConfirmedType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setLastModified(XMLGregorianCalendar value) {
+    public void setLastModified(Date value) {
         this.lastModified = value;
     }
 

@@ -1,12 +1,12 @@
 
 package nl.surf.polynsi.soap.connection.types;
 
+import java.util.Date;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
@@ -74,19 +74,19 @@ import javax.xml.datatype.XMLGregorianCalendar;
 public class ScheduleType {
 
     @XmlElementRef(name = "startTime", type = JAXBElement.class, required = false)
-    protected JAXBElement<XMLGregorianCalendar> startTime;
+    protected JAXBElement<Date> startTime;
     @XmlElementRef(name = "endTime", type = JAXBElement.class, required = false)
-    protected JAXBElement<XMLGregorianCalendar> endTime;
+    protected JAXBElement<Date> endTime;
 
     /**
      * Gets the value of the startTime property.
      * 
      * @return
      *     possible object is
-     *     {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     *     {@link JAXBElement }{@code <}{@link Date }{@code >}
      *     
      */
-    public JAXBElement<XMLGregorianCalendar> getStartTime() {
+    public JAXBElement<Date> getStartTime() {
         return startTime;
     }
 
@@ -95,10 +95,10 @@ public class ScheduleType {
      * 
      * @param value
      *     allowed object is
-     *     {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     *     {@link JAXBElement }{@code <}{@link Date }{@code >}
      *     
      */
-    public void setStartTime(JAXBElement<XMLGregorianCalendar> value) {
+    public void setStartTime(JAXBElement<Date> value) {
         this.startTime = value;
     }
 
@@ -107,10 +107,10 @@ public class ScheduleType {
      * 
      * @return
      *     possible object is
-     *     {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     *     {@link JAXBElement }{@code <}{@link Date }{@code >}
      *     
      */
-    public JAXBElement<XMLGregorianCalendar> getEndTime() {
+    public JAXBElement<Date> getEndTime() {
         return endTime;
     }
 
@@ -119,10 +119,10 @@ public class ScheduleType {
      * 
      * @param value
      *     allowed object is
-     *     {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     *     {@link JAXBElement }{@code <}{@link Date }{@code >}
      *     
      */
-    public void setEndTime(JAXBElement<XMLGregorianCalendar> value) {
+    public void setEndTime(JAXBElement<Date> value) {
         this.endTime = value;
     }
 

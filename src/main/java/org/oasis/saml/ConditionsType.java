@@ -2,6 +2,7 @@
 package org.oasis.saml;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -10,7 +11,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 
 
 /**
@@ -51,11 +53,13 @@ public class ConditionsType {
     })
     protected List<ConditionAbstractType> conditionOrAudienceRestrictionOrOneTimeUse;
     @XmlAttribute(name = "NotBefore")
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar notBefore;
+    protected Date notBefore;
     @XmlAttribute(name = "NotOnOrAfter")
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar notOnOrAfter;
+    protected Date notOnOrAfter;
 
     /**
      * Gets the value of the conditionOrAudienceRestrictionOrOneTimeUse property.
@@ -94,10 +98,10 @@ public class ConditionsType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getNotBefore() {
+    public Date getNotBefore() {
         return notBefore;
     }
 
@@ -106,10 +110,10 @@ public class ConditionsType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setNotBefore(XMLGregorianCalendar value) {
+    public void setNotBefore(Date value) {
         this.notBefore = value;
     }
 
@@ -118,10 +122,10 @@ public class ConditionsType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getNotOnOrAfter() {
+    public Date getNotOnOrAfter() {
         return notOnOrAfter;
     }
 
@@ -130,10 +134,10 @@ public class ConditionsType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setNotOnOrAfter(XMLGregorianCalendar value) {
+    public void setNotOnOrAfter(Date value) {
         this.notOnOrAfter = value;
     }
 

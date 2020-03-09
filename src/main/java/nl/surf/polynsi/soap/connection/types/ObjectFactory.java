@@ -1,11 +1,13 @@
 
 package nl.surf.polynsi.soap.connection.types;
 
+import java.util.Date;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.namespace.QName;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
 
 
@@ -813,29 +815,31 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     * Create an instance of {@link JAXBElement }{@code <}{@link Date }{@code >}
      * 
      * @param value
      *     Java instance representing xml element's value.
      * @return
-     *     the new instance of {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     *     the new instance of {@link JAXBElement }{@code <}{@link Date }{@code >}
      */
     @XmlElementDecl(namespace = "", name = "startTime", scope = ScheduleType.class)
-    public JAXBElement<XMLGregorianCalendar> createScheduleTypeStartTime(XMLGregorianCalendar value) {
-        return new JAXBElement<XMLGregorianCalendar>(_ScheduleTypeStartTime_QNAME, XMLGregorianCalendar.class, ScheduleType.class, value);
+    @XmlJavaTypeAdapter(Adapter1 .class)
+    public JAXBElement<Date> createScheduleTypeStartTime(Date value) {
+        return new JAXBElement<Date>(_ScheduleTypeStartTime_QNAME, Date.class, ScheduleType.class, value);
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     * Create an instance of {@link JAXBElement }{@code <}{@link Date }{@code >}
      * 
      * @param value
      *     Java instance representing xml element's value.
      * @return
-     *     the new instance of {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
+     *     the new instance of {@link JAXBElement }{@code <}{@link Date }{@code >}
      */
     @XmlElementDecl(namespace = "", name = "endTime", scope = ScheduleType.class)
-    public JAXBElement<XMLGregorianCalendar> createScheduleTypeEndTime(XMLGregorianCalendar value) {
-        return new JAXBElement<XMLGregorianCalendar>(_ScheduleTypeEndTime_QNAME, XMLGregorianCalendar.class, ScheduleType.class, value);
+    @XmlJavaTypeAdapter(Adapter1 .class)
+    public JAXBElement<Date> createScheduleTypeEndTime(Date value) {
+        return new JAXBElement<Date>(_ScheduleTypeEndTime_QNAME, Date.class, ScheduleType.class, value);
     }
 
 }

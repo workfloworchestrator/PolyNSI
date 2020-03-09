@@ -2,12 +2,15 @@
 package nl.surf.polynsi.soap.connection.types;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import nl.surf.polynsi.soap.connection.requester.Adapter1;
 
 
 /**
@@ -73,8 +76,10 @@ public class QueryType {
     protected List<String> connectionId;
     @XmlSchemaType(name = "anyURI")
     protected List<String> globalReservationId;
+    @XmlElement(type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar ifModifiedSince;
+    protected Date ifModifiedSince;
 
     /**
      * Gets the value of the connectionId property.
@@ -139,10 +144,10 @@ public class QueryType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getIfModifiedSince() {
+    public Date getIfModifiedSince() {
         return ifModifiedSince;
     }
 
@@ -151,10 +156,10 @@ public class QueryType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setIfModifiedSince(XMLGregorianCalendar value) {
+    public void setIfModifiedSince(Date value) {
         this.ifModifiedSince = value;
     }
 
