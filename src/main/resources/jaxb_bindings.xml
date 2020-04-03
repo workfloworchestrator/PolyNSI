@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jaxb:bindings
-        xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-        xmlns:xs="http://www.w3.org/2000/10/XMLSchema-instance"
-        xs:schemaLocation="http://java.sun.com/xml/ns/jaxb http://java.sun.com/xml/ns/jaxb/bindingschema_2_0.xsd"
-        jaxb:version="2.0">
+<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
+    <jaxb:globalBindings xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <jaxb:javaType name="java.time.OffsetDateTime" xmlType="xs:dateTime"
+                       parseMethod="nl.surf.polynsi.soap.DataTypeAdapter.parseDateTime"
+                       printMethod="nl.surf.polynsi.soap.DataTypeAdapter.printDateTime"/>
+    </jaxb:globalBindings>
     <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_connection_types_v2_0.xsd">
         <jaxb:schemaBindings>
             <jaxb:package name="nl.surf.polynsi.soap.connection.types"/>

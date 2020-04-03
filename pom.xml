@@ -53,6 +53,11 @@
             <version>${cxf.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.cxf.xjc-utils</groupId>
+            <artifactId>cxf-xjc-runtime</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+        <dependency>
             <groupId>javax.xml.ws</groupId>
             <artifactId>jaxws-api</artifactId>
             <version>2.3.1</version>
@@ -88,7 +93,7 @@
                         <configuration>
                             <defaultOptions>
                                 <bindingFiles>
-                                    <bindingFile>${basedir}/src/main/resources/connection_bindings.xml</bindingFile>
+                                    <bindingFile>${basedir}/src/main/resources/jaxb_bindings.xml</bindingFile>
                                     <bindingFile>
                                         ${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_types_v2_0.xsd
                                     </bindingFile>
@@ -126,6 +131,9 @@
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.provider</extraarg>
                                         <extraarg>-impl</extraarg>
+                                        <extraarg>-exsh</extraarg>
+                                        <extraarg>true</extraarg>
+                                        <extraarg>-mark-generated</extraarg>
                                     </extraargs>
                                 </wsdlOption>
                                 <wsdlOption>
@@ -136,6 +144,9 @@
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.requester</extraarg>
                                         <extraarg>-impl</extraarg>
+                                        <extraarg>-exsh</extraarg>
+                                        <extraarg>true</extraarg>
+                                        <extraarg>-mark-generated</extraarg>
                                     </extraargs>
                                 </wsdlOption>
                             </wsdlOptions>
@@ -153,7 +164,18 @@
                     <filesets>
                         <fileset>
                             <directory>${basedir}/src/generated</directory>
-                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/org</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/connection</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/framework</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/services</directory>
                         </fileset>
                     </filesets>
                 </configuration>

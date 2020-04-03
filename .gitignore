@@ -32,4 +32,7 @@ build/
 
 ### Apache CXF generated stub code
 src/generated
-
+src/main/java/org
+src/main/java/nl/surf/polynsi/soap/connection
+src/main/java/nl/surf/polynsi/soap/framework
+src/main/java/nl/surf/polynsi/soap/services
