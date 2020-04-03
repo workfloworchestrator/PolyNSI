@@ -164,7 +164,18 @@
                     <filesets>
                         <fileset>
                             <directory>${basedir}/src/generated</directory>
-                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/org</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/connection</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/framework</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/services</directory>
                         </fileset>
                     </filesets>
                 </configuration>
