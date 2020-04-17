@@ -33,6 +33,9 @@ build/
 ### Apache CXF generated stub code
 src/generated
 src/main/java/org
-src/main/java/nl/surf/polynsi/soap/connection
-src/main/java/nl/surf/polynsi/soap/framework
-src/main/java/nl/surf/polynsi/soap/services
+src/main/java/nl/surf/polynsi/soap/connection/**/*.java
+!src/main/java/nl/surf/polynsi/soap/connection/**/*Impl.java
+src/main/java/nl/surf/polynsi/soap/framework/**/*.java
+!src/main/java/nl/surf/polynsi/soap/framework/**/*Impl.java
+src/main/java/nl/surf/polynsi/soap/services/**/*.java
+!src/main/java/nl/surf/polynsi/soap/services/**/*Impl.java

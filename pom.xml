@@ -130,7 +130,6 @@
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.provider</extraarg>
-                                        <extraarg>-impl</extraarg>
                                         <extraarg>-exsh</extraarg>
                                         <extraarg>true</extraarg>
                                         <extraarg>-mark-generated</extraarg>
@@ -143,7 +142,6 @@
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.requester</extraarg>
-                                        <extraarg>-impl</extraarg>
                                         <extraarg>-exsh</extraarg>
                                         <extraarg>true</extraarg>
                                         <extraarg>-mark-generated</extraarg>
@@ -170,12 +168,21 @@
                         </fileset>
                         <fileset>
                             <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/connection</directory>
+                            <excludes>
+                                <exclude>*Impl.java</exclude>
+                            </excludes>
                         </fileset>
                         <fileset>
                             <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/framework</directory>
+                            <excludes>
+                                <exclude>*Impl.java</exclude>
+                            </excludes>
                         </fileset>
                         <fileset>
                             <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/services</directory>
+                            <excludes>
+                                <exclude>*Impl.java</exclude>
+                            </excludes>
                         </fileset>
                     </filesets>
                 </configuration>
