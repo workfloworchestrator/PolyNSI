@@ -1,0 +1,38 @@
+diff --git a/compiler/check-artifact.sh b/compiler/check-artifact.sh
+index 13ae89c74..06b59e5ba 100755
+--- a/compiler/check-artifact.sh
++++ b/compiler/check-artifact.sh
+@@ -51,7 +51,7 @@ checkArch ()
+ {
+   echo
+   echo "Checking format of $1"
+-  if [[ "$OS" == windows || "$OS" == linux ]]; then
++  if [[ "$OS" == windows || "$OS" == linux || "$OS" == freebsd ]]; then
+     format="$(objdump -f "$1" | grep -o "file format .*$" | grep -o "[^ ]*$")"
+     echo Format=$format
+     if [[ "$OS" == linux ]]; then
+@@ -64,6 +64,12 @@ checkArch ()
+       else
+         fail "Unsupported arch: $ARCH"
+       fi
++    elif [[ "$OS" == freebsd ]]; then
++      if [[ "$ARCH" == x86_64 ]]; then
++        assertEq "$format" "elf64-x86-64-freebsd" $LINENO
++      else
++        fail "Unsupported arch: $ARCH"
++      fi
+     else
+       # $OS == windows
+       if [[ "$ARCH" == x86_32 ]]; then
+@@ -109,6 +115,11 @@ checkDependencies ()
+       dump_cmd='aarch64-linux-gnu-objdump -x '"$1"' |grep "NEEDED"'
+       white_list="linux-vdso\.so\.1\|libpthread\.so\.0\|libm\.so\.6\|libc\.so\.6\|ld-linux-aarch64\.so\.1"
+     fi
++  elif [[ "$OS" == freebsd ]]; then
++    if [[ "$ARCH" == x86_64 ]]; then
++      dump_cmd='ldd '"$1"' | tail -n +2'
++      white_list="libthr\.so\.3\|libc++\.so\.1\|libcxxrt\.so\.1\|libm\.so\.5\|libgcc_s\.so\.1\|libc\.so\.7"
++    fi
+   elif [[ "$OS" == osx ]]; then
+     dump_cmd='otool -L '"$1"' | fgrep dylib'
+     white_list="libz\.1\.dylib\|libc++.1.dylib\|libstdc++\.6\.dylib\|libSystem\.B\.dylib"

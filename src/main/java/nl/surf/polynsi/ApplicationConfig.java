@@ -1,14 +1,11 @@
 package nl.surf.polynsi;
 
-import javax.xml.ws.Endpoint;
-
+import nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort;
 import nl.surf.polynsi.soap.connection.provider.ConnectionServiceProviderPortImpl;
+import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ConnectionServiceRequesterPortImpl;
 import org.apache.cxf.Bus;
-import org.apache.cxf.bus.spring.SpringBus;
-import org.apache.cxf.feature.LoggingFeature;
 import org.apache.cxf.jaxws.EndpointImpl;
-
 import org.apache.cxf.transport.servlet.CXFServlet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath;
@@ -17,15 +14,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import javax.xml.ws.Endpoint;
+
 
 @Configuration
 public class ApplicationConfig {
+    public static final String BASE_URL = "/soap";
+    public static final String SERVICE_URL = "/connection";
     @Autowired
     private Bus bus;
 
     @Bean
     public ServletRegistrationBean<CXFServlet> dispatcherServlet() {
-        return new ServletRegistrationBean<CXFServlet>(new CXFServlet(), "/soap/*");
+        return new ServletRegistrationBean<CXFServlet>(new CXFServlet(), BASE_URL + "/*");
     }
 
     @Bean
@@ -34,18 +35,27 @@ public class ApplicationConfig {
         return () -> "";
     }
 
+    @Bean
+    public ConnectionProviderPort connectionProviderPort() {
+        return new ConnectionServiceProviderPortImpl();
+    }
+
+    @Bean
+    public ConnectionRequesterPort connectionRequesterPort() {
+        return new ConnectionServiceRequesterPortImpl();
+    }
 
     @Bean
     public Endpoint endpointConnectionProvider() {
-        EndpointImpl endpoint = new EndpointImpl(bus, new ConnectionServiceProviderPortImpl());
-        endpoint.publish("/connection/provider");
+        EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort());
+        endpoint.publish(SERVICE_URL + "/provider");
         return endpoint;
     }
 
     @Bean
     public Endpoint endpointConnectionRequester() {
-        EndpointImpl endpoint = new EndpointImpl(bus, new ConnectionServiceRequesterPortImpl());
-        endpoint.publish("/connection/requester");
+        EndpointImpl endpoint = new EndpointImpl(bus, connectionRequesterPort());
+        endpoint.publish(SERVICE_URL + "/requester");
         return endpoint;
     }
 }
