@@ -30,7 +30,7 @@ First install the `protobuf` package:
 This not only installs the `protoc` compiler, but also all the relevant
 header files needed to built the gRPC compiler plugin.
 
-Next checkout the 1 branch of the `grpc-java` project. This project
+Next checkout the 1.29 branch of the `grpc-java` project. This project
 contains a `protoc` plugin that generates Java files.
 
     $ git clone -b v1.29.0 https://github.com/grpc/grpc-java
@@ -45,7 +45,7 @@ Yes, the `protoc` compiler is a C++ application and so is the gRPC
 plugin for Java!
  
 We also need to tell the `grpc-java` build system where to find the
-`protoc` compiler. Furthermore we are not interested in building things
+`protoc` compiler. Furthermore, we are not interested in building things
 for Android. So we create a file `grpc-java/gradle.properties` and add
 the following lines to it:
  
@@ -53,7 +53,7 @@ the following lines to it:
     protoc=/usr/local/bin/protoc
     
 Before we build the plugin we need to do one last thing; patch a
-Bash script that sanity checks the build artifact. Currently it only
+Bash script that sanity checks the build artifact. Currently, it only
 recognizes artifacts (the plugin) build on Linux, MacOS and
 Windows. The patch teaches it about FreeBSD:
 
