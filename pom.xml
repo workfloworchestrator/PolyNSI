@@ -211,19 +211,19 @@
                         <fileset>
                             <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/connection</directory>
                             <excludes>
-                                <exclude>*Impl.java</exclude>
+                                <exclude>**/*Impl.java</exclude>
                             </excludes>
                         </fileset>
                         <fileset>
                             <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/framework</directory>
                             <excludes>
-                                <exclude>*Impl.java</exclude>
+                                <exclude>**/*Impl.java</exclude>
                             </excludes>
                         </fileset>
                         <fileset>
                             <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/services</directory>
                             <excludes>
-                                <exclude>*Impl.java</exclude>
+                                <exclude>**/*Impl.java</exclude>
                             </excludes>
                         </fileset>
                     </filesets>
