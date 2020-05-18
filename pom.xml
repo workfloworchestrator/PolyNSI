@@ -163,7 +163,6 @@
                                     </bindingFile>
                                 </bindingFiles>
                             </defaultOptions>
-                            <sourceRoot>${basedir}/src/main/java</sourceRoot>
                             <wsdlOptions>
                                 <wsdlOption>
                                     <wsdl>
@@ -196,38 +195,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}/src/generated</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/org</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/connection</directory>
-                            <excludes>
-                                <exclude>**/*Impl.java</exclude>
-                            </excludes>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/framework</directory>
-                            <excludes>
-                                <exclude>**/*Impl.java</exclude>
-                            </excludes>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/services</directory>
-                            <excludes>
-                                <exclude>**/*Impl.java</exclude>
-                            </excludes>
-                        </fileset>
-                    </filesets>
-                </configuration>
             </plugin>
         </plugins>
     </build>
