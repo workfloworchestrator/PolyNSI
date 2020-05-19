@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The OGF takes no position regarding the validity or scope of any intellectual
+property or other rights that might be claimed to pertain to the implementation or use of
+the technology described in this document or the extent to which any license under such
+rights might or might not be available; neither does it represent that it has made any
+effort to identify any such rights. Copies of claims of rights made available for
+publication and any assurances of licenses to be made available, or the result of an
+attempt made to obtain a general license or permission for the use of such proprietary
+rights by implementers or users of this specification can be obtained from the OGF
+Secretariat.
+
+The OGF invites any interested party to bring to its attention any copyrights,
+patents or patent applications, or other proprietary rights which may cover technology
+that may be required to practice this recommendation. Please address the information to
+the OGF Executive Director.
+
+This document and
+ the information contained herein is provided on an "As Is" basis
+and the OGF disclaims
+ all warranties, express or implied, including but not limited to
+any warranty that the
+ use of the information herein will not infringe any rights or any
+implied warranties of
+ merchantability or fitness for a particular purpose.
+
+Copyright (C) Open Grid Forum (2009-2016). All Rights Reserved.
+
+This document and translations of it may be copied and furnished to others, and
+derivative works that comment on or otherwise explain it or assist in its implementation
+may be prepared, copied, published and distributed, in whole or in part, without
+restriction of any kind, provided that the above copyright notice and this paragraph are
+included on all such copies and derivative works. However, this document itself may not
+be modified in any way, such as by removing the copyright notice or references to the OGF
+or other organizations, except as needed for the purpose of developing Grid
+Recommendations in which case the procedures for copyrights defined in the OGF Document
+process must be followed, or as required to translate it into languages other than
+English.
+
+The limited permissions granted above are perpetual and will not be revoked by the
+OGF or its successors or assignees.
+
+Open Grid Forum NSI Connection Services Protocol v2.0 - Path trace extensions.
+-->
+<xsd:schema targetNamespace="http://schemas.ogf.org/nsi/2015/04/connection/pathtrace"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:types="http://schemas.ogf.org/nsi/2013/12/services/types"
+            xmlns:ftypes="http://schemas.ogf.org/nsi/2013/12/framework/types"
+            xmlns:tns="http://schemas.ogf.org/nsi/2015/04/connection/pathtrace">
+    <xsd:annotation>
+        <xsd:appinfo>OGF NSI CS Path Trace 2015-04-30</xsd:appinfo>
+        <xsd:documentation xml:lang="en">
+            This is an XML schema document describing the path trace extension
+            to the OGF NSI Connection Services protocol version 2.0. This
+            defines a new header element used to model the full path of a
+            reservation.
+        </xsd:documentation>
+    </xsd:annotation>
+    <!-- Import the common NSI framework types. -->
+    <xsd:import namespace="http://schemas.ogf.org/nsi/2013/12/framework/types"
+                schemaLocation="ogf_nsi_framework_types_v2_0.xsd"/>
+    <!-- Import the common NSI service types. -->
+    <xsd:import namespace="http://schemas.ogf.org/nsi/2013/12/services/types"
+                schemaLocation="ogf_nsi_services_types_v2_0.xsd"/>
+    <xsd:element name="pathTrace" type="tns:PathTraceType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                The header element modeling a connection path through the network.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:complexType name="PathTraceType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                Type definition for the path trace information.
+
+                Attributes:
+
+                id - In the case of TREE, this attribute contains the NSA
+                identifier of the aggregator that performed path resolution,
+                while for CHAIN, it is the identifier of the first (head-end)
+                NSA allocating transport plane resources. This identifier is
+                added for traceability back to the NSA performing initial
+                path resolution.
+
+                Elements:
+
+                connectionId - Connection identifier for the reservation in the
+                context of the NSA identified by the "id" attribute. This
+                identifier is added for traceability to the originating reservation
+                associated with this path.
+
+                path - In the case of a "source" routing the NSA doing path
+                resolution includes the complete path, while for “hop-by-hop”
+                each NSA allocating data plane resources adds its path
+                segment on the outbound reserve request until the full path is
+                completed by the tail end NSA. This path element is used by
+                uPA to perform routing policy enforcement.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="connectionId" type="ftypes:ConnectionIdType"/>
+            <xsd:element name="path" type="tns:PathType" minOccurs="0"
+                         maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute
+                name="id" type="ftypes:NsaIdType" use="required"/>
+    </xsd:complexType>
+    <xsd:complexType name="PathType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                Type definition for path information within the trace. A path
+                consists of a sequence of path segments.
+
+                Elements:
+
+                segment - A single segment in the overall connection path.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="segment" type="tns:SegmentType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="SegmentType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                Type definition for a path segment within the overall
+                connection path. This represents the connection segment for a
+                single domain.
+
+                Attributes:
+
+                id - The NSA identifier associated with this path segment.
+
+                order - The sequence order of the connection in the overall
+                path. As new segments are added to the path trace this value
+                is increased by one over the last added segment.
+
+                Elements:
+
+                connectionId - Connection identifier for the reservation in the
+                context of the NSA identified by the "id" attribute. This
+                identifier is added for traceability to the uPA reservation
+                associated with this path.
+
+                stp - A list of STP identifier within this domain that are part
+                of the overall path ordered by their sequence within the
+                connection. This list will usually only contain ingress and
+                egress STP, however, more flexibility is provided to model
+                internal STP as well.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="connectionId" type="ftypes:ConnectionIdType"/>
+            <xsd:element name="stp" type="tns:StpType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="ftypes:NsaIdType" use="required"/>
+        <xsd:attribute name="order" type="xsd:int" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="StpType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                An extended type definition for an STP identifier that includes
+                ordering capabilities.
+
+                Attributes:
+
+                order - The order of this STP within a sequence of STP.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="types:StpIdType">
+                <xsd:attribute name="order" type="xsd:int" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
