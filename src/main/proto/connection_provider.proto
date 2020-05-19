@@ -4,6 +4,7 @@ package connection.provider;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
+import "services.proto";
 
 option java_package = "nl.surf.polynsi.grpc.connection.provider";
 
@@ -48,28 +49,12 @@ message Schedule {
   google.protobuf.Timestamp end_time = 2;
 }
 
-enum Directionality {
-  BI_DIRECTIONAL = 0;
-  UNI_DIRECTIONAL = 1;
-}
-
-
-message PointToPointService {
-  int64 capacity = 1;  // in Mbps
-  Directionality directionality = 2;
-  bool symmetric_path = 3;
-  string source_stp = 4;  // StpId
-  string dest_stp = 5;  // StpId
-  repeated string ero = 6;  // [StpId]
-  int32 mtu = 7;  // in bytes (Inlining of parameter 'mtu' type. Can we do that?)
-}
-
 message ReservationRequestCriteria {
   int32 version = 1;
   Schedule schedule = 2;
   string service_type = 3;
   oneof service_specific_messages {
-    PointToPointService ptps = 4;
+    services.PointToPointService ptps = 4;
   }
   /*
      The specification has two additional fields, `inclusion` and
