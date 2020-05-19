@@ -1,0 +1,25 @@
+/*
+  Implement the Protocol Buffers equivalent of the `pathTrace` definition as specified in:
+
+  Document: GFD-R-233 - "Applying Policy in the NSI environment".
+ */
+
+syntax = "proto3";
+
+package pathtrace;
+
+option java_package = "nl.surf.polynsi.grpc.pathtrace";
+
+
+message Segment {
+  string id = 1;  // URI
+  string connection_id = 2;  // UUID
+  repeated string stps = 3;  // [StpId]
+}
+
+message PathTrace {
+  string id = 1;  // URI
+  string connection_id = 2;  // UUID
+  repeated Segment path = 3;
+}
+

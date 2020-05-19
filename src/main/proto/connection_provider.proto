@@ -5,6 +5,7 @@ package connection.provider;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "services.proto";
+import "pathtrace.proto";
 
 option java_package = "nl.surf.polynsi.grpc.connection.provider";
 
@@ -91,9 +92,7 @@ message Header {
      XML representation verbatim as a string.
    */
   string session_security_attributes = 6;
-  /*
-     TODO: add session policy attributes from GFD-R-233
-   */
+  pathtrace.PathTrace path_trace = 7;
 }
 
 message ReserveRequest {
