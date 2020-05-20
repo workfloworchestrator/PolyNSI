@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package services;
 
+option java_multiple_files = true;
 option java_package = "nl.surf.polynsi.grpc.services";
 
 enum Directionality {
