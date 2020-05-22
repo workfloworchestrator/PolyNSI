@@ -3,7 +3,7 @@ syntax = "proto3";
 package services;
 
 option java_multiple_files = true;
-option java_package = "nl.surf.polynsi.grpc.services";
+option java_package = "org.ogf.nsi.grpc.services";
 
 enum Directionality {
   BI_DIRECTIONAL = 0;
