@@ -6,10 +6,10 @@
 
 syntax = "proto3";
 
-package pathtrace;
+package policy;
 
 option java_multiple_files = true;
-option java_package = "org.ogf.nsi.grpc.pathtrace";
+option java_package = "org.ogf.nsi.grpc.policy";
 
 
 message Segment {
