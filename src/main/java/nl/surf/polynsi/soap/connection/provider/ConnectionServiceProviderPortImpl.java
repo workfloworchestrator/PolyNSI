@@ -6,6 +6,10 @@
 
 package nl.surf.polynsi.soap.connection.provider;
 
+import nl.surf.polynsi.soap.policies.ObjectFactory;
+import nl.surf.polynsi.soap.policies.PathTraceType;
+import org.w3c.dom.Element;
+
 import java.util.logging.Logger;
 import javax.annotation.Generated;
 import javax.jws.WebMethod;
@@ -13,6 +17,9 @@ import javax.jws.WebParam;
 import javax.jws.WebResult;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.ws.RequestWrapper;
 import javax.xml.ws.ResponseWrapper;
@@ -145,6 +152,24 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public void reserve(javax.xml.ws.Holder<java.lang.String> connectionId, java.lang.String globalReservationId, java.lang.String description, nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType criteria, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException   {
         LOG.info("Executing operation reserve");
+
+        for (Object elem : header.value.getAny()) {
+            if (elem instanceof Element) {
+                Element hdElem = (Element)elem;
+                if (hdElem.getLocalName().equals("pathTrace")) {
+                    try {
+                        JAXBContext hdElemContext = JAXBContext.newInstance("nl.surf.polynsi.soap.policies",
+                                nl.surf.polynsi.soap.policies.ObjectFactory.class.getClassLoader());
+                        JAXBElement<PathTraceType> root =
+                                hdElemContext.createUnmarshaller().unmarshal(hdElem.getOwnerDocument().getDocumentElement(), PathTraceType.class);
+                        PathTraceType pathTrace = root.getValue();
+                    } catch (JAXBException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
         System.out.println(connectionId.value);
         System.out.println(globalReservationId);
         System.out.println(description);
