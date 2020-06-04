@@ -18,9 +18,13 @@ message Segment {
   repeated string stps = 3;  // [StpId]
 }
 
+message Path {
+  repeated Segment segment = 1;
+}
+
 message PathTrace {
   string id = 1;  // URI
   string connection_id = 2;  // UUID
-  repeated Segment path = 3;
+  repeated Path paths = 3;
 }
 

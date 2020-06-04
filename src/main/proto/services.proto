@@ -18,6 +18,6 @@ message PointToPointService {
   string source_stp = 4;  // StpId
   string dest_stp = 5;  // StpId
   repeated string eros = 6;  // [StpId]
-  int32 mtu = 7;  // in bytes (Inlining of parameter 'mtu' type. Can we do that?)
+  map<string, string> parameters = 7;
 }
 
