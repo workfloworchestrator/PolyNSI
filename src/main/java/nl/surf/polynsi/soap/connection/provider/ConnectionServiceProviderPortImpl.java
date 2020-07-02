@@ -6,12 +6,10 @@
 package nl.surf.polynsi.soap.connection.provider;
 
 import com.google.protobuf.util.Timestamps;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import nl.surf.polynsi.soap.policies.*;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
-import org.ogf.nsi.grpc.connection.provider.Header;
-import org.ogf.nsi.grpc.connection.provider.ReservationRequestCriteria;
-import org.ogf.nsi.grpc.connection.provider.ReserveRequest;
-import org.ogf.nsi.grpc.connection.provider.Schedule;
+import org.ogf.nsi.grpc.connection.provider.*;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
@@ -51,6 +49,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     private static final Logger LOG = Logger.getLogger(ConnectionServiceProviderPortImpl.class.getName());
+
+    @GrpcClient("connection_provider")
+    private ConnectionProviderGrpc.ConnectionProviderBlockingStub connectionProviderStub;
 
     /* (non-Javadoc)
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#provision(java.lang.String connectionId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
@@ -306,11 +307,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             }
             pbReserveRequestBuilder.setCriteria(pbReservationRequestCriteriaBuilder);
             LOG.info("Built protobuf message: ReserveRequest: " + pbReserveRequestBuilder.toString());
+            ReserveResponse pbReserveResponse = connectionProviderStub.reserve(pbReserveRequestBuilder.build());
+            connectionId.value = pbReserveResponse.getConnectionId();
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
-            throw new RuntimeException(ex);
+            throw new ServiceException(ex.toString());
         }
-        //throw new ServiceException("serviceException...");
     }
 
     /* (non-Javadoc)

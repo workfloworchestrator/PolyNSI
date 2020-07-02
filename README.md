@@ -28,7 +28,16 @@ First install the `protobuf` package:
     $ sudo pkg protobuf
     
 This not only installs the `protoc` compiler, but also all the relevant
-header files needed to built the gRPC compiler plugin.
+header files needed to built the gRPC compiler plugin. For Maven to use the
+`protoc` compiler we need to tell it where to find it:
+
+    $ mvn install:install-file \
+        -DgroupId=com.google.protobuf \
+        -DartifactId=protoc \
+        -Dversion=3.12.2 \
+        -Dclassifier=freebsd-x86_64 \
+        -Dpackaging=exe \
+        -Dfile=/usr/local/bin/protoc
 
 Next checkout the 1.29 branch of the `grpc-java` project. This project
 contains a `protoc` plugin that generates Java files.
@@ -73,15 +82,61 @@ repository execute:
 That directory should have a file called.
 `protoc-gen-grpc-java-1.29.0-freebsd-x86_64.exe`
 
-## Installing protoc into the Maven repository
+## Building protobuf-java jars on FreeBSD
 
-Although we have installed the FreeBSD `protoc` package, Maven still
-doesn't know where to look for it. To that end execute:
+Generally, the required `protobuf-java` jars are available from the Maven Central
+Repository and will be downloaded by Maven automatically. However sometimes we
+want to build them from source if we need a specific version that's not yet
+available from the Maven Central Repository. 
 
-   $ mvn install:install-file \ 
-        -DgroupId=com.google.protobuf \ 
-        -DartifactId=protoc -Dversion=3.11.4 \ 
-        -Dclassifier=freebsd-x86_64 \
-        -Dpackaging=exe -Dfile=/usr/local/bin/protoc
+Building the `protobuf-java` jars requires the `protoc` compiler, that we
+already have installed, but in a different location from where the build
+configuration expects it. Contrary to `grpc-java` that uses the Gradle build
+system, `protobuf-java` uses Maven. As such, specifying the location of the
+`protoc` compiler is a little different. Even more so as protobuf-java uses an
+aggregate POM. With an aggregrate POM, properties specified on the command line
+using the `-D` parameter, are not passed on to submodules (POMs). That makes it
+less then trivial to set a value for the `protoc` property if it needs to be
+shared by all submodules. However with a `settings.xml` file in the `~/.m2`
+directory we will be able to set property values that will be picked up by any
+POM whether it is a submodule or not.
 
-For Linux, MacOS and Windows this won't be necessary.
+So create a file `~/.m2/settings.xml` with the following contents:
+
+    <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
+        <profiles>
+            <profile>
+                <id>freebsd</id>
+                <activation>
+                    <activeByDefault>true</activeByDefault>
+                </activation>
+                <properties>
+                    <protoc>/usr/local/bin/protoc</protoc>
+                </properties>
+            </profile>
+        </profiles>
+    </settings>
+
+With that out of the way we now need to clone the `protobuf` repository:
+
+    $ git clone git@github.com:protocolbuffers/protobuf.git
+
+The version of the `protobuf-java` jars we want to built need to match the
+version of the protoc compiler:
+
+    $ protoc --version
+    libprotoc 3.12.2
+
+This shows we need to checkout the v3.12.2 release:
+
+    $ cd protobuf
+    $ git checkout v3.12.2
+    
+And finally build the `protobuf-java` jars:
+
+    $ cd java
+    $ mvn install
+
