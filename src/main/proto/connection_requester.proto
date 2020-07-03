@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package connection.requester;
+
+import "connection_common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.ogf.nsi.grpc.connection.requester";
+
+/*
+  SOAP's version of ReserveFailed is an alias of GenericFailedType. Unfortunately protobuf does not
+  allows aliases for messages that are structurally the same. Hence we define each of the *Failed messages
+  explicitely.
+ */
+message ReserveFailedRequest {
+  common.Header header = 1;
+  string connection_id = 2;
+  common.ConnectionStates connection_states = 3;
+  common.ServiceException service_exception = 4;
+}
+
+message ReserveFailedResponse {
+  common.Header header = 1;
+}
+
+service ConnectionRequester {
+  rpc ReserveFailed(ReserveFailedRequest) returns (ReserveFailedResponse);
+}

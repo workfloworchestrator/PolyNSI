@@ -2,9 +2,8 @@ syntax = "proto3";
 
 package connection.provider;
 
-import "google/protobuf/timestamp.proto";
+import "connection_common.proto";
 import "services.proto";
-import "policy.proto";
 
 option java_multiple_files = true;
 option java_package = "org.ogf.nsi.grpc.connection.provider";
@@ -80,23 +79,8 @@ message ReservationRequestCriteria {
    */
 }
 
-message Header {
-  string protocol_version = 1;
-  string correlation_id = 2;  // UUID
-  string requester_nsa = 3;  // URI
-  string provider_nsa = 4;  // URI
-  string reply_to = 5;  // URI
-  /*
-     TODO: Not sure yet what to do with the session security attributes.
-     For the initial implementation we can probably pass the original
-     XML representation verbatim as a string.
-   */
-  string session_security_attributes = 6;
-  policy.PathTrace path_trace = 7;
-}
-
 message ReserveRequest {
-  Header header = 1;
+  common.Header header = 1;
   string connection_id = 2; // URI
   string global_reservation_id = 3;  // UUID
   string description = 4;
@@ -104,7 +88,7 @@ message ReserveRequest {
 }
 
 message ReserveResponse {
-  Header header = 1;
+  common.Header header = 1;
   string connection_id = 2; // URI
 }
 

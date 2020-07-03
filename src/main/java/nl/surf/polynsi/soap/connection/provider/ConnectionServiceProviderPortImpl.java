@@ -7,16 +7,24 @@ package nl.surf.polynsi.soap.connection.provider;
 
 import com.google.protobuf.util.Timestamps;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import nl.surf.polynsi.soap.policies.*;
+import nl.surf.polynsi.soap.policies.PathTraceType;
+import nl.surf.polynsi.soap.policies.PathType;
+import nl.surf.polynsi.soap.policies.SegmentType;
+import nl.surf.polynsi.soap.policies.StpType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
-import org.ogf.nsi.grpc.connection.provider.*;
+import nl.surf.polynsi.soap.services.types.OrderedStpType;
+import org.ogf.nsi.grpc.connection.common.Header;
+import org.ogf.nsi.grpc.connection.common.Schedule;
+import org.ogf.nsi.grpc.connection.provider.ConnectionProviderGrpc;
+import org.ogf.nsi.grpc.connection.provider.ReservationRequestCriteria;
+import org.ogf.nsi.grpc.connection.provider.ReserveRequest;
+import org.ogf.nsi.grpc.connection.provider.ReserveResponse;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 import org.w3c.dom.Element;
-import nl.surf.polynsi.soap.services.types.OrderedStpType;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
