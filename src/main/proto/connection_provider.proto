@@ -44,14 +44,9 @@ option java_package = "org.ogf.nsi.grpc.connection.provider";
 
 
  */
-message Schedule {
-  google.protobuf.Timestamp start_time = 1;
-  google.protobuf.Timestamp end_time = 2;
-}
-
 message ReservationRequestCriteria {
   int32 version = 1;
-  Schedule schedule = 2;
+  common.Schedule schedule = 2;
   string service_type = 3;
   oneof service_specific_messages {
     services.PointToPointService ptps = 4;

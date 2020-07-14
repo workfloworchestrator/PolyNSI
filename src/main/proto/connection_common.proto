@@ -25,6 +25,12 @@ message Header {
   policy.PathTrace path_trace = 7;
 }
 
+
+message Schedule {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+}
+
 message TypeValuePair {
   string type = 1;
   string namespace = 2; // URI

@@ -23,6 +23,25 @@ message ReserveFailedResponse {
   common.Header header = 1;
 }
 
+message ReservationConfirmCriteria {
+  int32 version = 1;
+  common.Schedule schedule = 2;
+  string serviceType = 3;
+}
+
+message ReserveConfirmedRequest {
+  common.Header header = 1;
+  string connection_id = 2;
+  string global_reservation_id = 3;  // UUID
+  string description = 4;
+  ReservationConfirmCriteria criteria = 5;
+}
+
+message ReserveConfirmedResponse {
+  common.Header header = 1;
+}
+
 service ConnectionRequester {
   rpc ReserveFailed(ReserveFailedRequest) returns (ReserveFailedResponse);
+  rpc ReserveConfirmed(ReserveConfirmedRequest) returns (ReserveConfirmedResponse);
 }
