@@ -87,9 +87,26 @@ message ReserveResponse {
   string connection_id = 2; // URI
 }
 
+message ReserveCommitRequest {
+  common.Header header = 1;
+  string connection_id = 2; // URI
+}
 
+message ReserveCommitResponse {
+  common.Header header = 1;
+}
+
+message ReserveAbortRequest {
+  common.Header header = 1;
+  string connection_id = 2; // URI
+}
+
+message ReserveAbortResponse {
+  common.Header header = 1;
 }
 
 service ConnectionProvider {
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
+  rpc ReserveCommit(ReserveCommitRequest) returns (ReserveCommitResponse);
+  rpc ReserveAbort(ReserveAbortRequest) returns (ReserveAbortResponse);
 }
