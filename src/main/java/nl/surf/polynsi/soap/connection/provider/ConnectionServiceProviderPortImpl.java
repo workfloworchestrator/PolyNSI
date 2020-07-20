@@ -51,8 +51,6 @@ import javax.xml.ws.ResponseWrapper;
  */
 
 @javax.jws.WebService(serviceName = "ConnectionServiceProvider", portName = "ConnectionServiceProviderPort", targetNamespace = "http://schemas.ogf.org/nsi/2013/12/connection/provider", wsdlLocation = "file:/usr/home/guido/devel/surfnet/polynsi/src/main/resources/wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl", endpointInterface = "nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort")
-
-@Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00", comments = "Apache CXF 3.3.5")
 public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort {
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -166,7 +164,10 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     /* (non-Javadoc)
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#reserve(java.lang.String connectionId, java.lang.String globalReservationId, java.lang.String description, nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType criteria, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    public void reserve(javax.xml.ws.Holder<java.lang.String> connectionId, java.lang.String globalReservationId, java.lang.String description, nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType criteria, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
+    public void reserve(javax.xml.ws.Holder<java.lang.String> connectionId, java.lang.String globalReservationId,
+                        java.lang.String description,
+                        nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType criteria,
+                        javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
         LOG.info("Executing operation reserve");
 
         // Build header
@@ -189,7 +190,8 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                     if (hdElem.getLocalName().equals("pathTrace")) {
                         // dynamically create Java PathTraceType instance from raw XML
                         JAXBContext hdElemContext = JAXBContext
-                                .newInstance("nl.surf.polynsi.soap.policies", nl.surf.polynsi.soap.policies.ObjectFactory.class
+                                .newInstance("nl.surf.polynsi.soap.policies",
+                                        nl.surf.polynsi.soap.policies.ObjectFactory.class
                                         .getClassLoader());
                         JAXBElement<PathTraceType> root = hdElemContext.createUnmarshaller()
                                 .unmarshal(hdElem.getOwnerDocument().getDocumentElement(), PathTraceType.class);
@@ -253,12 +255,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             if (criteria.getSchedule() != null) {
                 Schedule.Builder pbScheduleBuilder = Schedule.newBuilder();
                 if (criteria.getSchedule().getStartTime() != null) {
-                    pbScheduleBuilder.setStartTime(Timestamps.parse(criteria.getSchedule().getStartTime().getValue()
+                    pbScheduleBuilder.setStartTime(Timestamps.parse(criteria.getSchedule().getStartTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
                 if (criteria.getSchedule().getEndTime() != null) {
-                    pbScheduleBuilder.setEndTime(Timestamps.parse(criteria.getSchedule().getEndTime().getValue()
-                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+                    pbScheduleBuilder.setEndTime(Timestamps
+                            .parse(criteria.getSchedule().getEndTime().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
                 pbReservationRequestCriteriaBuilder.setSchedule(pbScheduleBuilder);
             }

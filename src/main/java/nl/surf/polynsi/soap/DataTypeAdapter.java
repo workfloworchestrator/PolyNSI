@@ -1,23 +1,17 @@
 package nl.surf.polynsi.soap;
 
-
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
-public final class DataTypeAdapter {
-    private DataTypeAdapter() {
+public class DataTypeAdapter extends XmlAdapter<String, OffsetDateTime> {
+    @Override
+    public String marshal(OffsetDateTime odt) {
+        return odt == null ? null : odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
-    public static OffsetDateTime parseDateTime(String s) {
+    @Override
+    public OffsetDateTime unmarshal(String s) {
         return s == null ? null : OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
-
-    public static String printDateTime(OffsetDateTime odt) {
-        if (odt == null) {
-            return null;
-        } else {
-            return odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        }
-    }
 }
-
