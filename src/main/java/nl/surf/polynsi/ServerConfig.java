@@ -13,6 +13,12 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.xml.ws.Endpoint;
 
+/*
+ This server config pertains to the configuration of the SOAP servers. The gRPC servers are 'configured'
+ where their classes are implemented and annotated with `@GrpcService`. I'd rather have had this all done in the
+ same location, but this all-over-the-place configuration/hooking up of things seem to be side-effect of Spring Boot's
+ dependency injection. It makes searching for things a little difficult
+ */
 @Configuration
 public class ServerConfig {
     @Value("${soap.server.connection_provider.path}")
