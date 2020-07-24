@@ -7,12 +7,14 @@ package nl.surf.polynsi.soap.connection.provider;
 
 import com.google.protobuf.util.Timestamps;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import nl.surf.polynsi.Converter;
 import nl.surf.polynsi.soap.policies.PathTraceType;
 import nl.surf.polynsi.soap.policies.PathType;
 import nl.surf.polynsi.soap.policies.SegmentType;
 import nl.surf.polynsi.soap.policies.StpType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.OrderedStpType;
+import nl.surf.polynsi.soap.services.types.TypeValueType;
 import org.ogf.nsi.grpc.connection.common.Header;
 import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.ConnectionProviderGrpc;
@@ -170,73 +172,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
         LOG.info("Executing operation reserve");
 
-        // Build header
         try {
-            Header.Builder pbHeaderBuilder = Header.newBuilder();
-            pbHeaderBuilder.setProtocolVersion(header.value.getProtocolVersion())
-                    .setCorrelationId(header.value.getCorrelationId()).setRequesterNsa(header.value.getRequesterNSA())
-                    .setProviderNsa(header.value.getProviderNSA());
-            if (header.value.getReplyTo() != null) {
-                pbHeaderBuilder.setReplyTo(header.value.getReplyTo());
-            }
-            if (header.value.getSessionSecurityAttr() != null) {
-                pbHeaderBuilder.setSessionSecurityAttributes("Ignoring SAML stuff for now (TODO).");
-            }
-
-            // Process NSI extensions that are included in the SOAP header
-            for (Object elem : header.value.getAny()) {
-                if (elem instanceof Element) {
-                    Element hdElem = (Element) elem;
-                    if (hdElem.getLocalName().equals("pathTrace")) {
-                        // dynamically create Java PathTraceType instance from raw XML
-                        JAXBContext hdElemContext = JAXBContext
-                                .newInstance("nl.surf.polynsi.soap.policies",
-                                        nl.surf.polynsi.soap.policies.ObjectFactory.class
-                                        .getClassLoader());
-                        JAXBElement<PathTraceType> root = hdElemContext.createUnmarshaller()
-                                .unmarshal(hdElem.getOwnerDocument().getDocumentElement(), PathTraceType.class);
-                        PathTraceType soapPathTrace = root.getValue();
-
-                        // Build protobuf PathTrace message
-                        PathTrace.Builder pbPathTraceBuilder = PathTrace.newBuilder().setId(soapPathTrace.getId())
-                                .setConnectionId(soapPathTrace.getConnectionId());
-                        for (PathType soapPathType : soapPathTrace.getPath()) {
-                            Path.Builder pbPathBuilder = Path.newBuilder();
-                            List<SegmentType> soapSegmentTypes = soapPathType.getSegment();
-                            /*
-                                SOAP `segment` elements effectively constitute a list. As such have have an implied
-                                order. However for some reason they have an explicit `order` attribute that defines
-                                their order. The protobuf version of `Segment` intentionally does not have this
-                                attribute. Instead it relies on the implied order of list elements. The presence of the
-                                `order` attribute however, *suggests* the SOAP `segment` elements might not be ordered
-                                based on the order they appear in. Hence we order them explicitely so that their order
-                                is the order of appearance, fullfilling the implicit ordering in the protobuf version.
-                             */
-                            soapSegmentTypes.sort(Comparator.comparing(SegmentType::getOrder));
-                            for (SegmentType soapSegmentType : soapSegmentTypes) {
-                                Segment.Builder pbSegmentBuilder = Segment.newBuilder().setId(soapSegmentType.getId())
-                                        .setConnectionId(soapSegmentType.getConnectionId());
-                                List<StpType> soapStpTypes = soapSegmentType.getStp();
-                                /*
-                                    Similarly to SOAP `segment` elements, SOAP `stp` elements, alhough being part of a
-                                    list, have an explicit `order` attribute. Suggesting they might not be ordered
-                                    based on their order of appearance. The protobuf version does rely on the order
-                                    of appearance, hence we sort them first.
-                                 */
-                                soapStpTypes.sort(Comparator.comparing(StpType::getOrder));
-                                pbSegmentBuilder.addAllStps(soapStpTypes.stream().map(StpType::getValue)
-                                        .collect(Collectors.toList()));
-                                pbPathBuilder.addSegment(pbSegmentBuilder);
-                            }
-                            pbPathTraceBuilder.addPaths(pbPathBuilder);
-                        }
-                        pbHeaderBuilder.setPathTrace(pbPathTraceBuilder);
-                    }
-                }
-            }
-
-            // Build body
-            ReserveRequest.Builder pbReserveRequestBuilder = ReserveRequest.newBuilder().setHeader(pbHeaderBuilder);
+            Header pbHeader = Converter.toProtobuf(header.value);
+            ReserveRequest.Builder pbReserveRequestBuilder = ReserveRequest.newBuilder().setHeader(pbHeader);
             if (connectionId.value != null) {
                 pbReserveRequestBuilder.setConnectionId(connectionId.value);
             }
@@ -309,7 +247,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         }
                         if (soapP2PService.getParameter() != null) {
                             pbP2PServiceBuilder.putAllParameters(soapP2PService.getParameter().stream()
-                                    .collect(Collectors.toMap(p -> p.getType(), p -> p.getValue())));
+                                    .collect(Collectors.toMap(TypeValueType::getType, TypeValueType::getValue)));
                             pbReservationRequestCriteriaBuilder.setPtps(pbP2PServiceBuilder);
                         }
                     }
