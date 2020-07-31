@@ -1,4 +1,4 @@
-package nl.surf.polynsi.soap;
+package nl.surf.polynsi;
 
 public class ConverterException extends Exception {
     public ConverterException() {

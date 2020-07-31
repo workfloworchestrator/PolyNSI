@@ -1,7 +1,8 @@
 package nl.surf.polynsi;
 
 import com.google.protobuf.Timestamp;
-import nl.surf.polynsi.soap.ConverterException;
+import nl.surf.polynsi.soap.connection.types.ObjectFactory;
+import nl.surf.polynsi.soap.connection.types.ScheduleType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.framework.headers.SessionSecurityAttrType;
 import nl.surf.polynsi.soap.policies.PathTraceType;
@@ -9,18 +10,21 @@ import nl.surf.polynsi.soap.policies.PathType;
 import nl.surf.polynsi.soap.policies.SegmentType;
 import nl.surf.polynsi.soap.policies.StpType;
 import org.ogf.nsi.grpc.connection.common.Header;
+import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
+import javax.xml.bind.*;
 import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -28,13 +32,17 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 
@@ -98,7 +106,7 @@ public class Converter {
      * @return a string representing the XML representation of the SessionSecurityAttr
      * @throws ConverterException if marshalling, xml->string transformation or xpath lookup fails.
      */
-    private static String getSessionSecurityAttrAsString(CommonHeaderType soapHeader) throws ConverterException {
+    protected static String fromSessionSecurityAttr(CommonHeaderType soapHeader) throws ConverterException {
         try {
             JAXBContext ssaContext = JAXBContext
                     .newInstance("nl.surf.polynsi.soap.framework.headers",
@@ -125,6 +133,49 @@ public class Converter {
         }
     }
 
+    /**
+     * Get the sessionSecurityAttrs as an object from the raw XML string.
+     * <p>
+     * <b>IMPORTANT:</b> currently this method will try unmarshalling the {@code xmlSSA} string into a single
+     * {@code SessionSecurityAttributeType}. The return type of this method is the same as that of the {@code
+     * sessionSecurityAttr} in {@code CommonHeaderType}. This type, being an {@code ArrayList}, suggests that there
+     * could be more than one SessionSecurityAttributeType encoded in the {@code xmlSSA}. But this method doesn't
+     * support it yet.
+     *
+     * @param xmlSSA The string representing the sessionSecurityAttr as XML
+     * @return The unmarshalled list of SessionSecurityAttributeType's
+     * @throws ConverterException if the unmarshalling or XML parsing fails.
+     */
+    protected static ArrayList<SessionSecurityAttrType> toSessionSecurityAttr(String xmlSSA) throws ConverterException {
+        try {
+            JAXBContext jc = JAXBContext
+                    .newInstance("nl.surf.polynsi.soap.framework.headers",
+                            nl.surf.polynsi.soap.framework.headers.ObjectFactory.class
+                            .getClassLoader());
+            Unmarshaller unmarshaller = jc.createUnmarshaller();
+
+            /*
+             TODO: CommonHeaderType.sessionSecurityAttribute is an ArrayList, meaning we might need to iterate
+                   over certain XML elements and unmarshal them into separate SessionAttributeSecurityType's.
+                   However we don't know what elements make up separate SessionAttributeSecurityType and what
+                   elements belong to the same SessionAttributeSecurityType. We need SAML expertise for that. For
+                   now we consider all the elements to belong to the same single SessionAttributeSecurityType.
+             */
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            DocumentBuilder dBuilder = factory.newDocumentBuilder();
+            Document doc = dBuilder.parse(new ByteArrayInputStream(xmlSSA.getBytes()));
+            JAXBElement<SessionSecurityAttrType> ssaElem = unmarshaller.unmarshal(doc, SessionSecurityAttrType.class);
+            return new ArrayList<>() {
+                {
+                    add(ssaElem.getValue());
+                }
+            };
+        } catch (JAXBException | ParserConfigurationException | SAXException | IOException e) {
+            throw new ConverterException("Could not convert 'sessionSecurityAttr' to an object.", e);
+        }
+    }
+
     public static Header toProtobuf(CommonHeaderType soapHeader) throws ConverterException {
         try {
             Header.Builder pbHeaderBuilder = Header.newBuilder();
@@ -140,7 +191,7 @@ public class Converter {
                 pbHeaderBuilder.setReplyTo(soapHeader.getReplyTo());
             }
             if (soapHeader.getSessionSecurityAttr() != null) {
-                String ssa = getSessionSecurityAttrAsString(soapHeader);
+                String ssa = fromSessionSecurityAttr(soapHeader);
                 pbHeaderBuilder.setSessionSecurityAttributes(ssa);
             }
 
@@ -150,11 +201,11 @@ public class Converter {
                     Element hdElem = (Element) elem;
                     if (hdElem.getLocalName().equals("pathTrace")) {
                         // dynamically create Java PathTraceType instance from raw XML
-                        JAXBContext hdElemContext = JAXBContext
+                        JAXBContext jc = JAXBContext
                                 .newInstance("nl.surf.polynsi.soap.policies",
                                         nl.surf.polynsi.soap.policies.ObjectFactory.class
                                         .getClassLoader());
-                        JAXBElement<PathTraceType> root = hdElemContext.createUnmarshaller()
+                        JAXBElement<PathTraceType> root = jc.createUnmarshaller()
                                 .unmarshal(hdElem.getOwnerDocument().getDocumentElement(), PathTraceType.class);
                         PathTraceType soapPathTrace = root.getValue();
 
@@ -200,5 +251,87 @@ public class Converter {
         } catch (Exception e) {
             throw new ConverterException("Could not convert SOAP header to protobuf header.", e);
         }
+    }
+
+    public static CommonHeaderType toSoap(Header pbHeader) throws ConverterException {
+        nl.surf.polynsi.soap.framework.headers.ObjectFactory headerObjFactory =
+                new nl.surf.polynsi.soap.framework.headers.ObjectFactory();
+        CommonHeaderType soapHeader = headerObjFactory.createCommonHeaderType();
+        soapHeader.setProtocolVersion(pbHeader.getProtocolVersion());
+        soapHeader.setCorrelationId(pbHeader.getCorrelationId());
+        soapHeader.setRequesterNSA(pbHeader.getRequesterNsa());
+        soapHeader.setProviderNSA(pbHeader.getProviderNsa());
+        if (!pbHeader.getReplyTo().isEmpty()) {
+            soapHeader.setReplyTo(pbHeader.getReplyTo());
+        }
+        if (!pbHeader.getSessionSecurityAttributes().isEmpty()) {
+            List<SessionSecurityAttrType> soapSSAs = soapHeader.getSessionSecurityAttr();
+            soapSSAs.addAll(toSessionSecurityAttr(pbHeader.getSessionSecurityAttributes()));
+        }
+        if (pbHeader.getPathTrace().isInitialized()) {
+            PathTrace pbPathTrace = pbHeader.getPathTrace();
+            nl.surf.polynsi.soap.policies.ObjectFactory policiesObjFactory =
+                    new nl.surf.polynsi.soap.policies.ObjectFactory();
+            PathTraceType soapPathTrace = policiesObjFactory.createPathTraceType();
+            soapPathTrace.setId(pbPathTrace.getId());
+            soapPathTrace.setConnectionId(pbPathTrace.getConnectionId());
+            List<PathType> soapPaths = soapPathTrace.getPath();
+            for (Path pbPath: pbPathTrace.getPathsList()) {
+                PathType soapPath = policiesObjFactory.createPathType();
+                List<SegmentType> soapSegments = soapPath.getSegment();
+                ListIterator<Segment> pbSegmentsIterator = pbPath.getSegmentList().listIterator();
+                while (pbSegmentsIterator.hasNext()) {
+                    int segOrder = pbSegmentsIterator.nextIndex();
+                    Segment pbSegment = pbSegmentsIterator.next();
+                    SegmentType soapSegment = policiesObjFactory.createSegmentType();
+                    soapSegment.setOrder(segOrder);
+                    soapSegment.setId(pbSegment.getId());
+                    soapSegment.setConnectionId(pbSegment.getConnectionId());
+                    List<StpType> soapStps = soapSegment.getStp();
+                    ListIterator<String> pbStpsIterator = pbSegment.getStpsList().listIterator();
+                    while (pbStpsIterator.hasNext()) {
+                        StpType soapStp = policiesObjFactory.createStpType();
+                        soapStp.setOrder(pbStpsIterator.nextIndex());
+                        soapStp.setValue(pbStpsIterator.next());
+                        soapStps.add(soapStp);
+                    }
+                    soapSegments.add(soapSegment);
+                }
+                soapPaths.add(soapPath);
+            }
+            List<Object> soapAny = soapHeader.getAny();
+            soapAny.add(soapPathTrace);
+        }
+        return soapHeader;
+    }
+
+
+    public static Schedule toProtobuf(ScheduleType soapSchedule) {
+        if (soapSchedule == null) {
+            return Schedule.getDefaultInstance();
+        }
+        Schedule.Builder pbScheduleBuilder = Schedule.newBuilder();
+        if (soapSchedule.getStartTime() != null) {
+            pbScheduleBuilder.setStartTime(toProtobuf(soapSchedule.getStartTime()));
+        }
+        if (soapSchedule.getEndTime() != null) {
+            pbScheduleBuilder.setEndTime(toProtobuf(soapSchedule.getEndTime()));
+        }
+        return pbScheduleBuilder.build();
+    }
+
+    public static ScheduleType toSoap(Schedule pbSchedule) {
+        if (!pbSchedule.isInitialized()) return null;
+
+        ObjectFactory objectFactory = new ObjectFactory();
+        ScheduleType soapSchedule = objectFactory.createScheduleType();
+
+        if (pbSchedule.getStartTime().isInitialized()) {
+            soapSchedule.setStartTime(toSoap(pbSchedule.getStartTime()));
+        }
+        if (pbSchedule.getEndTime().isInitialized()) {
+            soapSchedule.setEndTime(toSoap(pbSchedule.getEndTime()));
+        }
+        return soapSchedule;
     }
 }
