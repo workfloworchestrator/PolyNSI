@@ -168,12 +168,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
      */
     public void reserve(javax.xml.ws.Holder<java.lang.String> connectionId, java.lang.String globalReservationId,
                         java.lang.String description,
-                        nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType criteria,
-                        javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
+                        nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType soapCriteria,
+                        javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info("Executing operation reserve");
 
         try {
-            Header pbHeader = Converter.toProtobuf(header.value);
+            Header pbHeader = Converter.toProtobuf(soapHeader.value);
             ReserveRequest.Builder pbReserveRequestBuilder = ReserveRequest.newBuilder().setHeader(pbHeader);
             if (connectionId.value != null) {
                 pbReserveRequestBuilder.setConnectionId(connectionId.value);
@@ -187,27 +187,27 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
             // ReservationRequestCriteria
             ReservationRequestCriteria.Builder pbReservationRequestCriteriaBuilder = ReservationRequestCriteria
-                    .newBuilder().setVersion(criteria.getVersion());
+                    .newBuilder().setVersion(soapCriteria.getVersion());
 
             // Schedule
-            if (criteria.getSchedule() != null) {
+            if (soapCriteria.getSchedule() != null) {
                 Schedule.Builder pbScheduleBuilder = Schedule.newBuilder();
-                if (criteria.getSchedule().getStartTime() != null) {
-                    pbScheduleBuilder.setStartTime(Timestamps.parse(criteria.getSchedule().getStartTime()
+                if (soapCriteria.getSchedule().getStartTime() != null) {
+                    pbScheduleBuilder.setStartTime(Timestamps.parse(soapCriteria.getSchedule().getStartTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
-                if (criteria.getSchedule().getEndTime() != null) {
-                    pbScheduleBuilder.setEndTime(Timestamps
-                            .parse(criteria.getSchedule().getEndTime().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+                if (soapCriteria.getSchedule().getEndTime() != null) {
+                    pbScheduleBuilder.setEndTime(Timestamps.parse(soapCriteria.getSchedule().getEndTime()
+                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
                 pbReservationRequestCriteriaBuilder.setSchedule(pbScheduleBuilder);
             }
-            if (criteria.getServiceType() != null) {
-                pbReservationRequestCriteriaBuilder.setServiceType(criteria.getServiceType());
+            if (soapCriteria.getServiceType() != null) {
+                pbReservationRequestCriteriaBuilder.setServiceType(soapCriteria.getServiceType());
             }
 
             // Point2PointService
-            for (Object elem : criteria.getAny()) {
+            for (Object elem : soapCriteria.getAny()) {
                 /*
                     Contrary to the processing of the `pathTrace` element in the header, that was not referenced in
                     any of the WSDLs, and had to be mapped separately using JAXB, the P2PService _is_ referenced
