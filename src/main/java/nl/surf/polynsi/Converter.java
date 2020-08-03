@@ -1,16 +1,15 @@
 package nl.surf.polynsi;
 
 import com.google.protobuf.Timestamp;
-import nl.surf.polynsi.soap.connection.types.ObjectFactory;
-import nl.surf.polynsi.soap.connection.types.ScheduleType;
+import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.framework.headers.SessionSecurityAttrType;
+import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
 import nl.surf.polynsi.soap.policies.PathTraceType;
 import nl.surf.polynsi.soap.policies.PathType;
 import nl.surf.polynsi.soap.policies.SegmentType;
 import nl.surf.polynsi.soap.policies.StpType;
-import org.ogf.nsi.grpc.connection.common.Header;
-import org.ogf.nsi.grpc.connection.common.Schedule;
+import org.ogf.nsi.grpc.connection.common.*;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
@@ -276,7 +275,7 @@ public class Converter {
             soapPathTrace.setId(pbPathTrace.getId());
             soapPathTrace.setConnectionId(pbPathTrace.getConnectionId());
             List<PathType> soapPaths = soapPathTrace.getPath();
-            for (Path pbPath: pbPathTrace.getPathsList()) {
+            for (Path pbPath : pbPathTrace.getPathsList()) {
                 PathType soapPath = policiesObjFactory.createPathType();
                 List<SegmentType> soapSegments = soapPath.getSegment();
                 ListIterator<Segment> pbSegmentsIterator = pbPath.getSegmentList().listIterator();
@@ -323,7 +322,7 @@ public class Converter {
     public static ScheduleType toSoap(Schedule pbSchedule) {
         if (!pbSchedule.isInitialized()) return null;
 
-        ObjectFactory objectFactory = new ObjectFactory();
+        var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
         ScheduleType soapSchedule = objectFactory.createScheduleType();
 
         if (pbSchedule.getStartTime().isInitialized()) {
@@ -333,5 +332,97 @@ public class Converter {
             soapSchedule.setEndTime(toSoap(pbSchedule.getEndTime()));
         }
         return soapSchedule;
+    }
+
+    public static ReservationStateEnumType toSoap(ReservationState pbReservationState) throws ConverterException {
+        switch (pbReservationState) {
+            case RESERVE_START:
+                return ReservationStateEnumType.RESERVE_START;
+            case RESERVE_CHECKING:
+                return ReservationStateEnumType.RESERVE_CHECKING;
+            case RESERVE_FAILED:
+                return ReservationStateEnumType.RESERVE_FAILED;
+            case RESERVE_ABORTING:
+                return ReservationStateEnumType.RESERVE_ABORTING;
+            case RESERVE_HELD:
+                return ReservationStateEnumType.RESERVE_HELD;
+            case RESERVE_COMMITTING:
+                return ReservationStateEnumType.RESERVE_COMMITTING;
+            case RESERVE_TIMEOUT:
+                return ReservationStateEnumType.RESERVE_TIMEOUT;
+            default:
+                throw new ConverterException("Unexpected `ReservationState` value: " + pbReservationState.toString());
+        }
+    }
+
+    public static ProvisionStateEnumType toSoap(ProvisionState pbProvisionState) throws ConverterException {
+        switch (pbProvisionState) {
+            case RELEASED:
+                return ProvisionStateEnumType.RELEASED;
+            case PROVISIONING:
+                return ProvisionStateEnumType.PROVISIONING;
+            case PROVISIONED:
+                return ProvisionStateEnumType.PROVISIONED;
+            case RELEASING:
+                return ProvisionStateEnumType.RELEASING;
+            default:
+                throw new ConverterException("Unexpected `ProvisionState` value: " + pbProvisionState.toString());
+        }
+    }
+
+    public static LifecycleStateEnumType toSoap(LifecycleState pbLifecycleState) throws ConverterException {
+        switch (pbLifecycleState) {
+            case CREATED:
+                return LifecycleStateEnumType.CREATED;
+            case FAILED:
+                return LifecycleStateEnumType.FAILED;
+            case PASSED_END_TIME:
+                return LifecycleStateEnumType.PASSED_END_TIME;
+            case TERMINATING:
+                return LifecycleStateEnumType.TERMINATING;
+            case TERMINATED:
+                return LifecycleStateEnumType.TERMINATED;
+            default:
+                throw new ConverterException("Unexpected `LifecycleState` value: " + pbLifecycleState.toString());
+        }
+    }
+
+    public static DataPlaneStatusType toSoap(DataPlaneStatus pbDataPlaneStatus) {
+        var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+        DataPlaneStatusType soapDataPlaneStatus = objectFactory.createDataPlaneStatusType();
+        soapDataPlaneStatus.setActive(pbDataPlaneStatus.getActive());
+        soapDataPlaneStatus.setVersion(pbDataPlaneStatus.getVersion());
+        soapDataPlaneStatus.setVersionConsistent(pbDataPlaneStatus.getVersionConsistent());
+        return soapDataPlaneStatus;
+    }
+
+    public static ConnectionStatesType toSoap(ConnectionStates pbConnectionStates) throws ConverterException {
+        if (!pbConnectionStates.isInitialized()) return null;
+
+        var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+        ConnectionStatesType soapConnectionStates = objectFactory.createConnectionStatesType();
+        soapConnectionStates.setReservationState(toSoap(pbConnectionStates.getReservationState()));
+        soapConnectionStates.setProvisionState(toSoap(pbConnectionStates.getProvisionState()));
+        soapConnectionStates.setLifecycleState(toSoap(pbConnectionStates.getLifecycleState()));
+        soapConnectionStates.setDataPlaneStatus(toSoap(pbConnectionStates.getDataPlaneStatus()));
+        return soapConnectionStates;
+    }
+
+    public static ServiceExceptionType toSoap(ServiceException pbServiceException) {
+        var objectFactory = new nl.surf.polynsi.soap.framework.types.ObjectFactory();
+        ServiceExceptionType soapServiceException = objectFactory.createServiceExceptionType();
+        soapServiceException.setNsaId(pbServiceException.getNsaId());
+        soapServiceException.setConnectionId(pbServiceException.getConnectionId());
+        soapServiceException.setServiceType(pbServiceException.getServiceType());
+        soapServiceException.setErrorId(pbServiceException.getErrorId());
+        soapServiceException.setText(pbServiceException.getText());
+        if (pbServiceException.getChildExceptionCount() > 0) {
+            List<ServiceExceptionType> soapChildExceptions = soapServiceException.getChildException();
+            List<ServiceException> pbChildExceptions = pbServiceException.getChildExceptionList();
+            for (ServiceException pbChildException: pbChildExceptions) {
+                soapChildExceptions.add(toSoap(pbChildException));
+            }
+        }
+        return soapServiceException;
     }
 }

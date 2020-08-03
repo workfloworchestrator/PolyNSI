@@ -14,6 +14,7 @@ import org.ogf.nsi.grpc.connection.requester.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.xml.ws.Holder;
+import java.util.logging.Logger;
 
 import java.util.logging.Logger;
 
@@ -21,6 +22,8 @@ import static nl.surf.polynsi.Converter.toSoap;
 
 @GrpcService
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
+    private static final Logger LOG = Logger.getLogger(ConnectionRequesterService.class.getName());
+
     @Autowired
     ConnectionRequesterPort connectionRequesterPort;
 
@@ -28,6 +31,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveConfirmed(ReserveConfirmedRequest pbReserveConfirmedRequest,
                                  StreamObserver<ReserveConfirmedResponse> responseObserver) {
         try {
+            LOG.info("Executing gRPC service `reserveConfirmed`.");
             ReserveConfirmedResponse pbReserveConfirmedResponse = ReserveConfirmedResponse.newBuilder()
                     .setHeader(pbReserveConfirmedRequest.getHeader()).build();
 
@@ -52,4 +56,27 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handling 'reserveConfirmed' call.", e);
         }
     }
+
+    @Override
+    public void reserveFailed(ReserveFailedRequest pbRequestReserveFailed,
+                              StreamObserver<ReserveFailedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `reserveFailed`.");
+            ReserveFailedResponse pbReserveFailedResponse = ReserveFailedResponse.newBuilder()
+                    .setHeader(pbRequestReserveFailed.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbRequestReserveFailed.getHeader());
+            connectionRequesterPort
+                    .reserveFailed(pbRequestReserveFailed.getConnectionId(), toSoap(pbRequestReserveFailed
+                            .getConnectionStates()), toSoap(pbRequestReserveFailed
+                            .getServiceException()), soapHeaderHolder);
+
+            responseObserver.onNext(pbReserveFailedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing 'reserveFailed' call.", e);
+        }
+    }
 }
+
