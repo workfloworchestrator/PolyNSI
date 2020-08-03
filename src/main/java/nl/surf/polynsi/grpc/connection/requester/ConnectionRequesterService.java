@@ -53,29 +53,49 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             responseObserver.onNext(pbReserveConfirmedResponse);
             responseObserver.onCompleted();
         } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handling 'reserveConfirmed' call.", e);
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handling `reserveConfirmed` call.", e);
         }
     }
 
     @Override
-    public void reserveFailed(ReserveFailedRequest pbRequestReserveFailed,
+    public void reserveFailed(ReserveFailedRequest pbReserveFailedRequest,
                               StreamObserver<ReserveFailedResponse> responseObserver) {
         try {
             LOG.info("Executing gRPC service `reserveFailed`.");
             ReserveFailedResponse pbReserveFailedResponse = ReserveFailedResponse.newBuilder()
-                    .setHeader(pbRequestReserveFailed.getHeader()).build();
+                    .setHeader(pbReserveFailedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
-            soapHeaderHolder.value = toSoap(pbRequestReserveFailed.getHeader());
+            soapHeaderHolder.value = toSoap(pbReserveFailedRequest.getHeader());
             connectionRequesterPort
-                    .reserveFailed(pbRequestReserveFailed.getConnectionId(), toSoap(pbRequestReserveFailed
-                            .getConnectionStates()), toSoap(pbRequestReserveFailed
+                    .reserveFailed(pbReserveFailedRequest.getConnectionId(), toSoap(pbReserveFailedRequest
+                            .getConnectionStates()), toSoap(pbReserveFailedRequest
                             .getServiceException()), soapHeaderHolder);
 
             responseObserver.onNext(pbReserveFailedResponse);
             responseObserver.onCompleted();
         } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing 'reserveFailed' call.", e);
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveFailed` call.", e);
+        }
+    }
+
+    @Override
+    public void reserveAbortConfirmed(ReserveAbortConfirmedRequest pbReserveAbortConfirmedRequest,
+                                      StreamObserver<ReserveAbortConfirmedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `reserveAbortConfirmed");
+            ReserveAbortConfirmedResponse pbReserveAbortConfirmedResponse = ReserveAbortConfirmedResponse.newBuilder()
+                    .setHeader(pbReserveAbortConfirmedRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbReserveAbortConfirmedRequest.getHeader());
+            connectionRequesterPort
+                    .reserveAbortConfirmed(pbReserveAbortConfirmedRequest.getConnectionId(), soapHeaderHolder);
+
+            responseObserver.onNext(pbReserveAbortConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveAbortConfirmed` call.", e);
         }
     }
 }
