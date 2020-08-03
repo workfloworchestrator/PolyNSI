@@ -287,17 +287,21 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     /* (non-Javadoc)
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#reserveAbort(java.lang.String connectionId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
-    @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void reserveAbort(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
-        LOG.info("Executing operation reserveAbort");
-        System.out.println(connectionId);
-        System.out.println(header.value);
+    public void reserveAbort(java.lang.String connectionId,
+                             javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("Executing operation `reserveAbort`");
         try {
-        } catch (java.lang.Exception ex) {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            ReserveAbortRequest pbReserveAbortRequest = ReserveAbortRequest.newBuilder().setHeader(pbHeader)
+                    .setConnectionId(connectionId).build();
+
+            LOG.info("Built protobuf message `ReserveAbortRequest`: " + pbReserveAbortRequest.toString());
+            ReserveAbortResponse pbReserveCommitResponse = connectionProviderStub
+                    .reserveAbort(pbReserveAbortRequest);
+        } catch (ConverterException ex) {
             ex.printStackTrace();
-            throw new RuntimeException(ex);
+            throw new ServiceException(ex.toString());
         }
-        //throw new ServiceException("serviceException...");
     }
 
     /* (non-Javadoc)
