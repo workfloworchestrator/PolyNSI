@@ -16,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.xml.ws.Holder;
 import java.util.logging.Logger;
 
-import java.util.logging.Logger;
-
 import static nl.surf.polynsi.Converter.toSoap;
 
 @GrpcService
@@ -117,6 +115,28 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             responseObserver.onCompleted();
         } catch (ConverterException | ServiceException e) {
             throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveCommitConfirmed` call.", e);
+        }
+    }
+
+    @Override
+    public void reserveCommitFailed(ReserveCommitFailedRequest pbReserveCommitFailedRequest,
+                                    StreamObserver<ReserveCommitFailedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `reserveCommitFailed`.");
+            ReserveCommitFailedResponse pbReserveCommitFailedResponse = ReserveCommitFailedResponse.newBuilder()
+                    .setHeader(pbReserveCommitFailedRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbReserveCommitFailedRequest.getHeader());
+            connectionRequesterPort.reserveCommitFailed(pbReserveCommitFailedRequest
+                    .getConnectionId(), toSoap(pbReserveCommitFailedRequest
+                    .getConnectionStates()), toSoap(pbReserveCommitFailedRequest
+                    .getServiceException()), soapHeaderHolder);
+
+            responseObserver.onNext(pbReserveCommitFailedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveCommitFailed` call.", e);
         }
     }
 }
