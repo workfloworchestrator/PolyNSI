@@ -98,5 +98,26 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveAbortConfirmed` call.", e);
         }
     }
+
+
+    @Override
+    public void reserveCommitConfirmed(ReserveCommitConfirmedRequest pbReserveCommitConfirmedRequest,
+                                       StreamObserver<ReserveCommitConfirmedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `reserveCommitConfirmed`.");
+            ReserveCommitConfirmedResponse pbReserveCommitConfirmedResponse = ReserveCommitConfirmedResponse
+                    .newBuilder().setHeader(pbReserveCommitConfirmedRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbReserveCommitConfirmedRequest.getHeader());
+            connectionRequesterPort
+                    .reserveCommitConfirmed(pbReserveCommitConfirmedRequest.getConnectionId(), soapHeaderHolder);
+
+            responseObserver.onNext(pbReserveCommitConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveCommitConfirmed` call.", e);
+        }
+    }
 }
 
