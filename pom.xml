@@ -173,6 +173,7 @@
                                     <wsdl>
                                         ${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl
                                     </wsdl>
+                                    <wsdlLocation>wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl</wsdlLocation>
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.provider</extraarg>
@@ -185,6 +186,7 @@
                                     <wsdl>
                                         ${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl
                                     </wsdl>
+                                    <wsdlLocation>wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl</wsdlLocation>
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.requester</extraarg>

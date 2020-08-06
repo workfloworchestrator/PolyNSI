@@ -33,7 +33,7 @@ import static nl.surf.polynsi.Converter.toProtobuf;
  * Generated source version: 3.3.5
  */
 
-@javax.jws.WebService(serviceName = "ConnectionServiceProvider", portName = "ConnectionServiceProviderPort", targetNamespace = "http://schemas.ogf.org/nsi/2013/12/connection/provider", wsdlLocation = "file:/usr/home/guido/devel/surfnet/polynsi/src/main/resources/wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl", endpointInterface = "nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort")
+@javax.jws.WebService(serviceName = "ConnectionServiceProvider", portName = "ConnectionServiceProviderPort", targetNamespace = "http://schemas.ogf.org/nsi/2013/12/connection/provider", wsdlLocation = "wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl", endpointInterface = "nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort")
 public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort {
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")

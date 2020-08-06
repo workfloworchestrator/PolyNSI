@@ -28,7 +28,7 @@ import javax.xml.ws.ResponseWrapper;
                       serviceName = "ConnectionServiceRequester",
                       portName = "ConnectionServiceRequesterPort",
                       targetNamespace = "http://schemas.ogf.org/nsi/2013/12/connection/requester",
-                      wsdlLocation = "file:/usr/home/guido/devel/surfnet/polynsi/src/main/resources/wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl",
+                      wsdlLocation = "wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl",
                       endpointInterface = "nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort")
 
 @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:08.686+02:00", comments = "Apache CXF 3.3.5")
