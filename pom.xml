@@ -6,7 +6,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.2.4.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>nl.surf</groupId>
     <artifactId>polynsi</artifactId>
@@ -16,14 +15,10 @@
     <properties>
         <java.version>11</java.version>
         <cxf.version>3.3.5</cxf.version>
-        <grpc.version>1.29.0</grpc.version>
-        <protoc.version>3.11.4</protoc.version>
+        <grpc.version>1.30.0</grpc.version>
+        <protoc.version>3.12.2</protoc.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -83,6 +78,16 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
             <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protoc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-spring-boot-starter</artifactId>
+            <version>2.9.0.RELEASE</version>
         </dependency>
     </dependencies>
     <build>
@@ -163,12 +168,12 @@
                                     </bindingFile>
                                 </bindingFiles>
                             </defaultOptions>
-                            <sourceRoot>${basedir}/src/main/java</sourceRoot>
                             <wsdlOptions>
                                 <wsdlOption>
                                     <wsdl>
                                         ${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl
                                     </wsdl>
+                                    <wsdlLocation>wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl</wsdlLocation>
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.provider</extraarg>
@@ -181,6 +186,7 @@
                                     <wsdl>
                                         ${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl
                                     </wsdl>
+                                    <wsdlLocation>wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl</wsdlLocation>
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.requester</extraarg>
@@ -198,36 +204,52 @@
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>3.1.0</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>2.5.0</version>
                 <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}/src/generated</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/org</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/connection</directory>
-                            <excludes>
-                                <exclude>*Impl.java</exclude>
-                            </excludes>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/framework</directory>
-                            <excludes>
-                                <exclude>*Impl.java</exclude>
-                            </excludes>
-                        </fileset>
-                        <fileset>
-                            <directory>${basedir}/src/main/java/nl/surf/polynsi/soap/services</directory>
-                            <excludes>
-                                <exclude>*Impl.java</exclude>
-                            </excludes>
-                        </fileset>
-                    </filesets>
+                    <addGeneratedAnnotation>true</addGeneratedAnnotation>
+                    <target>2.1</target>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>xjc-service-schemas</id>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <configuration>
+                            <xjbSources>
+                                <xjbSource>{$basedir}/src/main/resources/jaxb_bindings.xml</xjbSource>
+                            </xjbSources>
+                            <packageName>nl.surf.polynsi.soap.services</packageName>
+                            <sources>
+                                <source>
+                                    ${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_p2p_v2_0.xsd
+                                </source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>xjc-policy-schemas</id>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                        <configuration>
+                            <xjbSources>
+                                <xjbSource>{$basedir}/src/main/resources/jaxb_bindings.xml</xjbSource>
+                            </xjbSources>
+                            <packageName>nl.surf.polynsi.soap.policies</packageName>
+                            <sources>
+                                <source>${basedir}/src/main/resources/wsdl/connection/pathtrace.xsd</source>
+                            </sources>
+                            <!--
+                                Don't clear the output directory before generating the sources.
+                                Clearing the output directory removes the p2p schema from above.
+                            -->
+                            <clearOutputDir>false</clearOutputDir>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

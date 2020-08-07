@@ -1,6 +1,61 @@
 # PolyNSI
 
-A SOAP to gRPC translating proxy server for the NSI protocol.
+A bidirectional SOAP to gRPC translating proxy server for the NSI protocol.
+
+# Introduction and Rationale
+
+NSI is a SOAP based protocol. [SOAP's specifications are unfortunately really
+vague and leave a lot of things open for
+interpretation](https://python-zeep.readthedocs.io/en/master/index.html#quick-introduction)
+(see last paragraph of referenced section). Apart from being under specified,
+SOAP is rather complex. The result is that not many programming language
+ecosystems have full support for SOAP. In fact, full implementations (both
+server and client) can only be found for:
+
+* Java
+* .NET (not even .NET Core)
+* C/C++
+
+SOAP client implementations can be found for many more programming language
+ecosystems. NSA implementations however, are both SOAP servers and clients.
+
+Services that implement the NSI protocol, are called Network Service Agents
+(NSAs). To allow convenient development of NSAs in other programming languages
+ecosystems than the above three, we have developed a proxy server in Java, that
+does nothing more than accepting SOAP requests, that it subsequently translates
+to requests using a more modern and widely used protocol and vice versa.
+
+An obvious choice for the 'more modern protocol' would be REST/JSON.  Obvious,
+because that is all the hype these days and many people have considerable
+experience with it. Downside is that endpoint and message specification using
+the OpenAPI Specification is enormously verbose and a pain to read.
+
+Another option would be to use gRPC with Protocol Buffers v3. Writing a
+specification using Protocol Buffers is much more succinct and easy to read
+than a verbose OpenAPI specification YAML file. Should we want to seek adoption
+among other National Research and Education Networks (NRENs) for an alternative
+NSI interface, readability will be an important factor. 
+
+Another benefit of gRPC is that it is a 
+[Cloud Native Computing Foundation (CNCF)](https://www.cncf.io/) 
+project just like Kubernetes is. There is some overlap between the 
+[Open Grid Forum](https://www.ogf.org/ogf/doku.php), where NSI originated, and
+CNCF. Sticking to similar technologies might invite contributions from people 
+already familiar in that space (easy transfer of skill sets)
+
+Hence the choice for gRPC to translate NSI's native SOAP requests and responses
+to and from. With the ability to develop NSAs more conveniently in a wider
+array of programming languages we hope to improve the uptake of the NSI
+protocol. And possibly direct gRPC to gRPC NSA interaction without PolyNSI's
+intervention.
+
+## A note on gRPC and its relation to Protocol Buffers
+
+gRPC is an extension of Protocol Buffers. Messages are still defined using
+Protocol Buffers v3. The service definitions (=remote procedures) though,
+extend the Protocol Buffers syntax. This means that the Protocol Buffers
+compiler `protoc` cannot compile all the `.proto` files used for gRPC. The
+compiler needs a plugin to do so. 
 
 # Quick Start
 
@@ -11,15 +66,58 @@ A SOAP to gRPC translating proxy server for the NSI protocol.
 * mvn spring-boot:run
 * point your browser at: http://localhost:8080/soap
 
-# gRPC
+# Installation
 
-gRPC is an extension of Protocol Buffers. Messages are still defined using
-Protocol Buffers v3. The service definitions though, extend the Protocol
-Buffers syntax. This means that the Protocol Buffers compiler `protoc`
-cannot compile all the `.proto` files used for gRPC. The compiler needs a
-plugin to do so. For most common platforms (Windows, MacOS and Linux)
-pre-built binaries are available. For FreeBSD the plugin needs to be
-built locally.
+Normally the Quick Start instructions should be all that's required to get
+PolyNSI installed and running with a default configuration. Maven will find
+everything it needs and installs it into its local repository. Thus making it
+available to PolyNSI. This includes binary dependencies such as the Protocol
+Buffers compiler with its gRPC plugin. However, for some less common, but
+otherwise equally relevant OSes in the networkin space, such as FreeBSD, a bit
+more work is required. See the section 
+[Advanced Installation](#Advanced-Installation) for more details.  
+
+# Configuration
+
+All PolyNSI configuration is done by properties. As PolyNSI is a Spring Boot
+application it follows Springs Boot's conventions for obtaining 
+[those properties from files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files).  
+
+PolyNSI's default configuration resides in
+`src/main/resources/application.properties` where the properiets are documented
+as well (todo). Things that you almost certainly will have to configure are the
+addresses of the NSA's that PolyNSI sits in between:
+
+~~~
+
+             +-------+                                             +-------+                  
+             | SOAP  |                 +---------+                 | gRPC  |                  
+             | based |-----------------| PolyNSI |-----------------| based |                  
+             | NSA   |                 +---------+                 | NSA   |                  
+             +-------+                                             +-------+                  
+                                                                                              
+ soap.client.connection_requester.address              grpc.client.connection_provider.address
+
+~~~
+
+In the diagram above you'll see the property names associated with each of the
+adresses of those NSAs. The properties both have `client` in their name,
+because PolyNSI has a SOAP _client_ to communicate with the SOAP based NSA and
+a gRPC _client_ to communcate with the gRPC based NSA.
+
+See also:
+* [Application Property Files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files)
+* [Common (Spring Boot) Application Properties](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/appendix-application-properties.html#common-application-properties)
+
+# Advanced Installation
+
+As detailed in the section [Installation](#Installation) some OSes, such as
+FreeBSD, require a bit more work to install PolyNSI on. The reason for this is
+that the Protocol Buffers and gRPC projects do not provide precompiled versions
+of their compiler and plugin for them. Hence we need to compile these
+ourselves. In some cases the package manager of the OS in question might help us
+with that. That happens to be the case with FreeBSD as we will shortly see. 
+
 
 ## Building the gRPC protoc plugin on FreeBSD
 
@@ -28,16 +126,25 @@ First install the `protobuf` package:
     $ sudo pkg protobuf
     
 This not only installs the `protoc` compiler, but also all the relevant
-header files needed to built the gRPC compiler plugin.
+header files needed, to build the gRPC compiler plugin. For Maven to use the
+`protoc` compiler we need to tell it where to find it:
 
-Next checkout the 1 branch of the `grpc-java` project. This project
+    $ mvn install:install-file \
+        -DgroupId=com.google.protobuf \
+        -DartifactId=protoc \
+        -Dversion=3.12.2 \
+        -Dclassifier=freebsd-x86_64 \
+        -Dpackaging=exe \
+        -Dfile=/usr/local/bin/protoc
+
+Next checkout the 1.29 branch of the `grpc-java` project. This project
 contains a `protoc` plugin that generates Java files.
 
     $ git clone -b v1.29.0 https://github.com/grpc/grpc-java
     
 On FreeBSD, third party libraries and headers files are located in `/usr
 /local/lib` and `/urs/local/include` by default. The `grpc-java` build
-system is unaware of those locations. Hence we need to tell it about them:
+system is unaware of those locations. Hence, we need to tell it about them:
 
     $ export CXXFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib"
     
@@ -45,16 +152,16 @@ Yes, the `protoc` compiler is a C++ application and so is the gRPC
 plugin for Java!
  
 We also need to tell the `grpc-java` build system where to find the
-`protoc` compiler. Furthermore we are not interested in building things
+`protoc` compiler. Furthermore, we are not interested in building things
 for Android. So we create a file `grpc-java/gradle.properties` and add
 the following lines to it:
  
     skipAndroid=true
     protoc=/usr/local/bin/protoc
     
-Before we build the plugin we need to do one last thing; patch a
-Bash script that sanity checks the build artifact. Currently it only
-recognizes artifacts (the plugin) build on Linux, MacOS and
+Before we build the plugin, we need to do one last thing; patch a
+Bash script that sanity checks the build artifact. Currently, it only
+recognizes artifacts (the plugin) built on Linux, MacOS and
 Windows. The patch teaches it about FreeBSD:
 
     $ cd grpc-java/compiler
@@ -66,22 +173,68 @@ in the directory `grpc-java/compile`):
     $ ../gradlew clean java_pluginExecutable test publishToMavenLocal
 
 To test whether the plugin now actually resides in your local Maven 
-repository execute:
+repository, execute:
 
     $ ls -l ~/.m2/repository/io/grpc/protoc-gen-grpc-java/1.29.0/
     
 That directory should have a file called.
 `protoc-gen-grpc-java-1.29.0-freebsd-x86_64.exe`
 
-## Installing protoc into the Maven repository
+## Building protobuf-java jars on FreeBSD
 
-Although we have installed the FreeBSD `protoc` package, Maven still
-doesn't know where to look for it. To that end execute:
+Generally, the required `protobuf-java` jars are available from the Maven Central
+Repository and will be downloaded by Maven automatically. However sometimes we
+want to build them from source if we need a specific version that's not yet
+available from the Maven Central Repository. 
 
-   $ mvn install:install-file \ 
-        -DgroupId=com.google.protobuf \ 
-        -DartifactId=protoc -Dversion=3.11.4 \ 
-        -Dclassifier=freebsd-x86_64 \
-        -Dpackaging=exe -Dfile=/usr/local/bin/protoc
+Building the `protobuf-java` jars requires the `protoc` compiler, that we
+already have installed, but in a different location from where the build
+configuration expects it. Contrary to `grpc-java` that uses the Gradle build
+system, `protobuf-java` uses Maven. As such, specifying the location of the
+`protoc` compiler is a little different. Even more so as protobuf-java uses an
+aggregate POM. With an aggregrate POM, properties specified on the command line
+using the `-D` parameter, are not passed on to submodules (POMs). That makes it
+less than trivial to set a value for the `protoc` property if it needs to be
+shared by all submodules. However, with a `settings.xml` file in the `~/.m2`
+directory we will be able to set property values that will be picked up by any
+POM, whether it is a submodule or not.
 
-For Linux, MacOS and Windows this won't be necessary.
+So create a file `~/.m2/settings.xml` with the following contents:
+
+    <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
+        <profiles>
+            <profile>
+                <id>freebsd</id>
+                <activation>
+                    <activeByDefault>true</activeByDefault>
+                </activation>
+                <properties>
+                    <protoc>/usr/local/bin/protoc</protoc>
+                </properties>
+            </profile>
+        </profiles>
+    </settings>
+
+With that out of the way we now need to clone the `protobuf` repository:
+
+    $ git clone git@github.com:protocolbuffers/protobuf.git
+
+The version of the `protobuf-java` jars we want to build, need to match the
+version of the protoc compiler:
+
+    $ protoc --version
+    libprotoc 3.12.2
+
+This shows that we need to checkout the v3.12.2 release:
+
+    $ cd protobuf
+    $ git checkout v3.12.2
+    
+And, finally, build the `protobuf-java` jars:
+
+    $ cd java
+    $ mvn install
+
