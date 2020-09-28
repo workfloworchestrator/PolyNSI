@@ -238,7 +238,7 @@ public class Converter {
                                 soapStpTypes.sort(Comparator.comparing(StpType::getOrder));
                                 pbSegmentBuilder.addAllStps(soapStpTypes.stream().map(StpType::getValue)
                                         .collect(Collectors.toList()));
-                                pbPathBuilder.addSegment(pbSegmentBuilder);
+                                pbPathBuilder.addSegments(pbSegmentBuilder);
                             }
                             pbPathTraceBuilder.addPaths(pbPathBuilder);
                         }
@@ -278,7 +278,7 @@ public class Converter {
             for (Path pbPath : pbPathTrace.getPathsList()) {
                 PathType soapPath = policiesObjFactory.createPathType();
                 List<SegmentType> soapSegments = soapPath.getSegment();
-                ListIterator<Segment> pbSegmentsIterator = pbPath.getSegmentList().listIterator();
+                ListIterator<Segment> pbSegmentsIterator = pbPath.getSegmentsList().listIterator();
                 while (pbSegmentsIterator.hasNext()) {
                     int segOrder = pbSegmentsIterator.nextIndex();
                     Segment pbSegment = pbSegmentsIterator.next();
