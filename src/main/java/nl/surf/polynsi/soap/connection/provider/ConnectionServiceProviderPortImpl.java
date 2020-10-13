@@ -221,6 +221,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                             pbP2PServiceBuilder.setDirectionality(directionality);
                         }
 
+                        /*  TODO Need to test each of the following SOAP elements for null. As some might not be set
+                            in case of an Reserve message update. An update generally only specifies a subset. Eg
+                            the initial Reservation included the wrong bandwidth. The update Reserve message will then
+                            only specifies the bandwidth (with the correct value).
+                         */
                         pbP2PServiceBuilder.setSymmetricPath(soapP2PService.isSymmetricPath())
                                 .setSourceStp(soapP2PService.getSourceSTP()).setDestStp(soapP2PService.getDestSTP());
 
