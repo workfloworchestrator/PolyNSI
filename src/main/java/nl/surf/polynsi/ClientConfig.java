@@ -26,6 +26,8 @@ public class ClientConfig {
 
     @Bean
     public ConnectionRequesterPort connectionRequesterProxy() {
+        System.out.println("soap.client.connection_requester.address=");
+        System.out.println(connectionRequesterAddress);
         JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
         jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
         jaxWsProxyFactoryBean.setAddress(this.connectionRequesterAddress);

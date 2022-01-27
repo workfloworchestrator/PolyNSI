@@ -6,6 +6,7 @@ import "connection_common.proto";
 
 option java_multiple_files = true;
 option java_package = "org.ogf.nsi.grpc.connection.requester";
+import "services.proto";
 
 /*
   SOAP's version of ReserveFailed is an alias of GenericFailedType. Unfortunately protobuf does not
@@ -27,6 +28,9 @@ message ReservationConfirmCriteria {
   int32 version = 1;
   common.Schedule schedule = 2;
   string serviceType = 3;
+  oneof service_specific_messages {
+    services.PointToPointService ptps = 4;
+  }
 }
 
 message ReserveConfirmedRequest {
@@ -70,10 +74,74 @@ message ReserveAbortConfirmedResponse {
   common.Header header = 1;
 }
 
+message ProvisionConfirmedRequest {
+  common.Header header = 1;
+  string connection_id = 2; // URI
+}
+
+message ProvisionConfirmedResponse {
+  common.Header header = 1;
+}
+
+message ReleaseConfirmedRequest {
+  common.Header header = 1;
+  string connection_id = 2; // URI
+}
+
+message ReleaseConfirmedResponse {
+  common.Header header = 1;
+}
+
+message TerminateConfirmedRequest {
+  common.Header header = 1;
+  string connection_id = 2; // URI
+}
+
+message TerminateConfirmedResponse {
+  common.Header header = 1;
+}
+
+message ErrorRequest {
+  common.Header header = 1;
+  common.ServiceException service_exception = 2;
+}
+
+message ErrorResponse {
+  common.Header header = 1;
+}
+
+message DataPlaneStateChangeRequest {
+  common.Header header = 1;
+  common.Notification notification = 2;
+  common.DataPlaneStatus data_plane_status = 3;
+}
+
+message DataPlaneStateChangeResponse {
+  common.Header header = 1;
+}
+
+message ReserveTimeoutRequest {
+  common.Header header = 1;
+  common.Notification notification = 2;
+  int32 timeout_value = 3;
+  string originating_connection_id = 4;
+  string originating_nsa = 5;
+}
+
+message ReserveTimeoutResponse {
+  common.Header header = 1;
+}
+
 service ConnectionRequester {
   rpc ReserveFailed(ReserveFailedRequest) returns (ReserveFailedResponse);
   rpc ReserveConfirmed(ReserveConfirmedRequest) returns (ReserveConfirmedResponse);
   rpc ReserveCommitConfirmed(ReserveCommitConfirmedRequest) returns (ReserveCommitConfirmedResponse);
   rpc ReserveCommitFailed(ReserveCommitFailedRequest) returns (ReserveCommitFailedResponse);
   rpc ReserveAbortConfirmed(ReserveAbortConfirmedRequest) returns (ReserveAbortConfirmedResponse);
+  rpc ProvisionConfirmed(ProvisionConfirmedRequest) returns (ProvisionConfirmedResponse);
+  rpc ReleaseConfirmed(ReleaseConfirmedRequest) returns (ReleaseConfirmedResponse);
+  rpc TerminateConfirmed(TerminateConfirmedRequest) returns (TerminateConfirmedResponse);
+  rpc Error(ErrorRequest) returns (ErrorResponse);
+  rpc DataPlaneStateChange(DataPlaneStateChangeRequest) returns (DataPlaneStateChangeResponse);
+  rpc ReserveTimeout(ReserveTimeoutRequest) returns (ReserveTimeoutResponse);
 }

@@ -10,8 +10,10 @@ import nl.surf.polynsi.soap.connection.requester.ServiceException;
 import nl.surf.polynsi.soap.connection.types.ObjectFactory;
 import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
+import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.xml.ws.Holder;
 import java.util.logging.Logger;
@@ -22,8 +24,18 @@ import static nl.surf.polynsi.Converter.toSoap;
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
     private static final Logger LOG = Logger.getLogger(ConnectionRequesterService.class.getName());
 
-    @Autowired
-    ConnectionRequesterPort connectionRequesterPort;
+//     @Autowired
+//     ConnectionRequesterPort connectionRequesterPort;
+
+    @Value("${soap.client.connection_requester.address}")
+    private String connectionRequesterAddress;
+
+    private ConnectionRequesterPort getSoapClientProxy(String replyTo) {
+        JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
+        jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
+        jaxWsProxyFactoryBean.setAddress(replyTo);
+        return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
+    }
 
     @Override
     public void reserveConfirmed(ReserveConfirmedRequest pbReserveConfirmedRequest,
@@ -43,7 +55,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveConfirmedRequest.getHeader());
-            connectionRequesterPort
+            getSoapClientProxy(connectionRequesterAddress)
                     .reserveConfirmed(pbReserveConfirmedRequest.getConnectionId(), pbReserveConfirmedRequest
                             .getGlobalReservationId(), pbReserveConfirmedRequest
                             .getGlobalReservationId(), soapReservationConfirmCriteria, soapHeaderHolder);
@@ -65,7 +77,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveFailedRequest.getHeader());
-            connectionRequesterPort
+            getSoapClientProxy(connectionRequesterAddress)
                     .reserveFailed(pbReserveFailedRequest.getConnectionId(), toSoap(pbReserveFailedRequest
                             .getConnectionStates()), toSoap(pbReserveFailedRequest
                             .getServiceException()), soapHeaderHolder);
@@ -87,7 +99,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveAbortConfirmedRequest.getHeader());
-            connectionRequesterPort
+            getSoapClientProxy(connectionRequesterAddress)
                     .reserveAbortConfirmed(pbReserveAbortConfirmedRequest.getConnectionId(), soapHeaderHolder);
 
             responseObserver.onNext(pbReserveAbortConfirmedResponse);
@@ -96,7 +108,6 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveAbortConfirmed` call.", e);
         }
     }
-
 
     @Override
     public void reserveCommitConfirmed(ReserveCommitConfirmedRequest pbReserveCommitConfirmedRequest,
@@ -108,7 +119,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveCommitConfirmedRequest.getHeader());
-            connectionRequesterPort
+            getSoapClientProxy(connectionRequesterAddress)
                     .reserveCommitConfirmed(pbReserveCommitConfirmedRequest.getConnectionId(), soapHeaderHolder);
 
             responseObserver.onNext(pbReserveCommitConfirmedResponse);
@@ -128,15 +139,157 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveCommitFailedRequest.getHeader());
-            connectionRequesterPort.reserveCommitFailed(pbReserveCommitFailedRequest
-                    .getConnectionId(), toSoap(pbReserveCommitFailedRequest
-                    .getConnectionStates()), toSoap(pbReserveCommitFailedRequest
-                    .getServiceException()), soapHeaderHolder);
+            getSoapClientProxy(connectionRequesterAddress)
+                    .reserveCommitFailed(pbReserveCommitFailedRequest
+                            .getConnectionId(), toSoap(pbReserveCommitFailedRequest
+                            .getConnectionStates()), toSoap(pbReserveCommitFailedRequest
+                            .getServiceException()), soapHeaderHolder);
 
             responseObserver.onNext(pbReserveCommitFailedResponse);
             responseObserver.onCompleted();
         } catch (ConverterException | ServiceException e) {
             throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveCommitFailed` call.", e);
+        }
+    }
+
+    @Override
+    public void error(ErrorRequest pbErrorRequest,
+        io.grpc.stub.StreamObserver<ErrorResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `error`.");
+            LOG.info("Received protobuf message `error`:\n" + pbErrorRequest.toString());
+            ErrorResponse pbErrorResponse = ErrorResponse.newBuilder()
+                    .setHeader(pbErrorRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbErrorRequest.getHeader());
+            getSoapClientProxy(connectionRequesterAddress)
+                    .error(toSoap(pbErrorRequest
+                            .getServiceException()), soapHeaderHolder);
+
+            responseObserver.onNext(pbErrorResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `error` call.", e);
+        }
+    }
+
+    @Override
+    public void provisionConfirmed(ProvisionConfirmedRequest pbProvisionConfirmedRequest,
+                                       StreamObserver<ProvisionConfirmedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `ProvisionConfirmed`.");
+            ProvisionConfirmedResponse pbProvisionConfirmedResponse = ProvisionConfirmedResponse
+                    .newBuilder().setHeader(pbProvisionConfirmedRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbProvisionConfirmedRequest.getHeader());
+            getSoapClientProxy(connectionRequesterAddress)
+                    .provisionConfirmed(
+                            pbProvisionConfirmedRequest.getConnectionId(),
+                            soapHeaderHolder);
+
+            responseObserver.onNext(pbProvisionConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `ProvisionConfirmed` call.", e);
+        }
+    }
+
+    @Override
+    public void releaseConfirmed(ReleaseConfirmedRequest pbReleaseConfirmedRequest,
+                                       StreamObserver<ReleaseConfirmedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `ReleaseConfirmed`.");
+            ReleaseConfirmedResponse pbReleaseConfirmedResponse = ReleaseConfirmedResponse
+                    .newBuilder().setHeader(pbReleaseConfirmedRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbReleaseConfirmedRequest.getHeader());
+            getSoapClientProxy(connectionRequesterAddress)
+                    .releaseConfirmed(
+                            pbReleaseConfirmedRequest.getConnectionId(),
+                            soapHeaderHolder);
+
+            responseObserver.onNext(pbReleaseConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `ReleaseConfirmed` call.", e);
+        }
+    }
+
+
+    @Override
+    public void terminateConfirmed(TerminateConfirmedRequest pbTerminateConfirmedRequest,
+                                       StreamObserver<TerminateConfirmedResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `TerminateConfirmed`.");
+            TerminateConfirmedResponse pbTerminateConfirmedResponse = TerminateConfirmedResponse
+                    .newBuilder().setHeader(pbTerminateConfirmedRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbTerminateConfirmedRequest.getHeader());
+            getSoapClientProxy(connectionRequesterAddress)
+                    .terminateConfirmed(
+                            pbTerminateConfirmedRequest.getConnectionId(),
+                            soapHeaderHolder);
+
+            responseObserver.onNext(pbTerminateConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `TerminateConfirmed` call.", e);
+        }
+    }
+
+    @Override
+    public void dataPlaneStateChange(DataPlaneStateChangeRequest pbDataPlaneStateChangeRequest,
+                                    StreamObserver<DataPlaneStateChangeResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `dataPlaneStateChange`.");
+            DataPlaneStateChangeResponse pbDataPlaneStateChangeResponse = DataPlaneStateChangeResponse.newBuilder()
+                    .setHeader(pbDataPlaneStateChangeRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbDataPlaneStateChangeRequest.getHeader());
+            getSoapClientProxy(connectionRequesterAddress)
+                    .dataPlaneStateChange(
+                            pbDataPlaneStateChangeRequest.getNotification().getConnectionId(),
+                            pbDataPlaneStateChangeRequest.getNotification().getNotificationId(),
+                            toSoap(pbDataPlaneStateChangeRequest.getNotification().getTimeStamp()),
+                            toSoap(pbDataPlaneStateChangeRequest.getDataPlaneStatus()),
+                            soapHeaderHolder);
+
+            responseObserver.onNext(pbDataPlaneStateChangeResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `datePlaneStateChange` call.", e);
+        }
+    }
+
+    @Override
+    public void reserveTimeout(ReserveTimeoutRequest pbReserveTimeoutRequest,
+                                    StreamObserver<ReserveTimeoutResponse> responseObserver) {
+        try {
+            LOG.info("Executing gRPC service `reserveTimeout`.");
+            ReserveTimeoutResponse pbReserveTimeoutResponse = ReserveTimeoutResponse.newBuilder()
+                    .setHeader(pbReserveTimeoutRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbReserveTimeoutRequest.getHeader());
+            getSoapClientProxy(connectionRequesterAddress)
+                    .reserveTimeout(
+                            pbReserveTimeoutRequest.getNotification().getConnectionId(),
+                            pbReserveTimeoutRequest.getNotification().getNotificationId(),
+                            toSoap(pbReserveTimeoutRequest.getNotification().getTimeStamp()),
+                            pbReserveTimeoutRequest.getTimeoutValue(),
+                            pbReserveTimeoutRequest.getOriginatingConnectionId(),
+                            pbReserveTimeoutRequest.getOriginatingNsa(),
+                            soapHeaderHolder);
+
+            responseObserver.onNext(pbReserveTimeoutResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveTimeout` call.", e);
         }
     }
 }
