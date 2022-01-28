@@ -24,18 +24,8 @@ import static nl.surf.polynsi.Converter.toSoap;
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
     private static final Logger LOG = Logger.getLogger(ConnectionRequesterService.class.getName());
 
-//     @Autowired
-//     ConnectionRequesterPort connectionRequesterPort;
-
-    @Value("${soap.client.connection_requester.address}")
-    private String connectionRequesterAddress;
-
-    private ConnectionRequesterPort getSoapClientProxy(String replyTo) {
-        JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
-        jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
-        jaxWsProxyFactoryBean.setAddress(replyTo);
-        return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
-    }
+    @Autowired
+    ConnectionRequesterPort connectionRequesterProxy;
 
     @Override
     public void reserveConfirmed(ReserveConfirmedRequest pbReserveConfirmedRequest,
@@ -55,7 +45,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveConfirmedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .reserveConfirmed(pbReserveConfirmedRequest.getConnectionId(), pbReserveConfirmedRequest
                             .getGlobalReservationId(), pbReserveConfirmedRequest
                             .getGlobalReservationId(), soapReservationConfirmCriteria, soapHeaderHolder);
@@ -77,7 +67,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveFailedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .reserveFailed(pbReserveFailedRequest.getConnectionId(), toSoap(pbReserveFailedRequest
                             .getConnectionStates()), toSoap(pbReserveFailedRequest
                             .getServiceException()), soapHeaderHolder);
@@ -99,7 +89,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveAbortConfirmedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .reserveAbortConfirmed(pbReserveAbortConfirmedRequest.getConnectionId(), soapHeaderHolder);
 
             responseObserver.onNext(pbReserveAbortConfirmedResponse);
@@ -119,7 +109,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveCommitConfirmedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .reserveCommitConfirmed(pbReserveCommitConfirmedRequest.getConnectionId(), soapHeaderHolder);
 
             responseObserver.onNext(pbReserveCommitConfirmedResponse);
@@ -139,7 +129,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveCommitFailedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .reserveCommitFailed(pbReserveCommitFailedRequest
                             .getConnectionId(), toSoap(pbReserveCommitFailedRequest
                             .getConnectionStates()), toSoap(pbReserveCommitFailedRequest
@@ -163,7 +153,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbErrorRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .error(toSoap(pbErrorRequest
                             .getServiceException()), soapHeaderHolder);
 
@@ -184,7 +174,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbProvisionConfirmedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .provisionConfirmed(
                             pbProvisionConfirmedRequest.getConnectionId(),
                             soapHeaderHolder);
@@ -206,7 +196,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReleaseConfirmedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .releaseConfirmed(
                             pbReleaseConfirmedRequest.getConnectionId(),
                             soapHeaderHolder);
@@ -229,7 +219,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbTerminateConfirmedRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .terminateConfirmed(
                             pbTerminateConfirmedRequest.getConnectionId(),
                             soapHeaderHolder);
@@ -251,7 +241,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbDataPlaneStateChangeRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .dataPlaneStateChange(
                             pbDataPlaneStateChangeRequest.getNotification().getConnectionId(),
                             pbDataPlaneStateChangeRequest.getNotification().getNotificationId(),
@@ -276,7 +266,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveTimeoutRequest.getHeader());
-            getSoapClientProxy(connectionRequesterAddress)
+            connectionRequesterProxy
                     .reserveTimeout(
                             pbReserveTimeoutRequest.getNotification().getConnectionId(),
                             pbReserveTimeoutRequest.getNotification().getNotificationId(),
