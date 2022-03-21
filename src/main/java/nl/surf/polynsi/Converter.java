@@ -269,12 +269,11 @@ public class Converter {
         }
         if (pbHeader.getPathTrace().isInitialized()) {
             PathTrace pbPathTrace = pbHeader.getPathTrace();
-            nl.surf.polynsi.soap.policies.ObjectFactory policiesObjFactory =
-                    new nl.surf.polynsi.soap.policies.ObjectFactory();
-            PathTraceType soapPathTrace = policiesObjFactory.createPathTraceType();
-            soapPathTrace.setId(pbPathTrace.getId());
-            soapPathTrace.setConnectionId(pbPathTrace.getConnectionId());
-            List<PathType> soapPaths = soapPathTrace.getPath();
+            nl.surf.polynsi.soap.policies.ObjectFactory policiesObjFactory = new nl.surf.polynsi.soap.policies.ObjectFactory();
+            PathTraceType pathTraceType = policiesObjFactory.createPathTraceType();
+            pathTraceType.setId(pbPathTrace.getId());
+            pathTraceType.setConnectionId(pbPathTrace.getConnectionId());
+            List<PathType> soapPaths = pathTraceType.getPath();
             for (Path pbPath : pbPathTrace.getPathsList()) {
                 PathType soapPath = policiesObjFactory.createPathType();
                 List<SegmentType> soapSegments = soapPath.getSegment();
@@ -299,7 +298,8 @@ public class Converter {
                 soapPaths.add(soapPath);
             }
             List<Object> soapAny = soapHeader.getAny();
-            soapAny.add(soapPathTrace);
+            JAXBElement<PathTraceType> ptt = policiesObjFactory.createPathTrace(pathTraceType);
+            soapAny.add(ptt);
         }
         return soapHeader;
     }
