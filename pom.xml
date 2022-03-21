@@ -146,11 +146,11 @@
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_framework_types_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_definition_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_p2p_v2_0.xsd</bindingFile>
+                                    <bindingFile>${basedir}/src/main/resources/wsdl/connection/pathtrace.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_types_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/saml-schema-assertion-2.0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/xenc-schema.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/xmldsig-core-schema.xsd</bindingFile>
-                                    <bindingFile>${basedir}/src/main/resources/wsdl/connection/pathtrace.xsd</bindingFile>
                                 </bindingFiles>
                             </defaultOptions>
                             <wsdlOptions>

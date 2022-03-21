@@ -32,6 +32,11 @@
             <jaxb:package name="nl.surf.polynsi.soap.services.p2p"/>
         </jaxb:schemaBindings>
     </jaxb:bindings>
+<!--    <jaxb:bindings schemaLocation="wsdl/connection/pathtrace.xsd">-->
+<!--        <jaxb:schemaBindings>-->
+<!--            <jaxb:package name="nl.surf.polynsi.soap.policies"/>-->
+<!--        </jaxb:schemaBindings>-->
+<!--    </jaxb:bindings>-->
     <jaxb:bindings schemaLocation="wsdl/connection/ogf_nsi_services_types_v2_0.xsd">
         <jaxb:schemaBindings>
             <jaxb:package name="nl.surf.polynsi.soap.services.types"/>
