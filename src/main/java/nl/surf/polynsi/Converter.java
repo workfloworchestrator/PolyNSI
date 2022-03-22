@@ -107,17 +107,14 @@ public class Converter {
      */
     protected static String fromSessionSecurityAttr(CommonHeaderType soapHeader) throws ConverterException {
         try {
-            JAXBContext ssaContext = JAXBContext
-                    .newInstance("nl.surf.polynsi.soap.framework.headers",
-                            nl.surf.polynsi.soap.framework.headers.ObjectFactory.class
-                            .getClassLoader());
+            // Explicitly add classes to marshall. Include PathTraceType.class.
+            JAXBContext ssaContext = JAXBContext.newInstance(CommonHeaderType.class, nl.surf.polynsi.soap.connection.provider.PathTraceType.class);
             Marshaller marshaller = ssaContext.createMarshaller();
             // Enable formatted output when debugging.
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
             // Wrap it, as CommonHeaderType is not annotated with @XMLRootElement
-            JAXBElement<CommonHeaderType> jaxbElemHeader = new JAXBElement<>(new QName("", "header"),
-                    CommonHeaderType.class, soapHeader);
+            JAXBElement<CommonHeaderType> jaxbElemHeader = new JAXBElement<>(new QName("", "header"), CommonHeaderType.class, soapHeader);
             marshaller.marshal(jaxbElemHeader, sw);
             InputSource xmlHeader = new InputSource(new StringReader(sw.toString()));
             XPath xPath = XPathFactory.newInstance().newXPath();
