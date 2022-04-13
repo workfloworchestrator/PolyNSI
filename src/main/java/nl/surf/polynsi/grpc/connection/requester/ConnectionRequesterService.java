@@ -10,10 +10,15 @@ import nl.surf.polynsi.soap.connection.requester.ServiceException;
 import nl.surf.polynsi.soap.connection.types.ObjectFactory;
 import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
+import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
+import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
+import org.ogf.nsi.grpc.services.Directionality;
+import org.ogf.nsi.grpc.services.PointToPointService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
 
 import javax.xml.ws.Holder;
 import java.util.logging.Logger;
@@ -39,9 +44,24 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             ReservationConfirmCriteriaType soapReservationConfirmCriteria = objectFactory
                     .createReservationConfirmCriteriaType();
-            soapReservationConfirmCriteria.setVersion(pbReserveConfirmedRequest.getCriteria().getVersion());
-            soapReservationConfirmCriteria.setSchedule(toSoap(pbReserveConfirmedRequest.getCriteria().getSchedule()));
-            soapReservationConfirmCriteria.setServiceType(pbReserveConfirmedRequest.getCriteria().getServiceType());
+            ReservationConfirmCriteria pbCriteria = pbReserveConfirmedRequest.getCriteria();
+            soapReservationConfirmCriteria.setVersion(pbCriteria.getVersion());
+            soapReservationConfirmCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+            soapReservationConfirmCriteria.setServiceType(pbCriteria.getServiceType());
+            nl.surf.polynsi.soap.services.p2p.ObjectFactory servicesObjFactory =
+                    new nl.surf.polynsi.soap.services.p2p.ObjectFactory();
+            P2PServiceBaseType soapP2PServiceType = servicesObjFactory.createP2PServiceBaseType();
+            PointToPointService pbPtps = pbCriteria.getPtps();
+            Directionality pbDirectionality = pbPtps.getDirectionality();
+            if (pbDirectionality == Directionality.UNI_DIRECTIONAL)
+                soapP2PServiceType.setDirectionality(DirectionalityType.UNIDIRECTIONAL);
+            else
+                soapP2PServiceType.setDirectionality(DirectionalityType.BIDIRECTIONAL);
+            soapP2PServiceType.setCapacity(pbPtps.getCapacity());
+            soapP2PServiceType.setSymmetricPath(pbPtps.getSymmetricPath());
+            soapP2PServiceType.setSourceSTP(pbPtps.getSourceStp());
+            soapP2PServiceType.setDestSTP(pbPtps.getDestStp());
+            soapReservationConfirmCriteria.getAny().add(servicesObjFactory.createP2Ps(soapP2PServiceType));
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveConfirmedRequest.getHeader());
