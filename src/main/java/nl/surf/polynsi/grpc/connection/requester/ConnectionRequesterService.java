@@ -16,9 +16,7 @@ import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-
+//import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.xml.ws.Holder;
 import java.util.logging.Logger;
@@ -29,14 +27,23 @@ import static nl.surf.polynsi.Converter.toSoap;
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
     private static final Logger LOG = Logger.getLogger(ConnectionRequesterService.class.getName());
 
-    @Autowired
-    ConnectionRequesterPort connectionRequesterProxy;
+//    @Autowired
+//    ConnectionRequesterPort connectionRequesterProxy;
+
+    static ConnectionRequesterPort connectionRequesterProxy(String address) {
+        JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
+        jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
+        jaxWsProxyFactoryBean.setAddress(address);
+        return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
+    }
 
     @Override
     public void reserveConfirmed(ReserveConfirmedRequest pbReserveConfirmedRequest,
                                  StreamObserver<ReserveConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveConfirmed`.");
+            LOG.info("Executing gRPC service `reserveConfirmed` to "
+                    + pbReserveConfirmedRequest.getHeader().getReplyTo());
+
             ReserveConfirmedResponse pbReserveConfirmedResponse = ReserveConfirmedResponse.newBuilder()
                     .setHeader(pbReserveConfirmedRequest.getHeader()).build();
 
@@ -62,9 +69,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             soapP2PServiceType.setSourceSTP(pbPtps.getSourceStp());
             soapP2PServiceType.setDestSTP(pbPtps.getDestStp());
             soapReservationConfirmCriteria.getAny().add(servicesObjFactory.createP2Ps(soapP2PServiceType));
-
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveConfirmedRequest.getHeader());
+
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReserveConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .reserveConfirmed(pbReserveConfirmedRequest.getConnectionId(), pbReserveConfirmedRequest
                             .getGlobalReservationId(), pbReserveConfirmedRequest
@@ -81,12 +90,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveFailed(ReserveFailedRequest pbReserveFailedRequest,
                               StreamObserver<ReserveFailedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveFailed`.");
+            LOG.info("Executing gRPC service `reserveFailed` to "
+                    + pbReserveFailedRequest.getHeader().getReplyTo());
             ReserveFailedResponse pbReserveFailedResponse = ReserveFailedResponse.newBuilder()
                     .setHeader(pbReserveFailedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveFailedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReserveFailedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .reserveFailed(pbReserveFailedRequest.getConnectionId(), toSoap(pbReserveFailedRequest
                             .getConnectionStates()), toSoap(pbReserveFailedRequest
@@ -103,12 +115,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveAbortConfirmed(ReserveAbortConfirmedRequest pbReserveAbortConfirmedRequest,
                                       StreamObserver<ReserveAbortConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveAbortConfirmed");
+            LOG.info("Executing gRPC service `reserveAbortConfirmed` to "
+                    + pbReserveAbortConfirmedRequest.getHeader().getReplyTo());
             ReserveAbortConfirmedResponse pbReserveAbortConfirmedResponse = ReserveAbortConfirmedResponse.newBuilder()
                     .setHeader(pbReserveAbortConfirmedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveAbortConfirmedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReserveAbortConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .reserveAbortConfirmed(pbReserveAbortConfirmedRequest.getConnectionId(), soapHeaderHolder);
 
@@ -123,12 +138,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveCommitConfirmed(ReserveCommitConfirmedRequest pbReserveCommitConfirmedRequest,
                                        StreamObserver<ReserveCommitConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveCommitConfirmed`.");
+            LOG.info("Executing gRPC service `reserveCommitConfirmed` to "
+                    + pbReserveCommitConfirmedRequest.getHeader().getReplyTo());
             ReserveCommitConfirmedResponse pbReserveCommitConfirmedResponse = ReserveCommitConfirmedResponse
                     .newBuilder().setHeader(pbReserveCommitConfirmedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveCommitConfirmedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReserveCommitConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .reserveCommitConfirmed(pbReserveCommitConfirmedRequest.getConnectionId(), soapHeaderHolder);
 
@@ -143,12 +161,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveCommitFailed(ReserveCommitFailedRequest pbReserveCommitFailedRequest,
                                     StreamObserver<ReserveCommitFailedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveCommitFailed`.");
+            LOG.info("Executing gRPC service `reserveCommitFailed` to "
+                    + pbReserveCommitFailedRequest.getHeader().getReplyTo());
             ReserveCommitFailedResponse pbReserveCommitFailedResponse = ReserveCommitFailedResponse.newBuilder()
                     .setHeader(pbReserveCommitFailedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveCommitFailedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReserveCommitFailedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .reserveCommitFailed(pbReserveCommitFailedRequest
                             .getConnectionId(), toSoap(pbReserveCommitFailedRequest
@@ -166,13 +187,16 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void error(ErrorRequest pbErrorRequest,
         io.grpc.stub.StreamObserver<ErrorResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `error`.");
+            LOG.info("Executing gRPC service `error` to "
+                    + pbErrorRequest.getHeader().getReplyTo());
             LOG.info("Received protobuf message `error`:\n" + pbErrorRequest.toString());
             ErrorResponse pbErrorResponse = ErrorResponse.newBuilder()
                     .setHeader(pbErrorRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbErrorRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbErrorRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .error(toSoap(pbErrorRequest
                             .getServiceException()), soapHeaderHolder);
@@ -188,12 +212,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void provisionConfirmed(ProvisionConfirmedRequest pbProvisionConfirmedRequest,
                                        StreamObserver<ProvisionConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `ProvisionConfirmed`.");
+            LOG.info("Executing gRPC service `ProvisionConfirmed` to "
+                    + pbProvisionConfirmedRequest.getHeader().getReplyTo());
             ProvisionConfirmedResponse pbProvisionConfirmedResponse = ProvisionConfirmedResponse
                     .newBuilder().setHeader(pbProvisionConfirmedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbProvisionConfirmedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbProvisionConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .provisionConfirmed(
                             pbProvisionConfirmedRequest.getConnectionId(),
@@ -210,12 +237,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void releaseConfirmed(ReleaseConfirmedRequest pbReleaseConfirmedRequest,
                                        StreamObserver<ReleaseConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `ReleaseConfirmed`.");
+            LOG.info("Executing gRPC service `ReleaseConfirmed` to "
+                    + pbReleaseConfirmedRequest.getHeader().getReplyTo());
             ReleaseConfirmedResponse pbReleaseConfirmedResponse = ReleaseConfirmedResponse
                     .newBuilder().setHeader(pbReleaseConfirmedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReleaseConfirmedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReleaseConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .releaseConfirmed(
                             pbReleaseConfirmedRequest.getConnectionId(),
@@ -233,12 +263,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void terminateConfirmed(TerminateConfirmedRequest pbTerminateConfirmedRequest,
                                        StreamObserver<TerminateConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `TerminateConfirmed`.");
+            LOG.info("Executing gRPC service `TerminateConfirmed` to "
+                    + pbTerminateConfirmedRequest.getHeader().getReplyTo());
             TerminateConfirmedResponse pbTerminateConfirmedResponse = TerminateConfirmedResponse
                     .newBuilder().setHeader(pbTerminateConfirmedRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbTerminateConfirmedRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbTerminateConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .terminateConfirmed(
                             pbTerminateConfirmedRequest.getConnectionId(),
@@ -255,12 +288,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void dataPlaneStateChange(DataPlaneStateChangeRequest pbDataPlaneStateChangeRequest,
                                     StreamObserver<DataPlaneStateChangeResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `dataPlaneStateChange`.");
+            LOG.info("Executing gRPC service `dataPlaneStateChange` to "
+                    + pbDataPlaneStateChangeRequest.getHeader().getReplyTo());
             DataPlaneStateChangeResponse pbDataPlaneStateChangeResponse = DataPlaneStateChangeResponse.newBuilder()
                     .setHeader(pbDataPlaneStateChangeRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbDataPlaneStateChangeRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbDataPlaneStateChangeRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .dataPlaneStateChange(
                             pbDataPlaneStateChangeRequest.getNotification().getConnectionId(),
@@ -280,12 +316,15 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveTimeout(ReserveTimeoutRequest pbReserveTimeoutRequest,
                                     StreamObserver<ReserveTimeoutResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveTimeout`.");
+            LOG.info("Executing gRPC service `reserveTimeout` to "
+                    + pbReserveTimeoutRequest.getHeader().getReplyTo());
             ReserveTimeoutResponse pbReserveTimeoutResponse = ReserveTimeoutResponse.newBuilder()
                     .setHeader(pbReserveTimeoutRequest.getHeader()).build();
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveTimeoutRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbReserveTimeoutRequest.getHeader().getReplyTo());
             connectionRequesterProxy
                     .reserveTimeout(
                             pbReserveTimeoutRequest.getNotification().getConnectionId(),

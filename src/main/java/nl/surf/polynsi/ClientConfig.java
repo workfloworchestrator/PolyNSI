@@ -20,6 +20,10 @@ public class ClientConfig {
      `replyTo` element/field in the header. Though with a single upstream aggregator it will, in practise,
      always be the same one. Hence we should be okay for now. If we get this working properly we
      can always enhance it do it on a per request basis.
+
+     NOTE: As provisional solution the connectionRequesterProxy is now created on a per request basis inside
+           ConnectionRequesterService class. If no better solution is found then the ClientConfig class can be
+           removed.
      */
     @Value("${soap.client.connection_requester.address}")
     private String connectionRequesterAddress;
