@@ -212,7 +212,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                     any of the WSDLs, and had to be mapped separately using JAXB, the P2PService _is_ referenced
                     from the WSDLs. This means that a Java class instance will be automatically created for us by the
                      `wsdl2java` generated code, but we still need to extract is from a wrapper `JAXBElement` instance.
-                     In other words we don't have to explicitely unmarshall it as we had to with `pathTrace`.
+                     In other words we don't have to explicitly unmarshall it as we had to with `pathTrace`.
                  */
                 if (elem instanceof JAXBElement) {
                     JAXBElement<?> bodyElem = (JAXBElement<?>) elem;

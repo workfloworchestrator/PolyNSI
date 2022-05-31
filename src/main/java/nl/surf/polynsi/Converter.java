@@ -264,7 +264,7 @@ public class Converter {
             List<SessionSecurityAttrType> soapSSAs = soapHeader.getSessionSecurityAttr();
             soapSSAs.addAll(toSessionSecurityAttr(pbHeader.getSessionSecurityAttributes()));
         }
-        if (pbHeader.getPathTrace().isInitialized()) {
+        if (pbHeader.hasPathTrace()) {
             PathTrace pbPathTrace = pbHeader.getPathTrace();
             nl.surf.polynsi.soap.connection.requester.ObjectFactory policiesObjFactory = new nl.surf.polynsi.soap.connection.requester.ObjectFactory();
             PathTraceType pathTraceType = policiesObjFactory.createPathTraceType();
