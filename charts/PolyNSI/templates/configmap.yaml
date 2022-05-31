@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-config" (include "PolyNSI.fullname" .) }}
+#  namespace: {{ .Release.Namespace }}
+data:
+{{.Values.config | indent 2}}
