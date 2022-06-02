@@ -25,16 +25,16 @@ public class ClientConfig {
            ConnectionRequesterService class. If no better solution is found then the ClientConfig class can be
            removed.
      */
-    @Value("${soap.client.connection_requester.address}")
-    private String connectionRequesterAddress;
-
-    @Bean
-    public ConnectionRequesterPort connectionRequesterProxy() {
-        System.out.println("soap.client.connection_requester.address=");
-        System.out.println(connectionRequesterAddress);
-        JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
-        jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
-        jaxWsProxyFactoryBean.setAddress(this.connectionRequesterAddress);
-        return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
-    }
+//    @Value("${soap.client.connection_requester.address}")
+//    private String connectionRequesterAddress;
+//
+//    @Bean
+//    public ConnectionRequesterPort connectionRequesterProxy() {
+//        System.out.println("soap.client.connection_requester.address=");
+//        System.out.println(connectionRequesterAddress);
+//        JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
+//        jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
+//        jaxWsProxyFactoryBean.setAddress(this.connectionRequesterAddress);
+//        return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
+//    }
 }
