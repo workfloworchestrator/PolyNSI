@@ -3,5 +3,13 @@ kind: ConfigMap
 metadata:
   name: {{ printf "%s-config" (include "PolyNSI.fullname" .) }}
 #  namespace: {{ .Release.Namespace }}
+{{- if .Values.config.filesGlob }}
+binaryData:
+{{- range $path, $_ :=  .Files.Glob  .Values.config.filesGlob }}
+{{ $path | base | indent 2 }}: |-
+{{ $.Files.Get $path | b64enc | indent 4 }}
+{{ end }}
+{{ else if .Values.config.inline }}
 data:
-{{.Values.config | indent 2}}
+{{.Values.config.inline | indent 2}}
+{{ end }}

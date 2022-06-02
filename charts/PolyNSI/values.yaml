@@ -76,12 +76,15 @@ persistence:
     - ReadWriteOnce
   size: 1Gi
 
-config: |-
-  application.properties: |-
-    debug=true
-    cxf.path=/soap
-    soap.server.connection_provider.path=/connection/provider
-    soap.server.connection_requester.path=/connection/requester
-    grpc.server.port=9090
-    grpc.client.connection_provider.address=static://supa-grpc.nsi.svc.cluster.local:80
-    grpc.client.connection_provider.negotiationType=PLAINTEXT
+config:
+  # either read config files from folder or use inline data, filesGlob takes precedence over inline.
+  #filesGlob: "config/*"
+  inline: |-
+    application.properties: |-
+      debug=true
+      cxf.path=/soap
+      soap.server.connection_provider.path=/connection/provider
+      soap.server.connection_requester.path=/connection/requester
+      grpc.server.port=9090
+      grpc.client.connection_provider.address=static://supa-grpc.hanst.svc.cluster.local:80
+      grpc.client.connection_provider.negotiationType=PLAINTEXT
