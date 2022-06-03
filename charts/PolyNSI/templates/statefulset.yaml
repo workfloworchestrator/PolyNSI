@@ -31,17 +31,20 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-#          command:
-#            - "mvn"
-#          args:
-#            - "spring-boot:run"
-#            - "-Dspring-boot.run.arguments=--spring.config.location=/usr/local/etc/polynsi/application.properties"
           command:
+            {{- if .Values.image.command }}
+            {{- toYaml .Values.image.command | nindent 12 }}
+            {{- else }}
             - "java"
+            {{- end }}
           args:
+            {{- if .Values.image.args }}
+            {{- toYaml .Values.image.args | nindent 12 }}
+            {{- else }}
             - "-Dspring.config.location=/usr/local/etc/polynsi/application.properties"
             - "-jar"
             - "polynsi.jar"
+            {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http-alt

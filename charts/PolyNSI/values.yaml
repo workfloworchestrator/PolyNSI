@@ -7,7 +7,18 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
-
+  command:
+    - "java"
+  args:
+    - "-Dspring.config.location=/usr/local/etc/polynsi/application.properties"
+    - "-Djavax.net.ssl.trustStoreType=jks"
+    - "-Djavax.net.ssl.keyStoreType=jks"
+    - "-Djavax.net.ssl.trustStorePassword=secret"
+    - "-Djavax.net.ssl.keyStorePassword=secret"
+    - "-Djavax.net.ssl.trustStore=/usr/local/etc/polynsi/polynsi-truststore.jks"
+    - "-Djavax.net.ssl.keyStore=/usr/local/etc/polynsi/polynsi-keystore.jks"
+    - "-jar"
+    - "polynsi.jar"
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
