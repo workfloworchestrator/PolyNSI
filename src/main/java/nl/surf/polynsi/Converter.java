@@ -1,14 +1,14 @@
 package nl.surf.polynsi;
 
 import com.google.protobuf.Timestamp;
+import nl.surf.polynsi.soap.connection.provider.PathType;
+import nl.surf.polynsi.soap.connection.requester.PathTraceType;
+import nl.surf.polynsi.soap.connection.requester.SegmentType;
+import nl.surf.polynsi.soap.connection.requester.StpType;
 import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.framework.headers.SessionSecurityAttrType;
 import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
-import nl.surf.polynsi.soap.policies.PathTraceType;
-import nl.surf.polynsi.soap.policies.PathType;
-import nl.surf.polynsi.soap.policies.SegmentType;
-import nl.surf.polynsi.soap.policies.StpType;
 import org.ogf.nsi.grpc.connection.common.*;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
@@ -107,17 +107,14 @@ public class Converter {
      */
     protected static String fromSessionSecurityAttr(CommonHeaderType soapHeader) throws ConverterException {
         try {
-            JAXBContext ssaContext = JAXBContext
-                    .newInstance("nl.surf.polynsi.soap.framework.headers",
-                            nl.surf.polynsi.soap.framework.headers.ObjectFactory.class
-                            .getClassLoader());
+            // Explicitly add classes to marshall. Include PathTraceType.class.
+            JAXBContext ssaContext = JAXBContext.newInstance(CommonHeaderType.class, nl.surf.polynsi.soap.connection.provider.PathTraceType.class);
             Marshaller marshaller = ssaContext.createMarshaller();
             // Enable formatted output when debugging.
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
             // Wrap it, as CommonHeaderType is not annotated with @XMLRootElement
-            JAXBElement<CommonHeaderType> jaxbElemHeader = new JAXBElement<>(new QName("", "header"),
-                    CommonHeaderType.class, soapHeader);
+            JAXBElement<CommonHeaderType> jaxbElemHeader = new JAXBElement<>(new QName("", "header"), CommonHeaderType.class, soapHeader);
             marshaller.marshal(jaxbElemHeader, sw);
             InputSource xmlHeader = new InputSource(new StringReader(sw.toString()));
             XPath xPath = XPathFactory.newInstance().newXPath();
@@ -202,7 +199,7 @@ public class Converter {
                         // dynamically create Java PathTraceType instance from raw XML
                         JAXBContext jc = JAXBContext
                                 .newInstance("nl.surf.polynsi.soap.policies",
-                                        nl.surf.polynsi.soap.policies.ObjectFactory.class
+                                        nl.surf.polynsi.soap.connection.provider.ObjectFactory.class
                                         .getClassLoader());
                         JAXBElement<PathTraceType> root = jc.createUnmarshaller()
                                 .unmarshal(hdElem.getOwnerDocument().getDocumentElement(), PathTraceType.class);
@@ -211,7 +208,7 @@ public class Converter {
                         // Build protobuf PathTrace message
                         PathTrace.Builder pbPathTraceBuilder = PathTrace.newBuilder().setId(soapPathTrace.getId())
                                 .setConnectionId(soapPathTrace.getConnectionId());
-                        for (PathType soapPathType : soapPathTrace.getPath()) {
+                        for (nl.surf.polynsi.soap.connection.requester.PathType soapPathType : soapPathTrace.getPath()) {
                             Path.Builder pbPathBuilder = Path.newBuilder();
                             List<SegmentType> soapSegmentTypes = soapPathType.getSegment();
                             /*
@@ -267,16 +264,15 @@ public class Converter {
             List<SessionSecurityAttrType> soapSSAs = soapHeader.getSessionSecurityAttr();
             soapSSAs.addAll(toSessionSecurityAttr(pbHeader.getSessionSecurityAttributes()));
         }
-        if (pbHeader.getPathTrace().isInitialized()) {
+        if (pbHeader.hasPathTrace()) {
             PathTrace pbPathTrace = pbHeader.getPathTrace();
-            nl.surf.polynsi.soap.policies.ObjectFactory policiesObjFactory =
-                    new nl.surf.polynsi.soap.policies.ObjectFactory();
-            PathTraceType soapPathTrace = policiesObjFactory.createPathTraceType();
-            soapPathTrace.setId(pbPathTrace.getId());
-            soapPathTrace.setConnectionId(pbPathTrace.getConnectionId());
-            List<PathType> soapPaths = soapPathTrace.getPath();
+            nl.surf.polynsi.soap.connection.requester.ObjectFactory policiesObjFactory = new nl.surf.polynsi.soap.connection.requester.ObjectFactory();
+            PathTraceType pathTraceType = policiesObjFactory.createPathTraceType();
+            pathTraceType.setId(pbPathTrace.getId());
+            pathTraceType.setConnectionId(pbPathTrace.getConnectionId());
+            List<nl.surf.polynsi.soap.connection.requester.PathType> soapPaths = pathTraceType.getPath();
             for (Path pbPath : pbPathTrace.getPathsList()) {
-                PathType soapPath = policiesObjFactory.createPathType();
+                nl.surf.polynsi.soap.connection.requester.PathType soapPath = policiesObjFactory.createPathType();
                 List<SegmentType> soapSegments = soapPath.getSegment();
                 ListIterator<Segment> pbSegmentsIterator = pbPath.getSegmentsList().listIterator();
                 while (pbSegmentsIterator.hasNext()) {
@@ -299,7 +295,8 @@ public class Converter {
                 soapPaths.add(soapPath);
             }
             List<Object> soapAny = soapHeader.getAny();
-            soapAny.add(soapPathTrace);
+            JAXBElement<PathTraceType> ptt = policiesObjFactory.createPathTrace(pathTraceType);
+            soapAny.add(ptt);
         }
         return soapHeader;
     }

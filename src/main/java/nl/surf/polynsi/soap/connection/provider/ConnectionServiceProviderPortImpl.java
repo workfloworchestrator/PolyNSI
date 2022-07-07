@@ -46,14 +46,21 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#provision(java.lang.String connectionId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void provision(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
+    public void provision(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info("Executing operation provision");
         System.out.println(connectionId);
-        System.out.println(header.value);
+        System.out.println(soapHeader.value);
         try {
-        } catch (java.lang.Exception ex) {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            ProvisionRequest pbProvisionRequest = ProvisionRequest.newBuilder().setHeader(pbHeader)
+                    .setConnectionId(connectionId).build();
+
+            LOG.info("Built protobuf message `ProvisionRequest`: " + pbProvisionRequest.toString());
+            ProvisionResponse pbProvisionResponse = connectionProviderStub
+                    .provision(pbProvisionRequest);
+        } catch (ConverterException ex) {
             ex.printStackTrace();
-            throw new RuntimeException(ex);
+            throw new ServiceException(ex.toString());
         }
         //throw new ServiceException("serviceException...");
     }
@@ -136,11 +143,18 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#terminate(java.lang.String connectionId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void terminate(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
+    public void terminate(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info("Executing operation terminate");
         System.out.println(connectionId);
-        System.out.println(header.value);
+        System.out.println(soapHeader.value);
         try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            TerminateRequest pbTerminateRequest = TerminateRequest.newBuilder().setHeader(pbHeader)
+                    .setConnectionId(connectionId).build();
+
+            LOG.info("Built protobuf message `TerminateRequest`: " + pbTerminateRequest.toString());
+            TerminateResponse pbTerminateResponse = connectionProviderStub
+                    .terminate(pbTerminateRequest);
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);
@@ -198,7 +212,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                     any of the WSDLs, and had to be mapped separately using JAXB, the P2PService _is_ referenced
                     from the WSDLs. This means that a Java class instance will be automatically created for us by the
                      `wsdl2java` generated code, but we still need to extract is from a wrapper `JAXBElement` instance.
-                     In other words we don't have to explicitely unmarshall it as we had to with `pathTrace`.
+                     In other words we don't have to explicitly unmarshall it as we had to with `pathTrace`.
                  */
                 if (elem instanceof JAXBElement) {
                     JAXBElement<?> bodyElem = (JAXBElement<?>) elem;
@@ -277,11 +291,18 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#release(java.lang.String connectionId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void release(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
+    public void release(java.lang.String connectionId, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info("Executing operation release");
         System.out.println(connectionId);
-        System.out.println(header.value);
+        System.out.println(soapHeader.value);
         try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            ReleaseRequest pbReleaseRequest = ReleaseRequest.newBuilder().setHeader(pbHeader)
+                    .setConnectionId(connectionId).build();
+
+            LOG.info("Built protobuf message `ReleaseRequest`: " + pbReleaseRequest.toString());
+            ReleaseResponse pbReleaseResponse = connectionProviderStub
+                    .release(pbReleaseRequest);
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);
