@@ -8,7 +8,7 @@
     </parent>
     <groupId>nl.surf</groupId>
     <artifactId>polynsi</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <name>polynsi</name>
     <description>A SOAP to gRPC translating proxy server for the NSI protocol.</description>
     <properties>
@@ -19,7 +19,7 @@
     </properties>
     <scm>
         <developerConnection>scm:git:git@github.com:workfloworchestrator/PolyNSI</developerConnection>
-      <tag>v0.1.0</tag>
+      <tag>HEAD</tag>
   </scm>
     <dependencies>
         <dependency>
