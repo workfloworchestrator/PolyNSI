@@ -18,6 +18,9 @@
         <grpc.version>1.42.2</grpc.version>
         <protoc.version>3.20.1</protoc.version>
     </properties>
+    <scm>
+        <developerConnection>scm:git:git@github.com:workfloworchestrator/PolyNSI</developerConnection>
+    </scm>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -234,6 +237,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M6</version>
             </plugin>
         </plugins>
     </build>
