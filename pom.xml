@@ -19,8 +19,15 @@
     </properties>
     <scm>
         <developerConnection>scm:git:git@github.com:workfloworchestrator/PolyNSI</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/workfloworchestrator/PolyNSI</url>
+        </repository>
+    </distributionManagement>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -39,3 +39,7 @@ src/main/java/nl/surf/polynsi/soap/framework/**/*.java
 !src/main/java/nl/surf/polynsi/soap/framework/**/*Impl.java
 src/main/java/nl/surf/polynsi/soap/services/**/*.java
 !src/main/java/nl/surf/polynsi/soap/services/**/*Impl.java
+
+### Maven release plugig
+pom.xml.releaseBackup
+release.properties
