@@ -8,6 +8,8 @@ import nl.surf.polynsi.ProxyException;
 import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ServiceException;
 import nl.surf.polynsi.soap.connection.types.ObjectFactory;
+import nl.surf.polynsi.soap.connection.types.QuerySummaryResultCriteriaType;
+import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
 import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
@@ -16,11 +18,14 @@ import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
-//import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.xml.ws.Holder;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
+import static com.google.protobuf.util.Timestamps.EPOCH;
 import static nl.surf.polynsi.Converter.toSoap;
 
 @GrpcService
@@ -341,5 +346,66 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveTimeout` call.", e);
         }
     }
-}
 
+    @Override
+    public void querySummaryConfirmed(org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest,
+                                      StreamObserver<QuerySummaryConfirmedResponse> responseObserver) {
+
+        class myQuerySummaryResultType extends QuerySummaryResultType
+        {
+            public void setCriteria(List<QuerySummaryResultCriteriaType> value) {
+                this.criteria = value;
+            }
+        }
+
+        try {
+            LOG.info("Executing gRPC service `querySummaryConfirmed` to "
+                    + pbQuerySummaryConfirmedRequest.getHeader().getReplyTo());
+            QuerySummaryConfirmedResponse pbQuerySummaryConfirmedResponse = QuerySummaryConfirmedResponse.newBuilder()
+                    .setHeader(pbQuerySummaryConfirmedRequest.getHeader()).build();
+
+            ObjectFactory objectFactory = new ObjectFactory();
+
+            List<QuerySummaryResultType> soapReservations= new ArrayList<>();
+            for(QuerySummaryResult pbReservation:pbQuerySummaryConfirmedRequest.getReservationList()){
+                // QuerySummaryResultType soapReservation = objectFactory.createQuerySummaryResultType();
+                myQuerySummaryResultType soapReservation = new myQuerySummaryResultType();
+                soapReservation.setConnectionId(pbReservation.getConnectionId());
+                soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
+                soapReservation.setConnectionStates(toSoap(pbReservation.getConnectionStates()));
+                soapReservation.setGlobalReservationId(pbReservation.getGlobalReservationId());
+                soapReservation.setDescription(pbReservation.getDescription());
+
+                QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
+                        .createQuerySummaryResultCriteriaType();
+                // TODO: when Modify Reservation is implemented, add all criteria
+                QuerySummaryResultCriteria pbCriteria = pbReservation.getCriteria(0);
+                soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
+                soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+                soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
+                List<QuerySummaryResultCriteriaType> soapCriteria = new ArrayList<>();
+                soapCriteria.add(soapQuerySummaryResultCriteria);
+                soapReservation.setCriteria(soapCriteria);
+
+                soapReservations.add(soapReservation);
+            }
+
+            OffsetDateTime lastModified = null;
+            if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {
+                lastModified = toSoap(pbQuerySummaryConfirmedRequest.getLastModified());
+            }
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbQuerySummaryConfirmedRequest.getHeader());
+
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbQuerySummaryConfirmedRequest.getHeader().getReplyTo());
+            connectionRequesterProxy.querySummaryConfirmed(soapReservations, lastModified, soapHeaderHolder);
+
+            responseObserver.onNext(pbQuerySummaryConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `querySummaryConfirmed` call.", e);
+        }
+    }
+}

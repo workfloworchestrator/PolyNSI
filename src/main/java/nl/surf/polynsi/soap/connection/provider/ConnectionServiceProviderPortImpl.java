@@ -334,20 +334,28 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#querySummary(nl.surf.polynsi.soap.connection.types.QueryType querySummary, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType querySummary(nl.surf.polynsi.soap.connection.types.QueryType querySummary, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> header) throws ServiceException {
+    public nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType querySummary(nl.surf.polynsi.soap.connection.types.QueryType querySummary, javax.xml.ws.Holder<nl.surf.polynsi.soap.framework.headers.CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info("Executing operation querySummary");
-        System.out.println(querySummary);
-        System.out.println(header.value);
         try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
+            pbQuerySummaryReguestBuilder.setHeader(pbHeader);
+            if (querySummary.getIfModifiedSince() != null) {
+                pbQuerySummaryReguestBuilder.setIfModifiedSince(Timestamps.parse(querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+            }
+            pbQuerySummaryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
+            pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
+            LOG.info("Built protobuf message `QuerySummaryRequest`: " + pbQuerySummaryReguestBuilder.build().toString());
+            QuerySummaryResponse pbQuerySummaryResponse = connectionProviderStub
+                    .querySummary(pbQuerySummaryReguestBuilder.build());
             nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
             ex.printStackTrace();
-            throw new RuntimeException(ex);
+            throw new ServiceException((ex.toString()));
         }
-        //throw new ServiceException("serviceException...");
     }
-
+    
     /* (non-Javadoc)
      * @see nl.surf.polynsi.soap.connection.provider.ConnectionProviderPort#queryResult(java.lang.String connectionId, java.lang.Long startResultId, java.lang.Long endResultId, nl.surf.polynsi.soap.framework.headers.CommonHeaderType header)*
      */
