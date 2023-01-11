@@ -8,20 +8,14 @@ import nl.surf.polynsi.ProxyException;
 import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ServiceException;
 import nl.surf.polynsi.soap.connection.types.ObjectFactory;
-import nl.surf.polynsi.soap.connection.types.QuerySummaryResultCriteriaType;
 import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
 import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
-import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
-import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
-import org.ogf.nsi.grpc.services.Directionality;
-import org.ogf.nsi.grpc.services.PointToPointService;
 
 import javax.xml.ws.Holder;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -60,20 +54,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             soapReservationConfirmCriteria.setVersion(pbCriteria.getVersion());
             soapReservationConfirmCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
             soapReservationConfirmCriteria.setServiceType(pbCriteria.getServiceType());
-            nl.surf.polynsi.soap.services.p2p.ObjectFactory servicesObjFactory =
-                    new nl.surf.polynsi.soap.services.p2p.ObjectFactory();
-            P2PServiceBaseType soapP2PServiceType = servicesObjFactory.createP2PServiceBaseType();
-            PointToPointService pbPtps = pbCriteria.getPtps();
-            Directionality pbDirectionality = pbPtps.getDirectionality();
-            if (pbDirectionality == Directionality.UNI_DIRECTIONAL)
-                soapP2PServiceType.setDirectionality(DirectionalityType.UNIDIRECTIONAL);
-            else
-                soapP2PServiceType.setDirectionality(DirectionalityType.BIDIRECTIONAL);
-            soapP2PServiceType.setCapacity(pbPtps.getCapacity());
-            soapP2PServiceType.setSymmetricPath(pbPtps.getSymmetricPath());
-            soapP2PServiceType.setSourceSTP(pbPtps.getSourceStp());
-            soapP2PServiceType.setDestSTP(pbPtps.getDestStp());
-            soapReservationConfirmCriteria.getAny().add(servicesObjFactory.createP2Ps(soapP2PServiceType));
+            soapReservationConfirmCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveConfirmedRequest.getHeader());
 
@@ -347,59 +328,6 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
         }
     }
 
-    public static List<QuerySummaryResultType> soapQuerySummaryConfirmed(org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest) throws ConverterException {
-
-        // For some reason the cxf-codegen-plugin wsdl2java does not generate the setCriteria method.
-        class myQuerySummaryResultType extends QuerySummaryResultType
-        {
-            public void setCriteria(List<QuerySummaryResultCriteriaType> value) {
-                this.criteria = value;
-            }
-        }
-
-        ObjectFactory objectFactory = new ObjectFactory();
-        List<QuerySummaryResultType> soapReservations = new ArrayList<>();
-        for (QuerySummaryResult pbReservation : pbQuerySummaryConfirmedRequest.getReservationList()) {
-            // QuerySummaryResultType soapReservation = objectFactory.createQuerySummaryResultType();
-            myQuerySummaryResultType soapReservation = new myQuerySummaryResultType();
-            soapReservation.setConnectionId(pbReservation.getConnectionId());
-            soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
-            soapReservation.setConnectionStates(toSoap(pbReservation.getConnectionStates()));
-            if (pbReservation.getGlobalReservationId().length() > 0) {
-                soapReservation.setGlobalReservationId(pbReservation.getGlobalReservationId());
-            }
-            soapReservation.setDescription(pbReservation.getDescription());
-            QuerySummaryResultCriteriaType soapQuerySummaryResultCriteriaType = objectFactory
-                    .createQuerySummaryResultCriteriaType();
-            // NOTE: a ReservationConfirmCriteria message is used instead of QuerySummaryResultCriteria
-            //       as we only support uPA's, and uPA's do not have child reservations
-            // TODO: when Modify Reservation is implemented, add all criteria
-            ReservationConfirmCriteria pbCriteria = pbReservation.getCriteria(0);
-            soapQuerySummaryResultCriteriaType.setVersion(pbCriteria.getVersion());
-            soapQuerySummaryResultCriteriaType.setSchedule(toSoap(pbCriteria.getSchedule()));
-            soapQuerySummaryResultCriteriaType.setServiceType(pbCriteria.getServiceType());
-            nl.surf.polynsi.soap.services.p2p.ObjectFactory servicesObjFactory =
-                    new nl.surf.polynsi.soap.services.p2p.ObjectFactory();
-            P2PServiceBaseType soapP2PServiceType = servicesObjFactory.createP2PServiceBaseType();
-            PointToPointService pbPtps = pbCriteria.getPtps();
-            Directionality pbDirectionality = pbPtps.getDirectionality();
-            if (pbDirectionality == Directionality.UNI_DIRECTIONAL)
-                soapP2PServiceType.setDirectionality(DirectionalityType.UNIDIRECTIONAL);
-            else
-                soapP2PServiceType.setDirectionality(DirectionalityType.BIDIRECTIONAL);
-            soapP2PServiceType.setCapacity(pbPtps.getCapacity());
-            soapP2PServiceType.setSymmetricPath(pbPtps.getSymmetricPath());
-            soapP2PServiceType.setSourceSTP(pbPtps.getSourceStp());
-            soapP2PServiceType.setDestSTP(pbPtps.getDestStp());
-            soapQuerySummaryResultCriteriaType.getAny().add(servicesObjFactory.createP2Ps(soapP2PServiceType));
-            List<QuerySummaryResultCriteriaType> soapCriteria = new ArrayList<>();
-            soapCriteria.add(soapQuerySummaryResultCriteriaType);
-            soapReservation.setCriteria(soapCriteria);
-            soapReservations.add(soapReservation);
-        }
-        return soapReservations;
-    }
-
     @Override
     public void querySummaryConfirmed(org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest,
                                       StreamObserver<QuerySummaryConfirmedResponse> responseObserver) {
@@ -409,7 +337,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             QuerySummaryConfirmedResponse pbQuerySummaryConfirmedResponse = QuerySummaryConfirmedResponse.newBuilder()
                     .setHeader(pbQuerySummaryConfirmedRequest.getHeader()).build();
 
-            List<QuerySummaryResultType> soapReservations = soapQuerySummaryConfirmed(pbQuerySummaryConfirmedRequest);
+            List<QuerySummaryResultType> soapReservations = toSoap(pbQuerySummaryConfirmedRequest);
 
             OffsetDateTime lastModified = null;
             if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {

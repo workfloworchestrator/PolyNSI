@@ -9,7 +9,6 @@ import com.google.protobuf.util.Timestamps;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import nl.surf.polynsi.ConverterException;
 import nl.surf.polynsi.soap.connection.types.QuerySummaryConfirmedType;
-import nl.surf.polynsi.grpc.connection.requester.ConnectionRequesterService;
 import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.OrderedStpType;
@@ -102,7 +101,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                     .querySummarySync(pbQuerySummaryReguestBuilder.build());
 
             myQuerySummaryConfirmedType soapQuerySummaryConfirmed = new myQuerySummaryConfirmedType();
-            soapQuerySummaryConfirmed.setReservation(ConnectionRequesterService.soapQuerySummaryConfirmed(pbQuerySummaryConfirmedRequest));
+            soapQuerySummaryConfirmed.setReservation(toSoap(pbQuerySummaryConfirmedRequest));
             OffsetDateTime lastModified = null;
             if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {
                 lastModified = toSoap(pbQuerySummaryConfirmedRequest.getLastModified());
