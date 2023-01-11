@@ -13,7 +13,7 @@ import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.ogf.nsi.grpc.connection.common.*;
 import org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest;
 import org.ogf.nsi.grpc.connection.requester.QuerySummaryResult;
-import org.ogf.nsi.grpc.connection.requester.ReservationConfirmCriteria;
+import org.ogf.nsi.grpc.connection.requester.QuerySummaryResultCriteria;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -475,7 +476,7 @@ public class Converter {
             // NOTE: a ReservationConfirmCriteria message is used instead of QuerySummaryResultCriteria
             //       as we only support uPA's, and uPA's do not have child reservations
             // TODO: when Modify Reservation is implemented, add all criteria
-            ReservationConfirmCriteria pbCriteria = pbReservation.getCriteria(0);
+            QuerySummaryResultCriteria pbCriteria = pbReservation.getCriteria(0);
             soapQuerySummaryResultCriteriaType.setVersion(pbCriteria.getVersion());
             soapQuerySummaryResultCriteriaType.setSchedule(toSoap(pbCriteria.getSchedule()));
             soapQuerySummaryResultCriteriaType.setServiceType(pbCriteria.getServiceType());
