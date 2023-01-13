@@ -40,8 +40,10 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveConfirmed(ReserveConfirmedRequest pbReserveConfirmedRequest,
                                  StreamObserver<ReserveConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveConfirmed` to "
-                    + pbReserveConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP reserveConfirmed to %s at %s",
+                    pbReserveConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbReserveConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `reserveConfirmed`:\n" + pbReserveConfirmedRequest.toString());
 
             ReserveConfirmedResponse pbReserveConfirmedResponse = ReserveConfirmedResponse.newBuilder()
                     .setHeader(pbReserveConfirmedRequest.getHeader()).build();
@@ -76,8 +78,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveFailed(ReserveFailedRequest pbReserveFailedRequest,
                               StreamObserver<ReserveFailedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveFailed` to "
-                    + pbReserveFailedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP reserveFailed to %s at %s",
+                    pbReserveFailedRequest.getHeader().getRequesterNsa(),
+                    pbReserveFailedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `reserveFailed`:\n" + pbReserveFailedRequest.toString());
+
             ReserveFailedResponse pbReserveFailedResponse = ReserveFailedResponse.newBuilder()
                     .setHeader(pbReserveFailedRequest.getHeader()).build();
 
@@ -101,8 +106,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveAbortConfirmed(ReserveAbortConfirmedRequest pbReserveAbortConfirmedRequest,
                                       StreamObserver<ReserveAbortConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveAbortConfirmed` to "
-                    + pbReserveAbortConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP reserveAbortConfirmed to %s at %s",
+                    pbReserveAbortConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbReserveAbortConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `reserveAbortConfirmed`:\n" + pbReserveAbortConfirmedRequest.toString());
+
             ReserveAbortConfirmedResponse pbReserveAbortConfirmedResponse = ReserveAbortConfirmedResponse.newBuilder()
                     .setHeader(pbReserveAbortConfirmedRequest.getHeader()).build();
 
@@ -124,8 +132,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveCommitConfirmed(ReserveCommitConfirmedRequest pbReserveCommitConfirmedRequest,
                                        StreamObserver<ReserveCommitConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveCommitConfirmed` to "
-                    + pbReserveCommitConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP reserveCommitConfirmed to %s at %s",
+                    pbReserveCommitConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbReserveCommitConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `reserveCommitConfirmed`:\n" + pbReserveCommitConfirmedRequest.toString());
+
             ReserveCommitConfirmedResponse pbReserveCommitConfirmedResponse = ReserveCommitConfirmedResponse
                     .newBuilder().setHeader(pbReserveCommitConfirmedRequest.getHeader()).build();
 
@@ -147,8 +158,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveCommitFailed(ReserveCommitFailedRequest pbReserveCommitFailedRequest,
                                     StreamObserver<ReserveCommitFailedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveCommitFailed` to "
-                    + pbReserveCommitFailedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP reserveCommitFailed to %s at %s",
+                    pbReserveCommitFailedRequest.getHeader().getRequesterNsa(),
+                    pbReserveCommitFailedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `reserveCommitFailed`:\n" + pbReserveCommitFailedRequest.toString());
+
             ReserveCommitFailedResponse pbReserveCommitFailedResponse = ReserveCommitFailedResponse.newBuilder()
                     .setHeader(pbReserveCommitFailedRequest.getHeader()).build();
 
@@ -173,9 +187,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void error(ErrorRequest pbErrorRequest,
         io.grpc.stub.StreamObserver<ErrorResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `error` to "
-                    + pbErrorRequest.getHeader().getReplyTo());
-            LOG.info("Received protobuf message `error`:\n" + pbErrorRequest.toString());
+            LOG.info(String.format("gRPC->SOAP error to %s at %s",
+                    pbErrorRequest.getHeader().getRequesterNsa(),
+                    pbErrorRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `error`:\n" + pbErrorRequest.toString());
+
             ErrorResponse pbErrorResponse = ErrorResponse.newBuilder()
                     .setHeader(pbErrorRequest.getHeader()).build();
 
@@ -198,8 +214,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void provisionConfirmed(ProvisionConfirmedRequest pbProvisionConfirmedRequest,
                                        StreamObserver<ProvisionConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `ProvisionConfirmed` to "
-                    + pbProvisionConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP provisionConfirmed to %s at %s",
+                    pbProvisionConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbProvisionConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `provisionConfirmed`:\n" + pbProvisionConfirmedRequest.toString());
+
             ProvisionConfirmedResponse pbProvisionConfirmedResponse = ProvisionConfirmedResponse
                     .newBuilder().setHeader(pbProvisionConfirmedRequest.getHeader()).build();
 
@@ -223,8 +242,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void releaseConfirmed(ReleaseConfirmedRequest pbReleaseConfirmedRequest,
                                        StreamObserver<ReleaseConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `ReleaseConfirmed` to "
-                    + pbReleaseConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP releaseConfirmed to %s at %s",
+                    pbReleaseConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbReleaseConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `releaseConfirmed`:\n" + pbReleaseConfirmedRequest.toString());
+
             ReleaseConfirmedResponse pbReleaseConfirmedResponse = ReleaseConfirmedResponse
                     .newBuilder().setHeader(pbReleaseConfirmedRequest.getHeader()).build();
 
@@ -249,8 +271,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void terminateConfirmed(TerminateConfirmedRequest pbTerminateConfirmedRequest,
                                        StreamObserver<TerminateConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `TerminateConfirmed` to "
-                    + pbTerminateConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP terminateConfirmed to %s at %s",
+                    pbTerminateConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbTerminateConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `terminateConfirmed`:\n" + pbTerminateConfirmedRequest.toString());
+
             TerminateConfirmedResponse pbTerminateConfirmedResponse = TerminateConfirmedResponse
                     .newBuilder().setHeader(pbTerminateConfirmedRequest.getHeader()).build();
 
@@ -274,8 +299,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void dataPlaneStateChange(DataPlaneStateChangeRequest pbDataPlaneStateChangeRequest,
                                     StreamObserver<DataPlaneStateChangeResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `dataPlaneStateChange` to "
-                    + pbDataPlaneStateChangeRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP dataPlaneStateChange to %s at %s",
+                    pbDataPlaneStateChangeRequest.getHeader().getRequesterNsa(),
+                    pbDataPlaneStateChangeRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `dataPlaneStateChange`:\n" + pbDataPlaneStateChangeRequest.toString());
+
             DataPlaneStateChangeResponse pbDataPlaneStateChangeResponse = DataPlaneStateChangeResponse.newBuilder()
                     .setHeader(pbDataPlaneStateChangeRequest.getHeader()).build();
 
@@ -302,8 +330,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     public void reserveTimeout(ReserveTimeoutRequest pbReserveTimeoutRequest,
                                     StreamObserver<ReserveTimeoutResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `reserveTimeout` to "
-                    + pbReserveTimeoutRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP reserveTimeout to %s at %s",
+                    pbReserveTimeoutRequest.getHeader().getRequesterNsa(),
+                    pbReserveTimeoutRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `reserveTimeout`:\n" + pbReserveTimeoutRequest.toString());
+
             ReserveTimeoutResponse pbReserveTimeoutResponse = ReserveTimeoutResponse.newBuilder()
                     .setHeader(pbReserveTimeoutRequest.getHeader()).build();
 
@@ -329,11 +360,14 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     }
 
     @Override
-    public void querySummaryConfirmed(org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest,
+    public void querySummaryConfirmed(QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest,
                                       StreamObserver<QuerySummaryConfirmedResponse> responseObserver) {
         try {
-            LOG.info("Executing gRPC service `querySummaryConfirmed` to "
-                    + pbQuerySummaryConfirmedRequest.getHeader().getReplyTo());
+            LOG.info(String.format("gRPC->SOAP querySummaryConfirmed to %s at %s",
+                    pbQuerySummaryConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbQuerySummaryConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `querySummaryConfirmed`:\n" + pbQuerySummaryConfirmedRequest.toString());
+
             QuerySummaryConfirmedResponse pbQuerySummaryConfirmedResponse = QuerySummaryConfirmedResponse.newBuilder()
                     .setHeader(pbQuerySummaryConfirmedRequest.getHeader()).build();
 
