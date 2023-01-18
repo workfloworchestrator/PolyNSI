@@ -8,18 +8,13 @@ package nl.surf.polynsi.soap.connection.provider;
 import com.google.protobuf.util.Timestamps;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import nl.surf.polynsi.ConverterException;
+import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
-import nl.surf.polynsi.soap.connection.types.GenericAcknowledgmentType;
-import nl.surf.polynsi.soap.connection.types.ReservationRequestCriteriaType;
-import nl.surf.polynsi.soap.connection.types.QueryNotificationConfirmedType;
-import nl.surf.polynsi.soap.connection.types.QueryNotificationType;
-import nl.surf.polynsi.soap.connection.types.QueryResultResponseType;
-import nl.surf.polynsi.soap.connection.types.QuerySummaryConfirmedType;
-import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
-import nl.surf.polynsi.soap.connection.types.QueryType;
+import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.OrderedStpType;
 import nl.surf.polynsi.soap.services.types.TypeValueType;
+import org.apache.cxf.jaxb.JAXBDataBinding;
 import org.ogf.nsi.grpc.connection.common.Header;
 import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.*;
@@ -28,9 +23,15 @@ import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
 import javax.annotation.Generated;
+import javax.annotation.Resource;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.namespace.QName;
+import javax.xml.ws.WebServiceContext;
+import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -59,6 +60,49 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     @GrpcClient("connection_provider")
     private ConnectionProviderGrpc.ConnectionProviderBlockingStub connectionProviderStub;
 
+    @Resource
+    private  WebServiceContext webServiceContext;
+
+    private void addHeaders(CommonHeaderType soapHeader) {
+        /*
+            Add nsiHeader to automatically generate ServiceException and Error messages
+            using a generic way of adding SOAP headers to a message. This probably can also be implemented
+            with a CXF SoapHeaderInterceptor that extends AbstractSoapInterceptor.
+         */
+        try {
+            List<org.apache.cxf.headers.Header> headers = new ArrayList<>();
+            soapHeader.setReplyTo(null);
+            org.apache.cxf.headers.Header nsiHeader = new org.apache.cxf.headers.Header(
+                    new QName("http://schemas.ogf.org/nsi/2013/12/framework/headers", "nsiHeader"),
+                    soapHeader,
+                    new JAXBDataBinding(CommonHeaderType.class)
+            );
+            headers.add(nsiHeader);
+            webServiceContext.getMessageContext().put(org.apache.cxf.headers.Header.HEADER_LIST, headers);
+        }  catch (JAXBException ex) {
+            LOG.warning(ex.toString());
+        }
+    }
+
+    private ServiceExceptionType genericInternalServiceException(String providerNSA, String connectionId, String text) {
+        var objectFactory = new nl.surf.polynsi.soap.framework.types.ObjectFactory();
+        ServiceExceptionType serviceException = objectFactory.createServiceExceptionType();
+        serviceException.setNsaId(providerNSA);
+        serviceException.setConnectionId(connectionId);
+        serviceException.setErrorId("00500");
+        serviceException.setText(
+                String.format("GENERIC_INTERNAL_ERROR: An internal error has caused a message processing failure (%s)", text)
+        );
+        return serviceException;
+    }
+
+    private GenericErrorType genericInternalError (String providerNSA, String connectionId, String text) {
+        var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+        GenericErrorType error = objectFactory.createGenericErrorType();
+        error.setServiceException(genericInternalServiceException(providerNSA, connectionId, text));
+        return error;
+    }
+    
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public void provision(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC provision from %s", soapHeader.value.getRequesterNSA()));
@@ -68,34 +112,36 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             ProvisionRequest pbProvisionRequest = ProvisionRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ProvisionRequest`:\n" + pbProvisionRequest.toString());
+            LOG.finer("Built protobuf message `ProvisionRequest`:\n" + pbProvisionRequest);
             ProvisionResponse pbProvisionResponse = connectionProviderStub
                     .provision(pbProvisionRequest);
+            // check the protobuf ProvisionResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbProvisionResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbProvisionResponse.getServiceException().getText(),
+                        toSoap(pbProvisionResponse.getServiceException())
+                );
+            }
         } catch (ConverterException ex) {
-            ex.printStackTrace();
-            throw new ServiceException(ex.toString());
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public QuerySummaryConfirmedType querySummarySync(QueryType querySummarySync,
                                                       javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
-
-        // For some reason the cxf-codegen-plugin wsdl2java does not generate the setCriteria method.
-        class myQuerySummaryConfirmedType extends QuerySummaryConfirmedType
-        {
-            public void setReservation(List<QuerySummaryResultType> value) {
-                this.reservation = value;
-            }
-        }
         LOG.info(String.format("SOAP->gRPC querySummarySync from %s", soapHeader.value.getRequesterNSA()));
-        for (String connectionId : querySummarySync.getConnectionId()) {
+        for (String connectionId : querySummarySync.getConnectionId())
             LOG.fine(String.format("connection ID %s", connectionId));
-        }
-        for (String globalReservationId : querySummarySync.getGlobalReservationId()) {
+        for (String globalReservationId : querySummarySync.getGlobalReservationId())
             LOG.fine(String.format("global reservation ID %s", globalReservationId));
-        }
-        LOG.fine(String.format("if modified since %s", querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+        if (querySummarySync.getIfModifiedSince() != null)
+            LOG.fine(String.format("if modified since %s", querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
@@ -107,13 +153,17 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             }
             pbQuerySummaryReguestBuilder.addAllConnectionId(querySummarySync.getConnectionId());
             pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummarySync.getGlobalReservationId());
-            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build().toString());
+            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build());
             // QuerySummarySync returns a QuerySummaryConfirmedRequest bypassing the associated Response messages
             QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest = connectionProviderStub
                     .querySummarySync(pbQuerySummaryReguestBuilder.build());
+            // the pbQuerySummaryConfirmedRequest does not have a service exception field,
+            // it is assumed that the query summary operations does not cause exceptions in SuPA
 
-            myQuerySummaryConfirmedType soapQuerySummaryConfirmed = new myQuerySummaryConfirmedType();
-            soapQuerySummaryConfirmed.setReservation(toSoap(pbQuerySummaryConfirmedRequest));
+            var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+            QuerySummaryConfirmedType soapQuerySummaryConfirmed = objectFactory.createQuerySummaryConfirmedType();
+            for (QuerySummaryResultType soapQuerySummaryResult : toSoap(pbQuerySummaryConfirmedRequest))
+                soapQuerySummaryConfirmed.getReservation().add(soapQuerySummaryResult);
             OffsetDateTime lastModified = null;
             if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {
                 lastModified = toSoap(pbQuerySummaryConfirmedRequest.getLastModified());
@@ -121,8 +171,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             soapQuerySummaryConfirmed.setLastModified(lastModified);
             return soapQuerySummaryConfirmed;
         } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
         }
     }
 
@@ -133,10 +186,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             GenericAcknowledgmentType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
         }
-        //throw new ServiceException("serviceException...");
     }
 
     public void reserveCommit(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
@@ -147,12 +202,23 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             ReserveCommitRequest pbReserveCommitRequest = ReserveCommitRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReserveCommitRequest`:\n" + pbReserveCommitRequest.toString());
+            LOG.finer("Built protobuf message `ReserveCommitRequest`:\n" + pbReserveCommitRequest);
             ReserveCommitResponse pbReserveCommitResponse = connectionProviderStub
                     .reserveCommit(pbReserveCommitRequest);
+            // check the protobuf ReserveCommitResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbReserveCommitResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbReserveCommitResponse.getServiceException().getText(),
+                        toSoap(pbReserveCommitResponse.getServiceException())
+                );
+            }
         } catch (ConverterException ex) {
-            ex.printStackTrace();
-            throw new ServiceException(ex.toString());
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
     }
 
@@ -165,10 +231,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("end notification ID %d", endNotificationId));
         try {
         } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
-        //throw new ServiceException("serviceException...");
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -180,23 +248,32 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             TerminateRequest pbTerminateRequest = TerminateRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `TerminateRequest`:\n" + pbTerminateRequest.toString());
+            LOG.finer("Built protobuf message `TerminateRequest`:\n" + pbTerminateRequest);
             TerminateResponse pbTerminateResponse = connectionProviderStub
                     .terminate(pbTerminateRequest);
-        } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            // check the protobuf TerminateResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbTerminateResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbTerminateResponse.getServiceException().getText(),
+                        toSoap(pbTerminateResponse.getServiceException())
+                );
+            }
+        } catch (ConverterException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
-        //throw new ServiceException("serviceException...");
     }
 
     public void reserve(javax.xml.ws.Holder<String> connectionId, String globalReservationId,
                         String description, ReservationRequestCriteriaType soapCriteria,
                         javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC reserve from %s", soapHeader.value.getRequesterNSA()));
-        if(connectionId.value != null) {
+        if(connectionId.value != null)
             LOG.fine(String.format("connection ID %s", connectionId.value));
-        }
         LOG.fine(String.format("global reservation ID %s", globalReservationId));
         LOG.fine(String.format("description %s", description));
         LOG.fine(String.format("service type %s", soapCriteria.getServiceType()));
@@ -295,12 +372,23 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                 }
             }
             pbReserveRequestBuilder.setCriteria(pbReservationRequestCriteriaBuilder);
-            LOG.finer("Built protobuf message `ReserveRequest`:\n" + pbReserveRequestBuilder.toString());
+            LOG.finer("Built protobuf message `ReserveRequest`:\n" + pbReserveRequestBuilder);
             ReserveResponse pbReserveResponse = connectionProviderStub.reserve(pbReserveRequestBuilder.build());
+            // check the protobuf ReserveResponse and either return a SOAP ServiceException or the connection ID
+            if (pbReserveResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbReserveResponse.getServiceException().getText(),
+                        toSoap(pbReserveResponse.getServiceException())
+                );
+            }
             connectionId.value = pbReserveResponse.getConnectionId();
-        } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new ServiceException(ex.toString());
+        } catch (ConverterException | ParseException ex)  {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId.value, ex.toString())
+            );
         }
     }
 
@@ -315,10 +403,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             java.util.List<QueryResultResponseType> _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
-        //throw new Error("error...");
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -330,14 +420,24 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             ReleaseRequest pbReleaseRequest = ReleaseRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReleaseRequest`:\n" + pbReleaseRequest.toString());
+            LOG.finer("Built protobuf message `ReleaseRequest`:\n" + pbReleaseRequest);
             ReleaseResponse pbReleaseResponse = connectionProviderStub
                     .release(pbReleaseRequest);
-        } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            // check the protobuf ReleaseResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbReleaseResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbReleaseResponse.getServiceException().getText(),
+                        toSoap(pbReleaseResponse.getServiceException())
+                );
+            }
+        } catch (ConverterException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
-        //throw new ServiceException("serviceException...");
     }
 
     public void reserveAbort(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
@@ -348,25 +448,35 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             ReserveAbortRequest pbReserveAbortRequest = ReserveAbortRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReserveAbortRequest`:\n" + pbReserveAbortRequest.toString());
-            ReserveAbortResponse pbReserveCommitResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `ReserveAbortRequest`:\n" + pbReserveAbortRequest);
+            ReserveAbortResponse pbReserveAbortResponse = connectionProviderStub
                     .reserveAbort(pbReserveAbortRequest);
+            // check the protobuf ReserveAbortResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbReserveAbortResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbReserveAbortResponse.getServiceException().getText(),
+                        toSoap(pbReserveAbortResponse.getServiceException())
+                );
+            }
         } catch (ConverterException ex) {
-            ex.printStackTrace();
-            throw new ServiceException(ex.toString());
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public GenericAcknowledgmentType querySummary(QueryType querySummary, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC querySummary from %s", soapHeader.value.getRequesterNSA()));
-        for (String connectionId : querySummary.getConnectionId()) {
+        for (String connectionId : querySummary.getConnectionId())
             LOG.fine(String.format("connection ID %s", connectionId));
-        }
-        for (String globalReservationId : querySummary.getGlobalReservationId()) {
+        for (String globalReservationId : querySummary.getGlobalReservationId())
             LOG.fine(String.format("global reservation ID %s", globalReservationId));
-        }
-        LOG.fine(String.format("if modified since %s", querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+        if (querySummary.getIfModifiedSince() != null)
+            LOG.fine(String.format("if modified since %s", querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
@@ -376,14 +486,25 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             }
             pbQuerySummaryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
             pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
-            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build().toString());
+            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build());
             QuerySummaryResponse pbQuerySummaryResponse = connectionProviderStub
                     .querySummary(pbQuerySummaryReguestBuilder.build());
+            // check the protobuf QuerySummaryResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQuerySummaryResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQuerySummaryResponse.getServiceException().getText(),
+                        toSoap(pbQuerySummaryResponse.getServiceException())
+                );
+            }
             GenericAcknowledgmentType _return = null;
             return _return;
-        } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new ServiceException((ex.toString()));
+        } catch (ConverterException | ParseException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
         }
     }
     
@@ -396,10 +517,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("end restult ID %d", endResultId));
         try {
         } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+            );
         }
-        //throw new ServiceException("serviceException...");
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -412,10 +535,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             QueryNotificationConfirmedType _return = null;
             return _return;
         } catch (java.lang.Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), queryNotificationSync.getConnectionId(), ex.toString())
+            );
         }
-        //throw new Error("error...");
     }
 
 }

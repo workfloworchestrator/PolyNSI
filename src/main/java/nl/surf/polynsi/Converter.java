@@ -8,6 +8,8 @@ import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.framework.headers.SessionSecurityAttrType;
 import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
+import nl.surf.polynsi.soap.framework.types.TypeValuePairType;
+import nl.surf.polynsi.soap.framework.types.VariablesType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.ogf.nsi.grpc.connection.common.*;
@@ -419,6 +421,17 @@ public class Converter {
         soapServiceException.setServiceType(pbServiceException.getServiceType());
         soapServiceException.setErrorId(pbServiceException.getErrorId());
         soapServiceException.setText(pbServiceException.getText());
+        // copy the optional list of variables (type/value pairs)
+        VariablesType soapVariables = objectFactory.createVariablesType();
+        for (TypeValuePair pbVariable : pbServiceException.getVariablesList()) {
+            TypeValuePairType soapTypeValuePair = objectFactory.createTypeValuePairType();
+            soapTypeValuePair.setType(pbVariable.getType());
+            soapTypeValuePair.setNamespace(pbVariable.getNamespace());
+            soapTypeValuePair.getValue().add(pbVariable.getValue());
+            soapVariables.getVariable().add(soapTypeValuePair);
+        }
+        soapServiceException.setVariables(soapVariables);
+        // copy the optional child exceptions
         if (pbServiceException.getChildExceptionCount() > 0) {
             List<ServiceExceptionType> soapChildExceptions = soapServiceException.getChildException();
             List<ServiceException> pbChildExceptions = pbServiceException.getChildExceptionList();
@@ -447,20 +460,10 @@ public class Converter {
 
     public static List<QuerySummaryResultType> toSoap(QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest)
             throws ConverterException {
-
-        // For some reason the cxf-codegen-plugin wsdl2java does not generate the setCriteria method.
-        class myQuerySummaryResultType extends QuerySummaryResultType
-        {
-            public void setCriteria(List<QuerySummaryResultCriteriaType> value) {
-                this.criteria = value;
-            }
-        }
-
         ObjectFactory objectFactory = new ObjectFactory();
         List<QuerySummaryResultType> soapReservations = new ArrayList<>();
         for (QuerySummaryResult pbReservation : pbQuerySummaryConfirmedRequest.getReservationList()) {
-            // QuerySummaryResultType soapReservation = objectFactory.createQuerySummaryResultType();
-            myQuerySummaryResultType soapReservation = new myQuerySummaryResultType();
+            QuerySummaryResultType soapReservation = objectFactory.createQuerySummaryResultType();
             soapReservation.setConnectionId(pbReservation.getConnectionId());
             soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
             soapReservation.setConnectionStates(toSoap(pbReservation.getConnectionStates()));
@@ -470,19 +473,15 @@ public class Converter {
             if (pbReservation.getDescription().length() > 0) {
                 soapReservation.setDescription(pbReservation.getDescription());
             }
-            QuerySummaryResultCriteriaType soapQuerySummaryResultCriteriaType = objectFactory
+            QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
                     .createQuerySummaryResultCriteriaType();
-            // NOTE: a ReservationConfirmCriteria message is used instead of QuerySummaryResultCriteria
-            //       as we only support uPA's, and uPA's do not have child reservations
             // TODO: when Modify Reservation is implemented, add all criteria
             QuerySummaryResultCriteria pbCriteria = pbReservation.getCriteria(0);
-            soapQuerySummaryResultCriteriaType.setVersion(pbCriteria.getVersion());
-            soapQuerySummaryResultCriteriaType.setSchedule(toSoap(pbCriteria.getSchedule()));
-            soapQuerySummaryResultCriteriaType.setServiceType(pbCriteria.getServiceType());
-            soapQuerySummaryResultCriteriaType.getAny().add(toSoap(pbCriteria.getPtps()));
-            List<QuerySummaryResultCriteriaType> soapCriteria = new ArrayList<>();
-            soapCriteria.add(soapQuerySummaryResultCriteriaType);
-            soapReservation.setCriteria(soapCriteria);
+            soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
+            soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+            soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
+            soapQuerySummaryResultCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
+            soapReservation.getCriteria().add(soapQuerySummaryResultCriteria);
             soapReservations.add(soapReservation);
         }
         return soapReservations;
