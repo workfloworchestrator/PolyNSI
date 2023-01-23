@@ -1,22 +1,22 @@
 package nl.surf.polynsi;
 
 public class ProxyException extends RuntimeException {
-    private String messagePostfix;
+    private String messagePrefix;
 
     public ProxyException(Direction direction, String message, Throwable cause) {
         super(message, cause);
         switch (direction) {
             case GRPC_TO_SOAP:
-                this.messagePostfix = " (gRPC -> SOAP)";
+                this.messagePrefix = "gRPC->SOAP " ;
                 break;
             case SOAP_TO_GRPC:
-                this.messagePostfix = " (SOAP -> gRPC)";
+                this.messagePrefix = "SOAP->gRPC ";
                 break;
         }
     }
 
     @Override
     public String getMessage() {
-        return super.getMessage() + this.messagePostfix;
+        return this.messagePrefix + "exception in " + super.getMessage();
     }
 }

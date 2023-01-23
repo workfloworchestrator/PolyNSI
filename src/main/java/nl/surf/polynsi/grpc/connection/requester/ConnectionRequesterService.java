@@ -1,6 +1,9 @@
 package nl.surf.polynsi.grpc.connection.requester;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.advice.GrpcAdvice;
+import net.devh.boot.grpc.server.advice.GrpcExceptionHandler;
 import net.devh.boot.grpc.server.service.GrpcService;
 import nl.surf.polynsi.ConverterException;
 import nl.surf.polynsi.Direction;
@@ -15,6 +18,7 @@ import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
 
 import javax.xml.ws.Holder;
+import javax.xml.ws.WebServiceException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.logging.Logger;
@@ -26,13 +30,28 @@ import static nl.surf.polynsi.Converter.toSoap;
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
     private static final Logger LOG = Logger.getLogger(ConnectionRequesterService.class.getName());
 
-//    @Autowired
-//    ConnectionRequesterPort connectionRequesterProxy;
+    /*
+        Catch ProxyException that can be thrown during gRPC -> SOAP processing and
+        send a gRPC UNAVAILABLE back with the cause from the exception.
+     */
+    @GrpcAdvice
+    public static class GrpcExceptionAdvice {
 
-    static ConnectionRequesterPort connectionRequesterProxy(String address) {
+        @GrpcExceptionHandler(ProxyException.class)
+        public Status handleProxyException(ProxyException e) {
+            String description = e.getMessage() + ": " + e.getCause().getMessage();
+            LOG.warning(description);
+            return Status.UNAVAILABLE.withDescription(description).withCause(e);
+        }
+    }
+
+    /*
+        Create connection requester proxy to send SOAP message.
+     */
+    private ConnectionRequesterPort connectionRequesterProxy(String replyTo) {
         JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
         jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
-        jaxWsProxyFactoryBean.setAddress(address);
+        jaxWsProxyFactoryBean.setAddress(replyTo);
         return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
     }
 
@@ -69,8 +88,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReserveConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handling `reserveConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "reserveConfirmed", e);
         }
     }
 
@@ -97,8 +116,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReserveFailedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveFailed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "reserveFailed", e);
         }
     }
 
@@ -123,8 +142,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReserveAbortConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveAbortConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "reserveAbortConfirmed", e);
         }
     }
 
@@ -149,8 +168,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReserveCommitConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveCommitConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "reserveCommitConfirmed", e);
         }
     }
 
@@ -178,8 +197,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReserveCommitFailedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveCommitFailed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "reserveCommitFailed", e);
         }
     }
 
@@ -205,8 +224,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbErrorResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `error` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "error", e);
         }
     }
 
@@ -233,8 +252,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbProvisionConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `ProvisionConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "ProvisionConfirmed", e);
         }
     }
 
@@ -261,8 +280,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReleaseConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `ReleaseConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "ReleaseConfirmed", e);
         }
     }
 
@@ -290,8 +309,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbTerminateConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `TerminateConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "TerminateConfirmed", e);
         }
     }
 
@@ -321,8 +340,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbDataPlaneStateChangeResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `datePlaneStateChange` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "datePlaneStateChange", e);
         }
     }
 
@@ -354,8 +373,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbReserveTimeoutResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `reserveTimeout` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "reserveTimeout", e);
         }
     }
 
@@ -387,8 +406,8 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
             responseObserver.onNext(pbQuerySummaryConfirmedResponse);
             responseObserver.onCompleted();
-        } catch (ConverterException | ServiceException e) {
-            throw new ProxyException(Direction.GRPC_TO_SOAP, "Error while handing `querySummaryConfirmed` call.", e);
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "querySummaryConfirmed", e);
         }
     }
 }
