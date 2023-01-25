@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.util.LinkedHashSet;
 import java.util.logging.Logger;
 
 /*
@@ -29,6 +30,7 @@ public class ClientConfig {
     static class PolyNsiFaultListener implements FaultListener {
 
         public boolean faultOccurred(final Exception exception,final String description,final Message message) {
+            // Try to name logger after reflected method, otherwise use own class name.
             Method method =  (Method) message.getContextualProperty("java.lang.reflect.Method");
             String logName = "";
             if (method != null)
@@ -37,34 +39,22 @@ public class ClientConfig {
                 logName = PolyNsiFaultListener.class.getName();
             Logger LOG = Logger.getLogger(logName);
 
-            // try to get url that triggered this exception (not used at the moment)
+            // try to get url that triggered this exception (not used at the moment).
             String url = null;
             if (  message.getContextualPropertyKeys().contains("http.connection"))
                 url = ((HttpURLConnection) message.getContextualProperty("http.connection")).getURL().toString();
             else
                 url = (String) message.getContextualProperty("org.apache.cxf.request.url");
 
-            // Concatenate up to three exception messages but do not include duplicates.
-            String logMessage = exception.getMessage();
-            String msg2, msg3;
-            try {
-                msg2 = exception.getCause().getMessage();
-            } catch (NullPointerException e) {
-                msg2 = null;
+            // Concatenate all messages from linked exceptions and remove duplicates.
+            LinkedHashSet<String> messages = new LinkedHashSet<>();
+            Throwable throwable = exception;
+            while (throwable != null) {
+                messages.add(throwable.getMessage());
+                throwable = throwable.getCause();
             }
-            try {
-                msg3 = exception.getCause().getCause().getMessage();
-            } catch (NullPointerException e) {
-                msg3 = null;
-            }
-            if ( msg2 != null) {
-                if ( ! logMessage.equals(msg2))
-                logMessage += ": " + msg2;
-                if ( msg3 != null && ! logMessage.equals(msg3) && ! msg2.equals(msg3))
-                    logMessage += ": " + msg3;
-            }
+            LOG.warning(String.join(": ", messages));
 
-            LOG.warning(logMessage);
             // Return false to disable the default CXF fault handling (which normally just logs the exception).
             return false;
         }
