@@ -5,7 +5,7 @@
         <appender-ref ref="CONSOLE" />
     </root>
     <logger name="org.springframework.web" level="INFO"/>
-    <logger name="org.apache.cxf.wsdl.service.factory.ReflectionServiceFactoryBean" level="WARNING"/>
+    <logger name="org.apache.cxf" level="WARNING"/>
     <!--
     <logger name="nl.surf.polynsi.soap.connection.provider.ConnectionServiceProviderPortImpl" level="TRACE"/>
     <logger name="nl.surf.polynsi.grpc.connection.requester.ConnectionRequesterService" level="TRACE"/>
