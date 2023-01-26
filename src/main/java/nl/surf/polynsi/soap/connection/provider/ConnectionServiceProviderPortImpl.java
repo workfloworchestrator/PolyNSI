@@ -6,6 +6,7 @@
 package nl.surf.polynsi.soap.connection.provider;
 
 import com.google.protobuf.util.Timestamps;
+import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import nl.surf.polynsi.ConverterException;
 import nl.surf.polynsi.soap.connection.types.*;
@@ -84,11 +85,32 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         }
     }
 
-    private ServiceExceptionType genericInternalServiceException(String providerNSA, String connectionId, String text) {
+    private ServiceExceptionType newServiceException(String providerNSA, String connectionId) {
         var objectFactory = new nl.surf.polynsi.soap.framework.types.ObjectFactory();
         ServiceExceptionType serviceException = objectFactory.createServiceExceptionType();
         serviceException.setNsaId(providerNSA);
         serviceException.setConnectionId(connectionId);
+        return serviceException;
+    }
+
+    private ServiceExceptionType notImplementedServiceException(String providerNSA, String feature) {
+        var serviceException = newServiceException(providerNSA, null);
+        serviceException.setErrorId("00103");
+        serviceException.setText(
+                String.format("NOT_IMPLEMENTED: Requested feature has not been implemented (%s)", feature)
+        );
+        return serviceException;
+    }
+
+    private GenericErrorType notImplementedError (String providerNSA, String feature) {
+        var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+        GenericErrorType error = objectFactory.createGenericErrorType();
+        error.setServiceException(notImplementedServiceException(providerNSA, feature));
+        return error;
+    }
+
+    private ServiceExceptionType genericInternalServiceException(String providerNSA, String connectionId, String text) {
+        var serviceException = newServiceException(providerNSA, connectionId);
         serviceException.setErrorId("00500");
         serviceException.setText(
                 String.format("GENERIC_INTERNAL_ERROR: An internal error has caused a message processing failure (%s)", text)
@@ -123,7 +145,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         toSoap(pbProvisionResponse.getServiceException())
                 );
             }
-        } catch (ConverterException ex) {
+        } catch (ConverterException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -170,7 +192,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             }
             soapQuerySummaryConfirmed.setLastModified(lastModified);
             return soapQuerySummaryConfirmed;
-        } catch (java.lang.Exception ex) {
+        } catch (ConverterException | ParseException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new Error(
                     ex.toString(),
@@ -181,17 +203,20 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public GenericAcknowledgmentType queryRecursive(QueryType queryRecursive, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC provision from %s", soapHeader.value.getRequesterNSA()));
-        try {
-            GenericAcknowledgmentType _return = null;
-            return _return;
-        } catch (java.lang.Exception ex) {
-            addHeaders(soapHeader.value);
-            throw new ServiceException(
-                    ex.toString(),
-                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
-            );
-        }
+        LOG.info(String.format("SOAP->gRPC queryRecursive from %s", soapHeader.value.getRequesterNSA()));
+        // TODO: replace notImplementedServiceException with queryRecursive implementation
+        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryRecursive");
+        throw new ServiceException(serviceException.getText(), serviceException);
+        // try {
+        //     GenericAcknowledgmentType _return = null;
+        //     return _return;
+        // } catch (java.lang.Exception ex) {
+        //     addHeaders(soapHeader.value);
+        //     throw new ServiceException(
+        //             ex.toString(),
+        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+        //     );
+        // }
     }
 
     public void reserveCommit(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
@@ -213,7 +238,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         toSoap(pbReserveCommitResponse.getServiceException())
                 );
             }
-        } catch (ConverterException ex) {
+        } catch (ConverterException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -229,14 +254,18 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         LOG.fine(String.format("start notification ID %d", startNotificationId));
         LOG.fine(String.format("end notification ID %d", endNotificationId));
-        try {
-        } catch (java.lang.Exception ex) {
-            addHeaders(soapHeader.value);
-            throw new ServiceException(
-                    ex.toString(),
-                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-            );
-        }
+        // TODO: replace notImplementedServiceException with queryNotification implementation
+        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryNotification");
+        throw new ServiceException(serviceException.getText(), serviceException);
+
+        // try {
+        // } catch (java.lang.Exception ex) {
+        //     addHeaders(soapHeader.value);
+        //     throw new ServiceException(
+        //             ex.toString(),
+        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+        //     );
+        // }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -259,7 +288,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         toSoap(pbTerminateResponse.getServiceException())
                 );
             }
-        } catch (ConverterException ex) {
+        } catch (ConverterException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -383,7 +412,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                 );
             }
             connectionId.value = pbReserveResponse.getConnectionId();
-        } catch (ConverterException | ParseException ex)  {
+        } catch (ConverterException | ParseException | StatusRuntimeException ex)  {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -399,16 +428,19 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         LOG.fine(String.format("start result ID %d", startResultId));
         LOG.fine(String.format("end result ID %d", endResultId));
-        try {
-            java.util.List<QueryResultResponseType> _return = null;
-            return _return;
-        } catch (java.lang.Exception ex) {
-            addHeaders(soapHeader.value);
-            throw new Error(
-                    ex.toString(),
-                    genericInternalError(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-            );
-        }
+        // TODO: replace notImplementedError with queryResultSync implementation
+        var error = notImplementedError(soapHeader.value.getProviderNSA(), "queryResultSync");
+        throw new Error(error.getServiceException().getText(), error);
+        // try {
+        //     java.util.List<QueryResultResponseType> _return = null;
+        //     return _return;
+        // } catch (java.lang.Exception ex) {
+        //     addHeaders(soapHeader.value);
+        //     throw new Error(
+        //             ex.toString(),
+        //             genericInternalError(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+        //     );
+        // }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -431,7 +463,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         toSoap(pbReleaseResponse.getServiceException())
                 );
             }
-        } catch (ConverterException ex) {
+        } catch (ConverterException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -459,7 +491,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         toSoap(pbReserveAbortResponse.getServiceException())
                 );
             }
-        } catch (ConverterException ex) {
+        } catch (ConverterException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -499,7 +531,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             }
             GenericAcknowledgmentType _return = null;
             return _return;
-        } catch (ConverterException | ParseException ex) {
+        } catch (ConverterException | ParseException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
                     ex.toString(),
@@ -515,14 +547,17 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         LOG.fine(String.format("start result ID %d", startResultId));
         LOG.fine(String.format("end restult ID %d", endResultId));
-        try {
-        } catch (java.lang.Exception ex) {
-            addHeaders(soapHeader.value);
-            throw new ServiceException(
-                    ex.toString(),
-                    genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-            );
-        }
+        // TODO: replace notImplementedServiceException with queryResult implementation
+        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryResult");
+        throw new ServiceException(serviceException.getText(), serviceException);
+        // try {
+        // } catch (java.lang.Exception ex) {
+        //     addHeaders(soapHeader.value);
+        //     throw new ServiceException(
+        //             ex.toString(),
+        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
+        //     );
+        // }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -531,16 +566,19 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.info(String.format("SOAP->gRPC queryNotificationSync from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s, %d, %d", queryNotificationSync.getConnectionId(),
                 queryNotificationSync.getStartNotificationId(), queryNotificationSync.getEndNotificationId()));
-        try {
-            QueryNotificationConfirmedType _return = null;
-            return _return;
-        } catch (java.lang.Exception ex) {
-            addHeaders(soapHeader.value);
-            throw new Error(
-                    ex.toString(),
-                    genericInternalError(soapHeader.value.getProviderNSA(), queryNotificationSync.getConnectionId(), ex.toString())
-            );
-        }
+        // TODO: replace notImplementedError with queryNotificationSync implementation
+        var error = notImplementedError(soapHeader.value.getProviderNSA(), "queryNotificationSync");
+        throw new Error(error.getServiceException().getText(), error);
+        // try {
+        //     QueryNotificationConfirmedType _return = null;
+        //     return _return;
+        // } catch (java.lang.Exception ex) {
+        //     addHeaders(soapHeader.value);
+        //     throw new Error(
+        //             ex.toString(),
+        //             genericInternalError(soapHeader.value.getProviderNSA(), queryNotificationSync.getConnectionId(), ex.toString())
+        //     );
+        // }
     }
 
 }
