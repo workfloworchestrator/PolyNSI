@@ -5,9 +5,16 @@
         <appender-ref ref="CONSOLE" />
     </root>
     <logger name="org.springframework.web" level="INFO"/>
+
+    <!-- set to WARN to prevent ReflectionServiceFactoryBean create message -->
     <logger name="org.apache.cxf.wsdl.service.factory.ReflectionServiceFactoryBean" level="WARN"/>
-    <!--
-    <logger name="nl.surf.polynsi.soap.connection.provider.ConnectionServiceProviderPortImpl" level="TRACE"/>
-    <logger name="nl.surf.polynsi.grpc.connection.requester.ConnectionRequesterService" level="TRACE"/>
-    -->
+
+    <!-- set to WARN to suppress logging of in and out SOAP message -->
+    <logger name="org.apache.cxf.services" level="WARN"/>
+
+    <!-- set to TRACE for detailed connection provider logging including protobuf message -->
+    <logger name="nl.surf.polynsi.soap.connection.provider.ConnectionServiceProviderPortImpl" level="INFO"/>
+
+    <!-- set to TRACE for detailed connection requester logging including protobuf message -->
+    <logger name="nl.surf.polynsi.grpc.connection.requester.ConnectionRequesterService" level="INFO"/>
 </configuration>

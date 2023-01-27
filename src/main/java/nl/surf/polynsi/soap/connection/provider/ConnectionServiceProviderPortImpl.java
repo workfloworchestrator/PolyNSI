@@ -48,6 +48,8 @@ import static nl.surf.polynsi.Converter.toSoap;
  * Generated source version: 3.3.5
  */
 
+
+@org.apache.cxf.feature.Features (features = {"nl.surf.polynsi.soap.connection.provider.PrettyLoggingFeature"})
 @javax.jws.WebService(serviceName = "ConnectionServiceProvider",
         portName = "ConnectionServiceProviderPort",
         targetNamespace = "http://schemas.ogf.org/nsi/2013/12/connection/provider",
@@ -65,7 +67,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     private  WebServiceContext webServiceContext;
 
     private void addHeaders(CommonHeaderType soapHeader) {
-        // clear any extension from header, fix for 'PathTraceType is not known to this context' error
+            // clear any extension from header, fix for 'PathTraceType is not known to this context' error
         soapHeader.getAny().clear();
         /*
             Add nsiHeader to automatically generate ServiceException and Error messages
