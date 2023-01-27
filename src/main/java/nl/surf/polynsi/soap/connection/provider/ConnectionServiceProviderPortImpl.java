@@ -65,6 +65,8 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     private  WebServiceContext webServiceContext;
 
     private void addHeaders(CommonHeaderType soapHeader) {
+        // clear any extension from header, fix for 'PathTraceType is not known to this context' error
+        soapHeader.getAny().clear();
         /*
             Add nsiHeader to automatically generate ServiceException and Error messages
             using a generic way of adding SOAP headers to a message. This probably can also be implemented
