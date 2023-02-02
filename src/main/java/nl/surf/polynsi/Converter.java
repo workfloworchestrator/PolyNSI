@@ -8,6 +8,7 @@ import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.framework.headers.SessionSecurityAttrType;
 import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
+import nl.surf.polynsi.soap.framework.types.TypeValuePairListType;
 import nl.surf.polynsi.soap.framework.types.TypeValuePairType;
 import nl.surf.polynsi.soap.framework.types.VariablesType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
@@ -392,6 +393,21 @@ public class Converter {
         }
     }
 
+    public static EventEnumType toSoap(EventType pbEvent) throws ConverterException {
+        switch (pbEvent) {
+            case ACTIVATE_FAILED:
+                return EventEnumType.ACTIVATE_FAILED;
+            case DEACTIVATE_FAILED:
+                return EventEnumType.DEACTIVATE_FAILED;
+            case DATAPLANE_ERROR:
+                return EventEnumType.DATAPLANE_ERROR;
+            case FORCED_END:
+                return EventEnumType.FORCED_END;
+            default:
+                throw new ConverterException("Unexpected `EventType` value: " + pbEvent.toString());
+        }
+    }
+
     public static DataPlaneStatusType toSoap(DataPlaneStatus pbDataPlaneStatus) {
         var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
         DataPlaneStatusType soapDataPlaneStatus = objectFactory.createDataPlaneStatusType();
@@ -413,6 +429,27 @@ public class Converter {
         return soapConnectionStates;
     }
 
+    public static TypeValuePairListType toValuePairList(VariablesType soapVariables) {
+        var objectFactory = new nl.surf.polynsi.soap.framework.types.ObjectFactory();
+        TypeValuePairListType soapValuePairList = objectFactory.createTypeValuePairListType();
+        for (TypeValuePairType soapVariable : soapVariables.getVariable())
+            soapValuePairList.getAttribute().add(soapVariable);
+        return soapValuePairList;
+    }
+
+    public static VariablesType toSoap(List<TypeValuePair> pbVariables) {
+        var objectFactory = new nl.surf.polynsi.soap.framework.types.ObjectFactory();
+        VariablesType soapVariables = objectFactory.createVariablesType();
+        for (TypeValuePair pbVariable : pbVariables) {
+            TypeValuePairType soapTypeValuePair = objectFactory.createTypeValuePairType();
+            soapTypeValuePair.setType(pbVariable.getType());
+            soapTypeValuePair.setNamespace(pbVariable.getNamespace());
+            soapTypeValuePair.getValue().add(pbVariable.getValue());
+            soapVariables.getVariable().add(soapTypeValuePair);
+        }
+        return soapVariables;
+    }
+
     public static ServiceExceptionType toSoap(ServiceException pbServiceException) {
         var objectFactory = new nl.surf.polynsi.soap.framework.types.ObjectFactory();
         ServiceExceptionType soapServiceException = objectFactory.createServiceExceptionType();
@@ -422,15 +459,7 @@ public class Converter {
         soapServiceException.setErrorId(pbServiceException.getErrorId());
         soapServiceException.setText(pbServiceException.getText());
         // copy the optional list of variables (type/value pairs)
-        VariablesType soapVariables = objectFactory.createVariablesType();
-        for (TypeValuePair pbVariable : pbServiceException.getVariablesList()) {
-            TypeValuePairType soapTypeValuePair = objectFactory.createTypeValuePairType();
-            soapTypeValuePair.setType(pbVariable.getType());
-            soapTypeValuePair.setNamespace(pbVariable.getNamespace());
-            soapTypeValuePair.getValue().add(pbVariable.getValue());
-            soapVariables.getVariable().add(soapTypeValuePair);
-        }
-        soapServiceException.setVariables(soapVariables);
+        soapServiceException.setVariables(toSoap(pbServiceException.getVariablesList()));
         // copy the optional child exceptions
         if (pbServiceException.getChildExceptionCount() > 0) {
             List<ServiceExceptionType> soapChildExceptions = soapServiceException.getChildException();
