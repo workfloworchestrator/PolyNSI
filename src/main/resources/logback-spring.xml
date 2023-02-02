@@ -1,0 +1,20 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+    <logger name="org.springframework.web" level="INFO"/>
+
+    <!-- set to WARN to prevent ReflectionServiceFactoryBean create message -->
+    <logger name="org.apache.cxf.wsdl.service.factory.ReflectionServiceFactoryBean" level="WARN"/>
+
+    <!-- set to WARN to suppress logging of in and out SOAP message -->
+    <logger name="org.apache.cxf.services" level="WARN"/>
+
+    <!-- set to TRACE for detailed connection provider logging including protobuf message -->
+    <logger name="nl.surf.polynsi.soap.connection.provider.ConnectionServiceProviderPortImpl" level="INFO"/>
+
+    <!-- set to TRACE for detailed connection requester logging including protobuf message -->
+    <logger name="nl.surf.polynsi.grpc.connection.requester.ConnectionRequesterService" level="INFO"/>
+</configuration>

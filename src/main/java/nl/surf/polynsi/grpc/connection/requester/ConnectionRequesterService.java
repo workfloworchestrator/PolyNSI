@@ -14,6 +14,7 @@ import nl.surf.polynsi.soap.connection.types.ObjectFactory;
 import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
 import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
+import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.requester.*;
 
@@ -52,6 +53,11 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
         JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
         jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
         jaxWsProxyFactoryBean.setAddress(replyTo);
+        LoggingFeature loggingFeature = new LoggingFeature();
+        loggingFeature.setPrettyLogging(true);
+        loggingFeature.setVerbose(true);
+        loggingFeature.setLogMultipart(true);
+        jaxWsProxyFactoryBean.getFeatures().add(loggingFeature);
         return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
     }
 
