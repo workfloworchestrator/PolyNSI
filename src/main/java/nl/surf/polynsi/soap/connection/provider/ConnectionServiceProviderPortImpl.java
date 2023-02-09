@@ -533,8 +533,8 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                         toSoap(pbQuerySummaryResponse.getServiceException())
                 );
             }
-            GenericAcknowledgmentType _return = null;
-            return _return;
+            var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+            return objectFactory.createGenericAcknowledgmentType();
         } catch (ConverterException | ParseException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
