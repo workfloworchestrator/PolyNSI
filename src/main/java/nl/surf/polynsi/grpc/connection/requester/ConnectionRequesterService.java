@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import static com.google.protobuf.util.Timestamps.EPOCH;
 import static nl.surf.polynsi.Converter.toSoap;
+import static nl.surf.polynsi.Converter.toValuePairList;
 
 @GrpcService
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
@@ -210,7 +211,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
     @Override
     public void error(ErrorRequest pbErrorRequest,
-        io.grpc.stub.StreamObserver<ErrorResponse> responseObserver) {
+                      io.grpc.stub.StreamObserver<ErrorResponse> responseObserver) {
         try {
             LOG.info(String.format("gRPC->SOAP error to %s at %s",
                     pbErrorRequest.getHeader().getRequesterNsa(),
@@ -232,6 +233,41 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             responseObserver.onCompleted();
         } catch (ConverterException | ServiceException | WebServiceException e) {
             throw new ProxyException(Direction.GRPC_TO_SOAP, "error", e);
+        }
+    }
+
+    @Override
+    public void errorEvent(ErrorEventRequest pbErrorEventRequest,
+                           io.grpc.stub.StreamObserver<ErrorEventResponse> responseObserver) {
+        try {
+            LOG.info(String.format("gRPC->SOAP errorEvent to %s at %s",
+                    pbErrorEventRequest.getHeader().getRequesterNsa(),
+                    pbErrorEventRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `errorEvent`:\n" + pbErrorEventRequest.toString());
+
+            ErrorEventResponse pbErrorEventResponse = ErrorEventResponse.newBuilder()
+                    .setHeader(pbErrorEventRequest.getHeader()).build();
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbErrorEventRequest.getHeader());
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbErrorEventRequest.getHeader().getReplyTo());
+            connectionRequesterProxy.errorEvent(
+                            pbErrorEventRequest.getOriginatingConnectionId(),
+                            pbErrorEventRequest.getNotification().getNotificationId(),
+                            toSoap(pbErrorEventRequest.getNotification().getTimeStamp()),
+                            toSoap(pbErrorEventRequest.getEvent()),
+                            pbErrorEventRequest.getOriginatingConnectionId(),
+                            pbErrorEventRequest.getOriginatingNsa(),
+                            toValuePairList(toSoap(pbErrorEventRequest.getAdditionalInfoList())),
+                            toSoap(pbErrorEventRequest.getServiceException()),
+                            soapHeaderHolder
+            );
+
+            responseObserver.onNext(pbErrorEventResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "errorEvent", e);
         }
     }
 
