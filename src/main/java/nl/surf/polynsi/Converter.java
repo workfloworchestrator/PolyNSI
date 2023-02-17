@@ -14,9 +14,9 @@ import nl.surf.polynsi.soap.framework.types.VariablesType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.ogf.nsi.grpc.connection.common.*;
-import org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest;
-import org.ogf.nsi.grpc.connection.requester.QuerySummaryResult;
-import org.ogf.nsi.grpc.connection.requester.QuerySummaryResultCriteria;
+import org.ogf.nsi.grpc.connection.requester.QueryConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryResult;
+import org.ogf.nsi.grpc.connection.requester.QueryResultCriteria;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
@@ -487,11 +487,11 @@ public class Converter {
         return servicesObjFactory.createP2Ps(soapP2PServiceType);
     }
 
-    public static List<QuerySummaryResultType> toSoap(QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest)
+    public static List<QuerySummaryResultType> toSoap(QueryConfirmedRequest pbQueryConfirmedRequest)
             throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
         List<QuerySummaryResultType> soapReservations = new ArrayList<>();
-        for (QuerySummaryResult pbReservation : pbQuerySummaryConfirmedRequest.getReservationList()) {
+        for (QueryResult pbReservation : pbQueryConfirmedRequest.getReservationList()) {
             QuerySummaryResultType soapReservation = objectFactory.createQuerySummaryResultType();
             soapReservation.setConnectionId(pbReservation.getConnectionId());
             soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
@@ -505,7 +505,7 @@ public class Converter {
             QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
                     .createQuerySummaryResultCriteriaType();
             // TODO: when Modify Reservation is implemented, add all criteria
-            QuerySummaryResultCriteria pbCriteria = pbReservation.getCriteria(0);
+            QueryResultCriteria pbCriteria = pbReservation.getCriteria(0);
             soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
             soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
             soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());

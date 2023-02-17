@@ -19,7 +19,7 @@ import org.apache.cxf.jaxb.JAXBDataBinding;
 import org.ogf.nsi.grpc.connection.common.Header;
 import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.*;
-import org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryConfirmedRequest;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
@@ -170,29 +170,29 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             LOG.fine(String.format("if modified since %s", querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
-            pbQuerySummaryReguestBuilder.setHeader(pbHeader);
+            QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
+            pbQueryReguestBuilder.setHeader(pbHeader);
             if (querySummarySync.getIfModifiedSince() != null) {
-                pbQuerySummaryReguestBuilder.setIfModifiedSince(Timestamps.parse(
+                pbQueryReguestBuilder.setIfModifiedSince(Timestamps.parse(
                         querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                 ));
             }
-            pbQuerySummaryReguestBuilder.addAllConnectionId(querySummarySync.getConnectionId());
-            pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummarySync.getGlobalReservationId());
-            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build());
+            pbQueryReguestBuilder.addAllConnectionId(querySummarySync.getConnectionId());
+            pbQueryReguestBuilder.addAllGlobalReservationId(querySummarySync.getGlobalReservationId());
+            LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
             // QuerySummarySync returns a QuerySummaryConfirmedRequest bypassing the associated Response messages
-            QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest = connectionProviderStub
-                    .querySummarySync(pbQuerySummaryReguestBuilder.build());
-            // the pbQuerySummaryConfirmedRequest does not have a service exception field,
-            // it is assumed that the query summary operations does not cause exceptions in SuPA
+            QueryConfirmedRequest pbQueryConfirmedRequest = connectionProviderStub
+                    .querySummarySync(pbQueryReguestBuilder.build());
+            // the pbQueryConfirmedRequest does not have a service exception field,
+            // it is assumed that the query operations does not cause exceptions in SuPA
 
             var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
             QuerySummaryConfirmedType soapQuerySummaryConfirmed = objectFactory.createQuerySummaryConfirmedType();
-            for (QuerySummaryResultType soapQuerySummaryResult : toSoap(pbQuerySummaryConfirmedRequest))
+            for (QuerySummaryResultType soapQuerySummaryResult : toSoap(pbQueryConfirmedRequest))
                 soapQuerySummaryConfirmed.getReservation().add(soapQuerySummaryResult);
             OffsetDateTime lastModified = null;
-            if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {
-                lastModified = toSoap(pbQuerySummaryConfirmedRequest.getLastModified());
+            if (!pbQueryConfirmedRequest.getLastModified().equals(EPOCH)) {
+                lastModified = toSoap(pbQueryConfirmedRequest.getLastModified());
             }
             soapQuerySummaryConfirmed.setLastModified(lastModified);
             return soapQuerySummaryConfirmed;
@@ -515,22 +515,22 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             LOG.fine(String.format("if modified since %s", querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
-            pbQuerySummaryReguestBuilder.setHeader(pbHeader);
+            QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
+            pbQueryReguestBuilder.setHeader(pbHeader);
             if (querySummary.getIfModifiedSince() != null) {
-                pbQuerySummaryReguestBuilder.setIfModifiedSince(Timestamps.parse(querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+                pbQueryReguestBuilder.setIfModifiedSince(Timestamps.parse(querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
             }
-            pbQuerySummaryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
-            pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
-            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build());
-            QuerySummaryResponse pbQuerySummaryResponse = connectionProviderStub
-                    .querySummary(pbQuerySummaryReguestBuilder.build());
-            // check the protobuf QuerySummaryResponse and either return a SOAP ServiceException or the generic Ack
-            if (pbQuerySummaryResponse.hasServiceException()) {
+            pbQueryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
+            pbQueryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
+            LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
+            QueryResponse pbQueryResponse = connectionProviderStub
+                    .querySummary(pbQueryReguestBuilder.build());
+            // check the protobuf QueryResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryResponse.hasServiceException()) {
                 addHeaders(soapHeader.value);
                 throw new ServiceException(
-                        pbQuerySummaryResponse.getServiceException().getText(),
-                        toSoap(pbQuerySummaryResponse.getServiceException())
+                        pbQueryResponse.getServiceException().getText(),
+                        toSoap(pbQueryResponse.getServiceException())
                 );
             }
             var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();

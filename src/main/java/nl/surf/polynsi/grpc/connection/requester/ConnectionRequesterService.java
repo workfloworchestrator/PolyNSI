@@ -421,32 +421,32 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     }
 
     @Override
-    public void querySummaryConfirmed(QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest,
-                                      StreamObserver<QuerySummaryConfirmedResponse> responseObserver) {
+    public void querySummaryConfirmed(QueryConfirmedRequest pbQueryConfirmedRequest,
+                                      StreamObserver<QueryConfirmedResponse> responseObserver) {
         try {
             LOG.info(String.format("gRPC->SOAP querySummaryConfirmed to %s at %s",
-                    pbQuerySummaryConfirmedRequest.getHeader().getRequesterNsa(),
-                    pbQuerySummaryConfirmedRequest.getHeader().getReplyTo()));
-            LOG.finer("Received protobuf message `querySummaryConfirmed`:\n" + pbQuerySummaryConfirmedRequest.toString());
+                    pbQueryConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbQueryConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `queryConfirmed`:\n" + pbQueryConfirmedRequest.toString());
 
-            QuerySummaryConfirmedResponse pbQuerySummaryConfirmedResponse = QuerySummaryConfirmedResponse.newBuilder()
-                    .setHeader(pbQuerySummaryConfirmedRequest.getHeader()).build();
+            QueryConfirmedResponse pbQueryConfirmedResponse = QueryConfirmedResponse.newBuilder()
+                    .setHeader(pbQueryConfirmedRequest.getHeader()).build();
 
-            List<QuerySummaryResultType> soapReservations = toSoap(pbQuerySummaryConfirmedRequest);
+            List<QuerySummaryResultType> soapReservations = toSoap(pbQueryConfirmedRequest);
 
             OffsetDateTime lastModified = null;
-            if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {
-                lastModified = toSoap(pbQuerySummaryConfirmedRequest.getLastModified());
+            if (!pbQueryConfirmedRequest.getLastModified().equals(EPOCH)) {
+                lastModified = toSoap(pbQueryConfirmedRequest.getLastModified());
             }
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
-            soapHeaderHolder.value = toSoap(pbQuerySummaryConfirmedRequest.getHeader());
+            soapHeaderHolder.value = toSoap(pbQueryConfirmedRequest.getHeader());
 
             ConnectionRequesterPort connectionRequesterProxy =
-                    connectionRequesterProxy(pbQuerySummaryConfirmedRequest.getHeader().getReplyTo());
+                    connectionRequesterProxy(pbQueryConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy.querySummaryConfirmed(soapReservations, lastModified, soapHeaderHolder);
 
-            responseObserver.onNext(pbQuerySummaryConfirmedResponse);
+            responseObserver.onNext(pbQueryConfirmedResponse);
             responseObserver.onCompleted();
         } catch (ConverterException | ServiceException | WebServiceException e) {
             throw new ProxyException(Direction.GRPC_TO_SOAP, "querySummaryConfirmed", e);
