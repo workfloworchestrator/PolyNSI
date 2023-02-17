@@ -278,20 +278,37 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                                   javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC queryNotification from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s", connectionId));
-        LOG.fine(String.format("start notification ID %d", startNotificationId));
-        LOG.fine(String.format("end notification ID %d", endNotificationId));
-        // TODO: replace notImplementedServiceException with queryNotification implementation
-        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryNotification");
-        throw new ServiceException(serviceException.getText(), serviceException);
-
-        // try {
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new ServiceException(
-        //             ex.toString(),
-        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-        //     );
-        // }
+        if (startNotificationId != null)
+            LOG.fine(String.format("start notification ID %d", startNotificationId));
+        if (endNotificationId != null)
+            LOG.fine(String.format("end notification ID %d", endNotificationId));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryNotificationRequest.Builder pbQueryNotificationReguestBuilder = QueryNotificationRequest.newBuilder();
+            pbQueryNotificationReguestBuilder.setHeader(pbHeader);
+            pbQueryNotificationReguestBuilder.setConnectionId(connectionId);
+            if (startNotificationId != null)
+                pbQueryNotificationReguestBuilder.setStartNotificationId(startNotificationId);
+            if (endNotificationId != null)
+                pbQueryNotificationReguestBuilder.setEndNotificationId(endNotificationId);
+            LOG.finer("Built protobuf message `QueryNotificationRequest`:\n" + pbQueryNotificationReguestBuilder.build());
+            QueryNotificationResponse pbQueryNotificationResponse = connectionProviderStub
+                    .queryNotification(pbQueryNotificationReguestBuilder.build());
+            // check the protobuf QueryNotificationResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryNotificationResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQueryNotificationResponse.getServiceException().getText(),
+                        toSoap(pbQueryNotificationResponse.getServiceException())
+                );
+            }
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
