@@ -496,12 +496,14 @@ public class Converter {
             soapReservation.setConnectionId(pbReservation.getConnectionId());
             soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
             soapReservation.setConnectionStates(toSoap(pbReservation.getConnectionStates()));
-            if (pbReservation.getGlobalReservationId().length() > 0) {
+            if (pbReservation.getGlobalReservationId().length() > 0)
                 soapReservation.setGlobalReservationId(pbReservation.getGlobalReservationId());
-            }
-            if (pbReservation.getDescription().length() > 0) {
+            if (pbReservation.getDescription().length() > 0)
                 soapReservation.setDescription(pbReservation.getDescription());
-            }
+            if (pbReservation.getResultId() > 0)
+                soapReservation.setResultId(pbReservation.getResultId());
+            if (pbReservation.getNotificationId() > 0)
+                soapReservation.setNotificationId(pbReservation.getNotificationId());
             QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
                     .createQuerySummaryResultCriteriaType();
             // TODO: when Modify Reservation is implemented, add all criteria
@@ -525,12 +527,14 @@ public class Converter {
             recursiveReservation.setConnectionId(summaryReservation.getConnectionId());
             recursiveReservation.setRequesterNSA(summaryReservation.getRequesterNSA());
             recursiveReservation.setConnectionStates(summaryReservation.getConnectionStates());
-            if (summaryReservation.getGlobalReservationId() != null) {
+            if (summaryReservation.getGlobalReservationId() != null)
                 recursiveReservation.setGlobalReservationId(summaryReservation.getGlobalReservationId());
-            }
-            if (summaryReservation.getDescription() != null) {
+            if (summaryReservation.getDescription() != null)
                 recursiveReservation.setDescription(summaryReservation.getDescription());
-            }
+            if (summaryReservation.getResultId() != null)
+                recursiveReservation.setResultId(summaryReservation.getResultId());
+            if (summaryReservation.getNotificationId() != null)
+                recursiveReservation.setNotificationId(summaryReservation.getNotificationId());
             QueryRecursiveResultCriteriaType recursiveResultCriteria = objectFactory
                     .createQueryRecursiveResultCriteriaType();
             // TODO: when Modify Reservation is implemented, add all criteria
