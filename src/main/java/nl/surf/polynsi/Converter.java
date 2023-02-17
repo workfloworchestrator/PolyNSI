@@ -515,4 +515,33 @@ public class Converter {
         }
         return soapReservations;
     }
+
+    public static List<QueryRecursiveResultType> toQueryRecursiveResult(List<QuerySummaryResultType> summaryReservations)
+            throws ConverterException {
+        ObjectFactory objectFactory = new ObjectFactory();
+        List<QueryRecursiveResultType> recursiveReservations = new ArrayList<>();
+        for (QuerySummaryResultType summaryReservation : summaryReservations) {
+            QueryRecursiveResultType recursiveReservation = objectFactory.createQueryRecursiveResultType();
+            recursiveReservation.setConnectionId(summaryReservation.getConnectionId());
+            recursiveReservation.setRequesterNSA(summaryReservation.getRequesterNSA());
+            recursiveReservation.setConnectionStates(summaryReservation.getConnectionStates());
+            if (summaryReservation.getGlobalReservationId() != null) {
+                recursiveReservation.setGlobalReservationId(summaryReservation.getGlobalReservationId());
+            }
+            if (summaryReservation.getDescription() != null) {
+                recursiveReservation.setDescription(summaryReservation.getDescription());
+            }
+            QueryRecursiveResultCriteriaType recursiveResultCriteria = objectFactory
+                    .createQueryRecursiveResultCriteriaType();
+            // TODO: when Modify Reservation is implemented, add all criteria
+            QuerySummaryResultCriteriaType summaryResultCriteria = summaryReservation.getCriteria().get(0);
+            recursiveResultCriteria.setVersion(summaryResultCriteria.getVersion());
+            recursiveResultCriteria.setSchedule(summaryResultCriteria.getSchedule());
+            recursiveResultCriteria.setServiceType(summaryResultCriteria.getServiceType());
+            recursiveResultCriteria.getAny().add(summaryResultCriteria.getAny().get(0));
+            recursiveReservation.getCriteria().add(recursiveResultCriteria);
+            recursiveReservations.add(recursiveReservation);
+        }
+        return recursiveReservations;
+    }
 }

@@ -11,6 +11,7 @@ import nl.surf.polynsi.ProxyException;
 import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ServiceException;
 import nl.surf.polynsi.soap.connection.types.ObjectFactory;
+import nl.surf.polynsi.soap.connection.types.QueryRecursiveResultType;
 import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
 import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
@@ -25,8 +26,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static com.google.protobuf.util.Timestamps.EPOCH;
-import static nl.surf.polynsi.Converter.toSoap;
-import static nl.surf.polynsi.Converter.toValuePairList;
+import static nl.surf.polynsi.Converter.*;
 
 @GrpcService
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
@@ -445,6 +445,34 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             ConnectionRequesterPort connectionRequesterProxy =
                     connectionRequesterProxy(pbQueryConfirmedRequest.getHeader().getReplyTo());
             connectionRequesterProxy.querySummaryConfirmed(soapReservations, lastModified, soapHeaderHolder);
+
+            responseObserver.onNext(pbQueryConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "querySummaryConfirmed", e);
+        }
+    }
+
+    @Override
+    public void queryRecursiveConfirmed(QueryConfirmedRequest pbQueryConfirmedRequest,
+                                      StreamObserver<QueryConfirmedResponse> responseObserver) {
+        try {
+            LOG.info(String.format("gRPC->SOAP queryRecursiveConfirmed to %s at %s",
+                    pbQueryConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbQueryConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `queryConfirmed`:\n" + pbQueryConfirmedRequest.toString());
+
+            QueryConfirmedResponse pbQueryConfirmedResponse = QueryConfirmedResponse.newBuilder()
+                    .setHeader(pbQueryConfirmedRequest.getHeader()).build();
+
+            List<QueryRecursiveResultType> soapReservations = toQueryRecursiveResult(toSoap(pbQueryConfirmedRequest));
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbQueryConfirmedRequest.getHeader());
+
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbQueryConfirmedRequest.getHeader().getReplyTo());
+            connectionRequesterProxy.queryRecursiveConfirmed(soapReservations, soapHeaderHolder);
 
             responseObserver.onNext(pbQueryConfirmedResponse);
             responseObserver.onCompleted();

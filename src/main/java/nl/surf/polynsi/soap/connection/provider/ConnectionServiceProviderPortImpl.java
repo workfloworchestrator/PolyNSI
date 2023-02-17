@@ -208,19 +208,41 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public GenericAcknowledgmentType queryRecursive(QueryType queryRecursive, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC queryRecursive from %s", soapHeader.value.getRequesterNSA()));
-        // TODO: replace notImplementedServiceException with queryRecursive implementation
-        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryRecursive");
-        throw new ServiceException(serviceException.getText(), serviceException);
-        // try {
-        //     GenericAcknowledgmentType _return = null;
-        //     return _return;
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new ServiceException(
-        //             ex.toString(),
-        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
-        //     );
-        // }
+        for (String connectionId : queryRecursive.getConnectionId())
+            LOG.fine(String.format("connection ID %s", connectionId));
+        for (String globalReservationId : queryRecursive.getGlobalReservationId())
+            LOG.fine(String.format("global reservation ID %s", globalReservationId));
+        if (queryRecursive.getIfModifiedSince() != null)
+            LOG.fine(String.format("if modified since %s", queryRecursive.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
+            pbQueryReguestBuilder.setHeader(pbHeader);
+            if (queryRecursive.getIfModifiedSince() != null) {
+                pbQueryReguestBuilder.setIfModifiedSince(Timestamps.parse(queryRecursive.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+            }
+            pbQueryReguestBuilder.addAllConnectionId(queryRecursive.getConnectionId());
+            pbQueryReguestBuilder.addAllGlobalReservationId(queryRecursive.getGlobalReservationId());
+            LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
+            QueryResponse pbQueryResponse = connectionProviderStub
+                    .queryRecursive(pbQueryReguestBuilder.build());
+            // check the protobuf QueryResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQueryResponse.getServiceException().getText(),
+                        toSoap(pbQueryResponse.getServiceException())
+                );
+            }
+            var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+            return objectFactory.createGenericAcknowledgmentType();
+        } catch (ConverterException | ParseException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     public void reserveCommit(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
