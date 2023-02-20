@@ -518,34 +518,34 @@ public class Converter {
         return soapReservations;
     }
 
-    public static List<QueryRecursiveResultType> toQueryRecursiveResult(List<QuerySummaryResultType> summaryReservations)
+    public static List<QueryRecursiveResultType> toSoapQueryRecursiveResult(QueryConfirmedRequest pbQueryConfirmedRequest)
             throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
-        List<QueryRecursiveResultType> recursiveReservations = new ArrayList<>();
-        for (QuerySummaryResultType summaryReservation : summaryReservations) {
-            QueryRecursiveResultType recursiveReservation = objectFactory.createQueryRecursiveResultType();
-            recursiveReservation.setConnectionId(summaryReservation.getConnectionId());
-            recursiveReservation.setRequesterNSA(summaryReservation.getRequesterNSA());
-            recursiveReservation.setConnectionStates(summaryReservation.getConnectionStates());
-            if (summaryReservation.getGlobalReservationId() != null)
-                recursiveReservation.setGlobalReservationId(summaryReservation.getGlobalReservationId());
-            if (summaryReservation.getDescription() != null)
-                recursiveReservation.setDescription(summaryReservation.getDescription());
-            if (summaryReservation.getResultId() != null)
-                recursiveReservation.setResultId(summaryReservation.getResultId());
-            if (summaryReservation.getNotificationId() != null)
-                recursiveReservation.setNotificationId(summaryReservation.getNotificationId());
-            QueryRecursiveResultCriteriaType recursiveResultCriteria = objectFactory
+        List<QueryRecursiveResultType> soapReservations = new ArrayList<>();
+        for (QueryResult pbReservation : pbQueryConfirmedRequest.getReservationList()) {
+            QueryRecursiveResultType soapReservation = objectFactory.createQueryRecursiveResultType();
+            soapReservation.setConnectionId(pbReservation.getConnectionId());
+            soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
+            soapReservation.setConnectionStates(toSoap(pbReservation.getConnectionStates()));
+            if (pbReservation.getGlobalReservationId().length() > 0)
+                soapReservation.setGlobalReservationId(pbReservation.getGlobalReservationId());
+            if (pbReservation.getDescription().length() > 0)
+                soapReservation.setDescription(pbReservation.getDescription());
+            if (pbReservation.getResultId() > 0)
+                soapReservation.setResultId(pbReservation.getResultId());
+            if (pbReservation.getNotificationId() > 0)
+                soapReservation.setNotificationId(pbReservation.getNotificationId());
+            QueryRecursiveResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
                     .createQueryRecursiveResultCriteriaType();
             // TODO: when Modify Reservation is implemented, add all criteria
-            QuerySummaryResultCriteriaType summaryResultCriteria = summaryReservation.getCriteria().get(0);
-            recursiveResultCriteria.setVersion(summaryResultCriteria.getVersion());
-            recursiveResultCriteria.setSchedule(summaryResultCriteria.getSchedule());
-            recursiveResultCriteria.setServiceType(summaryResultCriteria.getServiceType());
-            recursiveResultCriteria.getAny().add(summaryResultCriteria.getAny().get(0));
-            recursiveReservation.getCriteria().add(recursiveResultCriteria);
-            recursiveReservations.add(recursiveReservation);
+            QueryResultCriteria pbCriteria = pbReservation.getCriteria(0);
+            soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
+            soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+            soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
+            soapQuerySummaryResultCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
+            soapReservation.getCriteria().add(soapQuerySummaryResultCriteria);
+            soapReservations.add(soapReservation);
         }
-        return recursiveReservations;
+        return soapReservations;
     }
 }

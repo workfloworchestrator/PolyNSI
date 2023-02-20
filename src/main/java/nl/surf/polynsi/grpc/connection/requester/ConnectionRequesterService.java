@@ -465,7 +465,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             QueryConfirmedResponse pbQueryConfirmedResponse = QueryConfirmedResponse.newBuilder()
                     .setHeader(pbQueryConfirmedRequest.getHeader()).build();
 
-            List<QueryRecursiveResultType> soapReservations = toQueryRecursiveResult(toSoap(pbQueryConfirmedRequest));
+            List<QueryRecursiveResultType> soapReservations = toSoapQueryRecursiveResult(pbQueryConfirmedRequest);
 
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbQueryConfirmedRequest.getHeader());
