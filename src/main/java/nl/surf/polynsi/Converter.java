@@ -14,9 +14,7 @@ import nl.surf.polynsi.soap.framework.types.VariablesType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.ogf.nsi.grpc.connection.common.*;
-import org.ogf.nsi.grpc.connection.requester.QueryConfirmedRequest;
-import org.ogf.nsi.grpc.connection.requester.QueryResult;
-import org.ogf.nsi.grpc.connection.requester.QueryResultCriteria;
+import org.ogf.nsi.grpc.connection.requester.*;
 import org.ogf.nsi.grpc.policy.Path;
 import org.ogf.nsi.grpc.policy.PathTrace;
 import org.ogf.nsi.grpc.policy.Segment;
@@ -487,11 +485,11 @@ public class Converter {
         return servicesObjFactory.createP2Ps(soapP2PServiceType);
     }
 
-    public static List<QuerySummaryResultType> toSoap(QueryConfirmedRequest pbQueryConfirmedRequest)
+    public static List<QuerySummaryResultType> toSoap(QueryConfirmedRequest pbQueryConfirmed)
             throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
         List<QuerySummaryResultType> soapReservations = new ArrayList<>();
-        for (QueryResult pbReservation : pbQueryConfirmedRequest.getReservationList()) {
+        for (QueryResult pbReservation : pbQueryConfirmed.getReservationList()) {
             QuerySummaryResultType soapReservation = objectFactory.createQuerySummaryResultType();
             soapReservation.setConnectionId(pbReservation.getConnectionId());
             soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
@@ -518,11 +516,11 @@ public class Converter {
         return soapReservations;
     }
 
-    public static List<QueryRecursiveResultType> toSoapQueryRecursiveResult(QueryConfirmedRequest pbQueryConfirmedRequest)
+    public static List<QueryRecursiveResultType> toSoapQueryRecursiveResult(QueryConfirmedRequest pbQueryConfirmed)
             throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
         List<QueryRecursiveResultType> soapReservations = new ArrayList<>();
-        for (QueryResult pbReservation : pbQueryConfirmedRequest.getReservationList()) {
+        for (QueryResult pbReservation : pbQueryConfirmed.getReservationList()) {
             QueryRecursiveResultType soapReservation = objectFactory.createQueryRecursiveResultType();
             soapReservation.setConnectionId(pbReservation.getConnectionId());
             soapReservation.setRequesterNSA(pbReservation.getRequesterNsa());
@@ -547,5 +545,63 @@ public class Converter {
             soapReservations.add(soapReservation);
         }
         return soapReservations;
+    }
+
+    public static QueryNotificationConfirmedType toSoap(QueryNotificationConfirmedRequest pbQueryNotificationConfirmed) throws ConverterException {
+        ObjectFactory objectFactory = new ObjectFactory();
+        QueryNotificationConfirmedType soapQueryNotificationConfirmed = objectFactory.createQueryNotificationConfirmedType();
+        for (ErrorEventRequest pbErrorEvent : pbQueryNotificationConfirmed.getErrorEventList())
+            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbErrorEvent));
+        for (ReserveTimeoutRequest pbReserveTimeout : pbQueryNotificationConfirmed.getReserveTimeoutList())
+            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbReserveTimeout));
+        for (DataPlaneStateChangeRequest pbDataPlaneStateChange : pbQueryNotificationConfirmed.getDataPlaneStateChangeList())
+            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbDataPlaneStateChange));
+        for (MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout : pbQueryNotificationConfirmed.getMessageDeliveryTimeoutList())
+            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbMessageDeliveryTimeout));
+        return soapQueryNotificationConfirmed;
+    }
+
+    private static void addNotificationBase (Notification pbNotification, NotificationBaseType soapNotification) {
+        soapNotification.setConnectionId(pbNotification.getConnectionId());
+        soapNotification.setNotificationId(pbNotification.getNotificationId());
+        soapNotification.setTimeStamp(toSoap(pbNotification.getTimeStamp()));
+    }
+
+    private static ErrorEventType toSoap(ErrorEventRequest pbErrorEvent) throws ConverterException {
+        ObjectFactory objectFactory = new ObjectFactory();
+        ErrorEventType soapErrorEvent = objectFactory.createErrorEventType();
+        addNotificationBase(pbErrorEvent.getNotification(), soapErrorEvent);
+        soapErrorEvent.setEvent(toSoap(pbErrorEvent.getEvent()));
+        soapErrorEvent.setOriginatingConnectionId(pbErrorEvent.getOriginatingConnectionId());
+        soapErrorEvent.setOriginatingNSA(pbErrorEvent.getOriginatingNsa());
+        soapErrorEvent.setAdditionalInfo(toValuePairList(toSoap(pbErrorEvent.getAdditionalInfoList())));
+        soapErrorEvent.setServiceException(toSoap(pbErrorEvent.getServiceException()));
+        return soapErrorEvent;
+    }
+
+    private static ReserveTimeoutRequestType toSoap(ReserveTimeoutRequest pbReserveTimeout) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        ReserveTimeoutRequestType soapReserveTimeout = objectFactory.createReserveTimeoutRequestType();
+        addNotificationBase(pbReserveTimeout.getNotification(), soapReserveTimeout);
+        soapReserveTimeout.setTimeoutValue(pbReserveTimeout.getTimeoutValue());
+        soapReserveTimeout.setOriginatingConnectionId(pbReserveTimeout.getOriginatingConnectionId());
+        soapReserveTimeout.setOriginatingNSA(pbReserveTimeout.getOriginatingNsa());
+        return soapReserveTimeout;
+    }
+
+    private static DataPlaneStateChangeRequestType toSoap(DataPlaneStateChangeRequest pbDataPlaneStateChange) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        DataPlaneStateChangeRequestType soapDataPlaneStateChange = objectFactory.createDataPlaneStateChangeRequestType();
+        addNotificationBase(pbDataPlaneStateChange.getNotification(), soapDataPlaneStateChange);
+        soapDataPlaneStateChange.setDataPlaneStatus(toSoap(pbDataPlaneStateChange.getDataPlaneStatus()));
+        return soapDataPlaneStateChange;
+    }
+
+    private static MessageDeliveryTimeoutRequestType toSoap(MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        MessageDeliveryTimeoutRequestType soapMessageDeliveryTimeout = objectFactory.createMessageDeliveryTimeoutRequestType();
+        addNotificationBase(pbMessageDeliveryTimeout.getNotification(), soapMessageDeliveryTimeout);
+        soapMessageDeliveryTimeout.setCorrelationId(pbMessageDeliveryTimeout.getCorrelationId());
+        return soapMessageDeliveryTimeout;
     }
 }

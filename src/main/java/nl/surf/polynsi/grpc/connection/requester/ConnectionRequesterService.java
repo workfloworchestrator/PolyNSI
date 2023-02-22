@@ -10,13 +10,11 @@ import nl.surf.polynsi.Direction;
 import nl.surf.polynsi.ProxyException;
 import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ServiceException;
-import nl.surf.polynsi.soap.connection.types.ObjectFactory;
-import nl.surf.polynsi.soap.connection.types.QueryRecursiveResultType;
-import nl.surf.polynsi.soap.connection.types.QuerySummaryResultType;
-import nl.surf.polynsi.soap.connection.types.ReservationConfirmCriteriaType;
+import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
+import org.ogf.nsi.grpc.connection.provider.QueryNotificationResponse;
 import org.ogf.nsi.grpc.connection.requester.*;
 
 import javax.xml.ws.Holder;
@@ -253,7 +251,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             ConnectionRequesterPort connectionRequesterProxy =
                     connectionRequesterProxy(pbErrorEventRequest.getHeader().getReplyTo());
             connectionRequesterProxy.errorEvent(
-                            pbErrorEventRequest.getOriginatingConnectionId(),
+                            pbErrorEventRequest.getNotification().getConnectionId(),
                             pbErrorEventRequest.getNotification().getNotificationId(),
                             toSoap(pbErrorEventRequest.getNotification().getTimeStamp()),
                             toSoap(pbErrorEventRequest.getEvent()),
@@ -455,7 +453,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
 
     @Override
     public void queryRecursiveConfirmed(QueryConfirmedRequest pbQueryConfirmedRequest,
-                                      StreamObserver<QueryConfirmedResponse> responseObserver) {
+                                        StreamObserver<QueryConfirmedResponse> responseObserver) {
         try {
             LOG.info(String.format("gRPC->SOAP queryRecursiveConfirmed to %s at %s",
                     pbQueryConfirmedRequest.getHeader().getRequesterNsa(),
@@ -480,4 +478,33 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             throw new ProxyException(Direction.GRPC_TO_SOAP, "querySummaryConfirmed", e);
         }
     }
+
+    @Override
+    public void queryNotificationConfirmed(QueryNotificationConfirmedRequest pbQueryNotificationConfirmedRequest,
+                                           StreamObserver<QueryNotificationConfirmedResponse> responseObserver) {
+        try {
+            LOG.info(String.format("gRPC->SOAP queryNotificationConfirmed to %s at %s",
+                    pbQueryNotificationConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbQueryNotificationConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `queryNotificationConfirmed`:\n" + pbQueryNotificationConfirmedRequest.toString());
+
+            QueryNotificationConfirmedResponse pbQueryNotificationConfirmedResponse = QueryNotificationConfirmedResponse.newBuilder()
+                    .setHeader(pbQueryNotificationConfirmedRequest.getHeader()).build();
+
+            QueryNotificationConfirmedType soapQueryNotificationConfirmed = toSoap(pbQueryNotificationConfirmedRequest);
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbQueryNotificationConfirmedRequest.getHeader());
+
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbQueryNotificationConfirmedRequest.getHeader().getReplyTo());
+            connectionRequesterProxy.queryNotificationConfirmed(soapQueryNotificationConfirmed, soapHeaderHolder);
+
+            responseObserver.onNext(pbQueryNotificationConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "querySummaryConfirmed", e);
+        }
+    }
+
 }
