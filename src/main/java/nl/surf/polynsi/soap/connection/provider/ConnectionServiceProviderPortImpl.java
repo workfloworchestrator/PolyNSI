@@ -20,6 +20,7 @@ import org.ogf.nsi.grpc.connection.common.Header;
 import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.*;
 import org.ogf.nsi.grpc.connection.requester.QueryConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryNotificationConfirmedRequest;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
@@ -607,21 +608,34 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     public QueryNotificationConfirmedType queryNotificationSync(QueryNotificationType queryNotificationSync,
                                                                 javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
         LOG.info(String.format("SOAP->gRPC queryNotificationSync from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s, %d, %d", queryNotificationSync.getConnectionId(),
-                queryNotificationSync.getStartNotificationId(), queryNotificationSync.getEndNotificationId()));
-        // TODO: replace notImplementedError with queryNotificationSync implementation
-        var error = notImplementedError(soapHeader.value.getProviderNSA(), "queryNotificationSync");
-        throw new Error(error.getServiceException().getText(), error);
-        // try {
-        //     QueryNotificationConfirmedType _return = null;
-        //     return _return;
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new Error(
-        //             ex.toString(),
-        //             genericInternalError(soapHeader.value.getProviderNSA(), queryNotificationSync.getConnectionId(), ex.toString())
-        //     );
-        // }
+        LOG.fine(String.format("connection ID %s", queryNotificationSync.getConnectionId()));
+        if (queryNotificationSync.getStartNotificationId() != null)
+            LOG.fine(String.format("start notification ID %d", queryNotificationSync.getStartNotificationId()));
+        if (queryNotificationSync.getEndNotificationId() != null)
+            LOG.fine(String.format("end notification ID %d", queryNotificationSync.getEndNotificationId()));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryNotificationRequest.Builder pbQueryNotificationReguestBuilder = QueryNotificationRequest.newBuilder();
+            pbQueryNotificationReguestBuilder.setHeader(pbHeader);
+            pbQueryNotificationReguestBuilder.setConnectionId(queryNotificationSync.getConnectionId());
+            if (queryNotificationSync.getStartNotificationId() != null)
+                pbQueryNotificationReguestBuilder.setStartNotificationId(queryNotificationSync.getStartNotificationId());
+            if (queryNotificationSync.getEndNotificationId() != null)
+                pbQueryNotificationReguestBuilder.setEndNotificationId(queryNotificationSync.getEndNotificationId());
+            LOG.finer("Built protobuf message `QueryNotificationReguest`:\n" + pbQueryNotificationReguestBuilder.build());
+            // queryNotificationSync returns a QueryNotificationConfirmedRequest bypassing the generic Response messages
+            QueryNotificationConfirmedRequest pbQueryConfirmedRequest = connectionProviderStub
+                    .queryNotificationSync(pbQueryNotificationReguestBuilder.build());
+            // the pbQueryConfirmedRequest does not have a service exception field,
+            // it is assumed that the query operations does not cause exceptions in SuPA
+            return toSoap(pbQueryConfirmedRequest);
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
 }
