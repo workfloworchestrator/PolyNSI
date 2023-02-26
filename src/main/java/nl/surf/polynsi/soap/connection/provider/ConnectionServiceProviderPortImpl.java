@@ -21,6 +21,7 @@ import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.*;
 import org.ogf.nsi.grpc.connection.requester.QueryConfirmedRequest;
 import org.ogf.nsi.grpc.connection.requester.QueryNotificationConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryResultConfirmedRequest;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
@@ -470,21 +471,33 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                                                                    javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
         LOG.info(String.format("SOAP->gRPC queryResultSync from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s", connectionId));
-        LOG.fine(String.format("start result ID %d", startResultId));
-        LOG.fine(String.format("end result ID %d", endResultId));
-        // TODO: replace notImplementedError with queryResultSync implementation
-        var error = notImplementedError(soapHeader.value.getProviderNSA(), "queryResultSync");
-        throw new Error(error.getServiceException().getText(), error);
-        // try {
-        //     java.util.List<QueryResultResponseType> _return = null;
-        //     return _return;
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new Error(
-        //             ex.toString(),
-        //             genericInternalError(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-        //     );
-        // }
+        if (startResultId != null)
+            LOG.fine(String.format("start result ID %d", startResultId));
+        if (endResultId != null)
+            LOG.fine(String.format("end result ID %d", endResultId));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryResultRequest.Builder pbQueryResultReguestBuilder = QueryResultRequest.newBuilder();
+            pbQueryResultReguestBuilder.setHeader(pbHeader);
+            pbQueryResultReguestBuilder.setConnectionId(connectionId);
+            if (startResultId != null)
+                pbQueryResultReguestBuilder.setStartResultId(startResultId);
+            if (endResultId != null)
+                pbQueryResultReguestBuilder.setEndResultId(endResultId);
+            LOG.finer("Built protobuf message `QueryResultRequest`:\n" + pbQueryResultReguestBuilder.build());
+            // queryResultSync returns a QueryResultConfirmedRequest bypassing the generic Response messages
+            QueryResultConfirmedRequest pbQueryResultConfirmedRequest = connectionProviderStub
+                    .queryResultSync(pbQueryResultReguestBuilder.build());
+            // the pbQueryResultConfirmedRequest does not have a service exception field,
+            // it is assumed that the query operations does not cause exceptions in SuPA
+            return toSoap(pbQueryResultConfirmedRequest);
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -589,19 +602,37 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                             javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC queryResult from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s", connectionId));
-        LOG.fine(String.format("start result ID %d", startResultId));
-        LOG.fine(String.format("end restult ID %d", endResultId));
-        // TODO: replace notImplementedServiceException with queryResult implementation
-        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryResult");
-        throw new ServiceException(serviceException.getText(), serviceException);
-        // try {
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new ServiceException(
-        //             ex.toString(),
-        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-        //     );
-        // }
+        if (startResultId != null)
+            LOG.fine(String.format("start result ID %d", startResultId));
+        if (endResultId != null)
+            LOG.fine(String.format("end restult ID %d", endResultId));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryResultRequest.Builder pbQueryResultReguestBuilder = QueryResultRequest.newBuilder();
+            pbQueryResultReguestBuilder.setHeader(pbHeader);
+            pbQueryResultReguestBuilder.setConnectionId(connectionId);
+            if (startResultId != null)
+                pbQueryResultReguestBuilder.setStartResultId(startResultId);
+            if (endResultId != null)
+                pbQueryResultReguestBuilder.setEndResultId(endResultId);
+            LOG.finer("Built protobuf message `QueryResultRequest`:\n" + pbQueryResultReguestBuilder.build());
+            QueryResultResponse pbQueryResultResponse = connectionProviderStub
+                    .queryResult(pbQueryResultReguestBuilder.build());
+            // check the protobuf QueryResultResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryResultResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQueryResultResponse.getServiceException().getText(),
+                        toSoap(pbQueryResultResponse.getServiceException())
+                );
+            }
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")

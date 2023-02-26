@@ -14,7 +14,6 @@ import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
-import org.ogf.nsi.grpc.connection.provider.QueryNotificationResponse;
 import org.ogf.nsi.grpc.connection.requester.*;
 
 import javax.xml.ws.Holder;
@@ -72,15 +71,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             ReserveConfirmedResponse pbReserveConfirmedResponse = ReserveConfirmedResponse.newBuilder()
                     .setHeader(pbReserveConfirmedRequest.getHeader()).build();
 
-            ObjectFactory objectFactory = new ObjectFactory();
-
-            ReservationConfirmCriteriaType soapReservationConfirmCriteria = objectFactory
-                    .createReservationConfirmCriteriaType();
-            ReservationConfirmCriteria pbCriteria = pbReserveConfirmedRequest.getCriteria();
-            soapReservationConfirmCriteria.setVersion(pbCriteria.getVersion());
-            soapReservationConfirmCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
-            soapReservationConfirmCriteria.setServiceType(pbCriteria.getServiceType());
-            soapReservationConfirmCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
+            ReservationConfirmCriteriaType soapReservationConfirmCriteria = toSoap(pbReserveConfirmedRequest.getCriteria());
             Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
             soapHeaderHolder.value = toSoap(pbReserveConfirmedRequest.getHeader());
 
@@ -507,4 +498,30 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
         }
     }
 
+    public void queryResultConfirmed(QueryResultConfirmedRequest pbQueryResultConfirmedRequest,
+                                     StreamObserver<org.ogf.nsi.grpc.connection.requester.QueryResultConfirmedResponse> responseObserver) {
+        try {
+            LOG.info(String.format("gRPC->SOAP queryResultConfirmed to %s at %s",
+                    pbQueryResultConfirmedRequest.getHeader().getRequesterNsa(),
+                    pbQueryResultConfirmedRequest.getHeader().getReplyTo()));
+            LOG.finer("Received protobuf message `queryResultConfirmed`:\n" + pbQueryResultConfirmedRequest);
+
+            QueryResultConfirmedResponse pbQueryResultConfirmedResponse = QueryResultConfirmedResponse.newBuilder()
+                    .setHeader(pbQueryResultConfirmedRequest.getHeader()).build();
+
+            List<QueryResultResponseType> soapResultResponses = toSoap(pbQueryResultConfirmedRequest);
+
+            Holder<CommonHeaderType> soapHeaderHolder = new Holder<>();
+            soapHeaderHolder.value = toSoap(pbQueryResultConfirmedRequest.getHeader());
+
+            ConnectionRequesterPort connectionRequesterProxy =
+                    connectionRequesterProxy(pbQueryResultConfirmedRequest.getHeader().getReplyTo());
+            connectionRequesterProxy.queryResultConfirmed(soapResultResponses, soapHeaderHolder);
+
+            responseObserver.onNext(pbQueryResultConfirmedResponse);
+            responseObserver.onCompleted();
+        } catch (ConverterException | ServiceException | WebServiceException e) {
+            throw new ProxyException(Direction.GRPC_TO_SOAP, "queryResultConfirmed", e);
+        }
+    }
 }

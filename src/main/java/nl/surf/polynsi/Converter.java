@@ -11,6 +11,7 @@ import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
 import nl.surf.polynsi.soap.framework.types.TypeValuePairListType;
 import nl.surf.polynsi.soap.framework.types.TypeValuePairType;
 import nl.surf.polynsi.soap.framework.types.VariablesType;
+import nl.surf.polynsi.soap.services.definition.ErrorType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.ogf.nsi.grpc.connection.common.*;
@@ -567,7 +568,7 @@ public class Converter {
         soapNotification.setTimeStamp(toSoap(pbNotification.getTimeStamp()));
     }
 
-    private static ErrorEventType toSoap(ErrorEventRequest pbErrorEvent) throws ConverterException {
+    public static ErrorEventType toSoap(ErrorEventRequest pbErrorEvent) throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
         ErrorEventType soapErrorEvent = objectFactory.createErrorEventType();
         addNotificationBase(pbErrorEvent.getNotification(), soapErrorEvent);
@@ -579,7 +580,7 @@ public class Converter {
         return soapErrorEvent;
     }
 
-    private static ReserveTimeoutRequestType toSoap(ReserveTimeoutRequest pbReserveTimeout) {
+    public static ReserveTimeoutRequestType toSoap(ReserveTimeoutRequest pbReserveTimeout) {
         ObjectFactory objectFactory = new ObjectFactory();
         ReserveTimeoutRequestType soapReserveTimeout = objectFactory.createReserveTimeoutRequestType();
         addNotificationBase(pbReserveTimeout.getNotification(), soapReserveTimeout);
@@ -589,7 +590,7 @@ public class Converter {
         return soapReserveTimeout;
     }
 
-    private static DataPlaneStateChangeRequestType toSoap(DataPlaneStateChangeRequest pbDataPlaneStateChange) {
+    public static DataPlaneStateChangeRequestType toSoap(DataPlaneStateChangeRequest pbDataPlaneStateChange) {
         ObjectFactory objectFactory = new ObjectFactory();
         DataPlaneStateChangeRequestType soapDataPlaneStateChange = objectFactory.createDataPlaneStateChangeRequestType();
         addNotificationBase(pbDataPlaneStateChange.getNotification(), soapDataPlaneStateChange);
@@ -597,11 +598,135 @@ public class Converter {
         return soapDataPlaneStateChange;
     }
 
-    private static MessageDeliveryTimeoutRequestType toSoap(MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout) {
+    public static MessageDeliveryTimeoutRequestType toSoap(MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout) {
         ObjectFactory objectFactory = new ObjectFactory();
         MessageDeliveryTimeoutRequestType soapMessageDeliveryTimeout = objectFactory.createMessageDeliveryTimeoutRequestType();
         addNotificationBase(pbMessageDeliveryTimeout.getNotification(), soapMessageDeliveryTimeout);
         soapMessageDeliveryTimeout.setCorrelationId(pbMessageDeliveryTimeout.getCorrelationId());
         return soapMessageDeliveryTimeout;
+    }
+
+    public static ReservationConfirmCriteriaType toSoap(ReservationConfirmCriteria pbCriteria) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        ReservationConfirmCriteriaType soapReservationConfirmCriteria = objectFactory.createReservationConfirmCriteriaType();
+        soapReservationConfirmCriteria.setVersion(pbCriteria.getVersion());
+        soapReservationConfirmCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+        soapReservationConfirmCriteria.setServiceType(pbCriteria.getServiceType());
+        soapReservationConfirmCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
+        return soapReservationConfirmCriteria;
+    }
+
+    public static ReserveConfirmedType toSoap(ReserveConfirmedRequest pbReserveConfirmed) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        ReserveConfirmedType soapProvisionConfirmed = objectFactory.createReserveConfirmedType();
+        soapProvisionConfirmed.setConnectionId(pbReserveConfirmed.getConnectionId());
+        if (pbReserveConfirmed.getGlobalReservationId().length() > 0)
+            soapProvisionConfirmed.setGlobalReservationId(pbReserveConfirmed.getGlobalReservationId());
+        if (pbReserveConfirmed.getDescription().length() > 0)
+            soapProvisionConfirmed.setDescription(pbReserveConfirmed.getDescription());
+        soapProvisionConfirmed.setCriteria(toSoap(pbReserveConfirmed.getCriteria()));
+        return soapProvisionConfirmed;
+    }
+
+    public static GenericFailedType toSoap(ReserveFailedRequest pbReserveFailed) throws ConverterException {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericFailedType soapReserveFailed = objectFactory.createGenericFailedType();
+        soapReserveFailed.setConnectionId(pbReserveFailed.getConnectionId());
+        soapReserveFailed.setConnectionStates(toSoap(pbReserveFailed.getConnectionStates()));
+        soapReserveFailed.setServiceException(toSoap(pbReserveFailed.getServiceException()));
+        return soapReserveFailed;
+    }
+
+    public static GenericConfirmedType toSoap(ReserveCommitConfirmedRequest pbReserveCommitConfirmed) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericConfirmedType soapReserveCommitConfirmed = objectFactory.createGenericConfirmedType();
+        soapReserveCommitConfirmed.setConnectionId(pbReserveCommitConfirmed.getConnectionId());
+        return soapReserveCommitConfirmed;
+    }
+
+    public static GenericFailedType toSoap(ReserveCommitFailedRequest pbReserveCommitFailed) throws ConverterException {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericFailedType soapReserveCommitFailed = objectFactory.createGenericFailedType();
+        soapReserveCommitFailed.setConnectionId(pbReserveCommitFailed.getConnectionId());
+        soapReserveCommitFailed.setConnectionStates(toSoap(pbReserveCommitFailed.getConnectionStates()));
+        soapReserveCommitFailed.setServiceException(toSoap(pbReserveCommitFailed.getServiceException()));
+        return soapReserveCommitFailed;
+    }
+
+    public static GenericConfirmedType toSoap(ReserveAbortConfirmedRequest pbReserveAbortConfirmed) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericConfirmedType soapReserveAbortConfirmed = objectFactory.createGenericConfirmedType();
+        soapReserveAbortConfirmed.setConnectionId(pbReserveAbortConfirmed.getConnectionId());
+        return soapReserveAbortConfirmed;
+    }
+
+    public static GenericConfirmedType toSoap(ProvisionConfirmedRequest pbProvisionConfirmed) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericConfirmedType soapProvisionConfirmed = objectFactory.createGenericConfirmedType();
+        soapProvisionConfirmed.setConnectionId(pbProvisionConfirmed.getConnectionId());
+        return soapProvisionConfirmed;
+    }
+
+    public static GenericConfirmedType toSoap(ReleaseConfirmedRequest pbReleaseConfirmed) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericConfirmedType soapReleaseConfirmed = objectFactory.createGenericConfirmedType();
+        soapReleaseConfirmed.setConnectionId(pbReleaseConfirmed.getConnectionId());
+        return soapReleaseConfirmed;
+    }
+
+    public static GenericConfirmedType toSoap(TerminateConfirmedRequest pbTerminateConfirmed) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericConfirmedType soapTerminateConfirmed = objectFactory.createGenericConfirmedType();
+        soapTerminateConfirmed.setConnectionId(pbTerminateConfirmed.getConnectionId());
+        return soapTerminateConfirmed;
+    }
+
+    public static GenericErrorType toSoap(ErrorRequest pbError) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        GenericErrorType soapError = objectFactory.createGenericErrorType();
+        soapError.setServiceException(toSoap(pbError.getServiceException()));
+        return soapError;
+    }
+
+    public static List<QueryResultResponseType> toSoap(QueryResultConfirmedRequest pbQueryResultConfirmed) throws ConverterException {
+        ObjectFactory objectFactory = new ObjectFactory();
+        List<QueryResultResponseType> soapResultResponses = new ArrayList<>();
+        for (ResultResponse pbResultResponse : pbQueryResultConfirmed.getResultList()) {
+            QueryResultResponseType soapResultResponse = objectFactory.createQueryResultResponseType();
+            soapResultResponse.setResultId(pbResultResponse.getResultId());
+            soapResultResponse.setCorrelationId(pbResultResponse.getCorrelationId());
+            soapResultResponse.setTimeStamp(toSoap(pbResultResponse.getTimeStamp()));
+            switch (pbResultResponse.getTypeCase()) {
+                case RESERVE_CONFIRMED:
+                    soapResultResponse.setReserveConfirmed(toSoap(pbResultResponse.getReserveConfirmed()));
+                    break;
+                case RESERVE_FAILED:
+                    soapResultResponse.setReserveFailed(toSoap(pbResultResponse.getReserveFailed()));
+                    break;
+                case RESERVE_COMMIT_CONFIRMED:
+                    soapResultResponse.setReserveCommitConfirmed(toSoap(pbResultResponse.getReserveCommitConfirmed()));
+                    break;
+                case RESERVE_COMMIT_FAILED:
+                    soapResultResponse.setReserveCommitFailed(toSoap(pbResultResponse.getReserveCommitFailed()));
+                    break;
+                case RESERVE_ABORT_CONFIRMED:
+                    soapResultResponse.setReserveAbortConfirmed(toSoap(pbResultResponse.getReserveAbortConfirmed()));
+                    break;
+                case PROVISION_CONFIRMED:
+                    soapResultResponse.setProvisionConfirmed(toSoap(pbResultResponse.getProvisionConfirmed()));
+                    break;
+                case RELEASE_CONFIRMED:
+                    soapResultResponse.setReleaseConfirmed(toSoap(pbResultResponse.getReleaseConfirmed()));
+                    break;
+                case TERMINATE_CONFIRMED:
+                    soapResultResponse.setTerminateConfirmed(toSoap(pbResultResponse.getTerminateConfirmed()));
+                    break;
+                case ERROR:
+                    soapResultResponse.setError(toSoap(pbResultResponse.getError()));
+                    break;
+            }
+            soapResultResponses.add(soapResultResponse);
+        }
+        return soapResultResponses;
     }
 }
