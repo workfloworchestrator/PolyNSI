@@ -16,6 +16,7 @@ import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.OrderedStpType;
 import nl.surf.polynsi.soap.services.types.TypeValueType;
 import org.apache.cxf.jaxb.JAXBDataBinding;
+import org.ogf.nsi.grpc.connection.common.GenericAcknowledgment;
 import org.ogf.nsi.grpc.connection.common.Header;
 import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.*;
@@ -137,11 +138,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ProvisionRequest pbProvisionRequest = ProvisionRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbProvisionRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ProvisionRequest`:\n" + pbProvisionRequest);
-            ProvisionResponse pbProvisionResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbProvisionRequest);
+            GenericAcknowledgment pbProvisionResponse = connectionProviderStub
                     .provision(pbProvisionRequest);
             // check the protobuf ProvisionResponse and either return a SOAP ServiceException or the generic Ack
             if (pbProvisionResponse.hasServiceException()) {
@@ -226,7 +227,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             pbQueryReguestBuilder.addAllConnectionId(queryRecursive.getConnectionId());
             pbQueryReguestBuilder.addAllGlobalReservationId(queryRecursive.getGlobalReservationId());
             LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
-            QueryResponse pbQueryResponse = connectionProviderStub
+            GenericAcknowledgment pbQueryResponse = connectionProviderStub
                     .queryRecursive(pbQueryReguestBuilder.build());
             // check the protobuf QueryResponse and either return a SOAP ServiceException or the generic Ack
             if (pbQueryResponse.hasServiceException()) {
@@ -252,11 +253,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ReserveCommitRequest pbReserveCommitRequest = ReserveCommitRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbReserveCommitRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReserveCommitRequest`:\n" + pbReserveCommitRequest);
-            ReserveCommitResponse pbReserveCommitResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbReserveCommitRequest);
+            GenericAcknowledgment pbReserveCommitResponse = connectionProviderStub
                     .reserveCommit(pbReserveCommitRequest);
             // check the protobuf ReserveCommitResponse and either return a SOAP ServiceException or the generic Ack
             if (pbReserveCommitResponse.hasServiceException()) {
@@ -294,7 +295,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             if (endNotificationId != null)
                 pbQueryNotificationReguestBuilder.setEndNotificationId(endNotificationId);
             LOG.finer("Built protobuf message `QueryNotificationRequest`:\n" + pbQueryNotificationReguestBuilder.build());
-            QueryNotificationResponse pbQueryNotificationResponse = connectionProviderStub
+            GenericAcknowledgment pbQueryNotificationResponse = connectionProviderStub
                     .queryNotification(pbQueryNotificationReguestBuilder.build());
             // check the protobuf QueryNotificationResponse and either return a SOAP ServiceException or the generic Ack
             if (pbQueryNotificationResponse.hasServiceException()) {
@@ -319,11 +320,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            TerminateRequest pbTerminateRequest = TerminateRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbTerminateRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `TerminateRequest`:\n" + pbTerminateRequest);
-            TerminateResponse pbTerminateResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbTerminateRequest);
+            GenericAcknowledgment pbTerminateResponse = connectionProviderStub
                     .terminate(pbTerminateRequest);
             // check the protobuf TerminateResponse and either return a SOAP ServiceException or the generic Ack
             if (pbTerminateResponse.hasServiceException()) {
@@ -506,11 +507,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ReleaseRequest pbReleaseRequest = ReleaseRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbReleaseRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReleaseRequest`:\n" + pbReleaseRequest);
-            ReleaseResponse pbReleaseResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbReleaseRequest);
+            GenericAcknowledgment pbReleaseResponse = connectionProviderStub
                     .release(pbReleaseRequest);
             // check the protobuf ReleaseResponse and either return a SOAP ServiceException or the generic Ack
             if (pbReleaseResponse.hasServiceException()) {
@@ -534,11 +535,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ReserveAbortRequest pbReserveAbortRequest = ReserveAbortRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbReserveAbortRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReserveAbortRequest`:\n" + pbReserveAbortRequest);
-            ReserveAbortResponse pbReserveAbortResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbReserveAbortRequest);
+            GenericAcknowledgment pbReserveAbortResponse = connectionProviderStub
                     .reserveAbort(pbReserveAbortRequest);
             // check the protobuf ReserveAbortResponse and either return a SOAP ServiceException or the generic Ack
             if (pbReserveAbortResponse.hasServiceException()) {
@@ -576,7 +577,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             pbQueryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
             pbQueryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
             LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
-            QueryResponse pbQueryResponse = connectionProviderStub
+            GenericAcknowledgment pbQueryResponse = connectionProviderStub
                     .querySummary(pbQueryReguestBuilder.build());
             // check the protobuf QueryResponse and either return a SOAP ServiceException or the generic Ack
             if (pbQueryResponse.hasServiceException()) {
@@ -616,7 +617,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             if (endResultId != null)
                 pbQueryResultReguestBuilder.setEndResultId(endResultId);
             LOG.finer("Built protobuf message `QueryResultRequest`:\n" + pbQueryResultReguestBuilder.build());
-            QueryResultResponse pbQueryResultResponse = connectionProviderStub
+            GenericAcknowledgment pbQueryResultResponse = connectionProviderStub
                     .queryResult(pbQueryResultReguestBuilder.build());
             // check the protobuf QueryResultResponse and either return a SOAP ServiceException or the generic Ack
             if (pbQueryResultResponse.hasServiceException()) {

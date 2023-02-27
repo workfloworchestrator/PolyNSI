@@ -27,4 +27,3 @@ message PathTrace {
   string connection_id = 2;  // UUID
   repeated Path paths = 3;
 }
-

@@ -11,7 +11,6 @@ import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
 import nl.surf.polynsi.soap.framework.types.TypeValuePairListType;
 import nl.surf.polynsi.soap.framework.types.TypeValuePairType;
 import nl.surf.polynsi.soap.framework.types.VariablesType;
-import nl.surf.polynsi.soap.services.definition.ErrorType;
 import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.DirectionalityType;
 import org.ogf.nsi.grpc.connection.common.*;
@@ -628,57 +627,20 @@ public class Converter {
         return soapProvisionConfirmed;
     }
 
-    public static GenericFailedType toSoap(ReserveFailedRequest pbReserveFailed) throws ConverterException {
+    public static GenericFailedType toSoap(GenericFailedRequest pbFailedRequest) throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
-        GenericFailedType soapReserveFailed = objectFactory.createGenericFailedType();
-        soapReserveFailed.setConnectionId(pbReserveFailed.getConnectionId());
-        soapReserveFailed.setConnectionStates(toSoap(pbReserveFailed.getConnectionStates()));
-        soapReserveFailed.setServiceException(toSoap(pbReserveFailed.getServiceException()));
-        return soapReserveFailed;
+        GenericFailedType soapGenericFailed = objectFactory.createGenericFailedType();
+        soapGenericFailed.setConnectionId(pbFailedRequest.getConnectionId());
+        soapGenericFailed.setConnectionStates(toSoap(pbFailedRequest.getConnectionStates()));
+        soapGenericFailed.setServiceException(toSoap(pbFailedRequest.getServiceException()));
+        return soapGenericFailed;
     }
 
-    public static GenericConfirmedType toSoap(ReserveCommitConfirmedRequest pbReserveCommitConfirmed) {
+    public static GenericConfirmedType toSoap(GenericConfirmedRequest pbConfirmedRequest) {
         ObjectFactory objectFactory = new ObjectFactory();
-        GenericConfirmedType soapReserveCommitConfirmed = objectFactory.createGenericConfirmedType();
-        soapReserveCommitConfirmed.setConnectionId(pbReserveCommitConfirmed.getConnectionId());
-        return soapReserveCommitConfirmed;
-    }
-
-    public static GenericFailedType toSoap(ReserveCommitFailedRequest pbReserveCommitFailed) throws ConverterException {
-        ObjectFactory objectFactory = new ObjectFactory();
-        GenericFailedType soapReserveCommitFailed = objectFactory.createGenericFailedType();
-        soapReserveCommitFailed.setConnectionId(pbReserveCommitFailed.getConnectionId());
-        soapReserveCommitFailed.setConnectionStates(toSoap(pbReserveCommitFailed.getConnectionStates()));
-        soapReserveCommitFailed.setServiceException(toSoap(pbReserveCommitFailed.getServiceException()));
-        return soapReserveCommitFailed;
-    }
-
-    public static GenericConfirmedType toSoap(ReserveAbortConfirmedRequest pbReserveAbortConfirmed) {
-        ObjectFactory objectFactory = new ObjectFactory();
-        GenericConfirmedType soapReserveAbortConfirmed = objectFactory.createGenericConfirmedType();
-        soapReserveAbortConfirmed.setConnectionId(pbReserveAbortConfirmed.getConnectionId());
-        return soapReserveAbortConfirmed;
-    }
-
-    public static GenericConfirmedType toSoap(ProvisionConfirmedRequest pbProvisionConfirmed) {
-        ObjectFactory objectFactory = new ObjectFactory();
-        GenericConfirmedType soapProvisionConfirmed = objectFactory.createGenericConfirmedType();
-        soapProvisionConfirmed.setConnectionId(pbProvisionConfirmed.getConnectionId());
-        return soapProvisionConfirmed;
-    }
-
-    public static GenericConfirmedType toSoap(ReleaseConfirmedRequest pbReleaseConfirmed) {
-        ObjectFactory objectFactory = new ObjectFactory();
-        GenericConfirmedType soapReleaseConfirmed = objectFactory.createGenericConfirmedType();
-        soapReleaseConfirmed.setConnectionId(pbReleaseConfirmed.getConnectionId());
-        return soapReleaseConfirmed;
-    }
-
-    public static GenericConfirmedType toSoap(TerminateConfirmedRequest pbTerminateConfirmed) {
-        ObjectFactory objectFactory = new ObjectFactory();
-        GenericConfirmedType soapTerminateConfirmed = objectFactory.createGenericConfirmedType();
-        soapTerminateConfirmed.setConnectionId(pbTerminateConfirmed.getConnectionId());
-        return soapTerminateConfirmed;
+        GenericConfirmedType soapGenericConfirmed = objectFactory.createGenericConfirmedType();
+        soapGenericConfirmed.setConnectionId(pbConfirmedRequest.getConnectionId());
+        return soapGenericConfirmed;
     }
 
     public static GenericErrorType toSoap(ErrorRequest pbError) {

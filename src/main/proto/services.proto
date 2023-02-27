@@ -20,4 +20,3 @@ message PointToPointService {
   repeated string eros = 6;  // [StpId]
   map<string, string> parameters = 7;
 }
-
