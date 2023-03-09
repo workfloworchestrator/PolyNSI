@@ -16,10 +16,13 @@ import nl.surf.polynsi.soap.services.p2p.P2PServiceBaseType;
 import nl.surf.polynsi.soap.services.types.OrderedStpType;
 import nl.surf.polynsi.soap.services.types.TypeValueType;
 import org.apache.cxf.jaxb.JAXBDataBinding;
+import org.ogf.nsi.grpc.connection.common.GenericAcknowledgment;
 import org.ogf.nsi.grpc.connection.common.Header;
 import org.ogf.nsi.grpc.connection.common.Schedule;
 import org.ogf.nsi.grpc.connection.provider.*;
-import org.ogf.nsi.grpc.connection.requester.QuerySummaryConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryNotificationConfirmedRequest;
+import org.ogf.nsi.grpc.connection.requester.QueryResultConfirmedRequest;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
@@ -135,11 +138,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ProvisionRequest pbProvisionRequest = ProvisionRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbProvisionRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ProvisionRequest`:\n" + pbProvisionRequest);
-            ProvisionResponse pbProvisionResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbProvisionRequest);
+            GenericAcknowledgment pbProvisionResponse = connectionProviderStub
                     .provision(pbProvisionRequest);
             // check the protobuf ProvisionResponse and either return a SOAP ServiceException or the generic Ack
             if (pbProvisionResponse.hasServiceException()) {
@@ -170,29 +173,29 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             LOG.fine(String.format("if modified since %s", querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
-            pbQuerySummaryReguestBuilder.setHeader(pbHeader);
+            QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
+            pbQueryReguestBuilder.setHeader(pbHeader);
             if (querySummarySync.getIfModifiedSince() != null) {
-                pbQuerySummaryReguestBuilder.setIfModifiedSince(Timestamps.parse(
+                pbQueryReguestBuilder.setIfModifiedSince(Timestamps.parse(
                         querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                 ));
             }
-            pbQuerySummaryReguestBuilder.addAllConnectionId(querySummarySync.getConnectionId());
-            pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummarySync.getGlobalReservationId());
-            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build());
+            pbQueryReguestBuilder.addAllConnectionId(querySummarySync.getConnectionId());
+            pbQueryReguestBuilder.addAllGlobalReservationId(querySummarySync.getGlobalReservationId());
+            LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
             // QuerySummarySync returns a QuerySummaryConfirmedRequest bypassing the associated Response messages
-            QuerySummaryConfirmedRequest pbQuerySummaryConfirmedRequest = connectionProviderStub
-                    .querySummarySync(pbQuerySummaryReguestBuilder.build());
-            // the pbQuerySummaryConfirmedRequest does not have a service exception field,
-            // it is assumed that the query summary operations does not cause exceptions in SuPA
+            QueryConfirmedRequest pbQueryConfirmedRequest = connectionProviderStub
+                    .querySummarySync(pbQueryReguestBuilder.build());
+            // the pbQueryConfirmedRequest does not have a service exception field,
+            // it is assumed that the query operations does not cause exceptions in SuPA
 
             var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
             QuerySummaryConfirmedType soapQuerySummaryConfirmed = objectFactory.createQuerySummaryConfirmedType();
-            for (QuerySummaryResultType soapQuerySummaryResult : toSoap(pbQuerySummaryConfirmedRequest))
+            for (QuerySummaryResultType soapQuerySummaryResult : toSoap(pbQueryConfirmedRequest))
                 soapQuerySummaryConfirmed.getReservation().add(soapQuerySummaryResult);
             OffsetDateTime lastModified = null;
-            if (!pbQuerySummaryConfirmedRequest.getLastModified().equals(EPOCH)) {
-                lastModified = toSoap(pbQuerySummaryConfirmedRequest.getLastModified());
+            if (!pbQueryConfirmedRequest.getLastModified().equals(EPOCH)) {
+                lastModified = toSoap(pbQueryConfirmedRequest.getLastModified());
             }
             soapQuerySummaryConfirmed.setLastModified(lastModified);
             return soapQuerySummaryConfirmed;
@@ -208,19 +211,41 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public GenericAcknowledgmentType queryRecursive(QueryType queryRecursive, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC queryRecursive from %s", soapHeader.value.getRequesterNSA()));
-        // TODO: replace notImplementedServiceException with queryRecursive implementation
-        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryRecursive");
-        throw new ServiceException(serviceException.getText(), serviceException);
-        // try {
-        //     GenericAcknowledgmentType _return = null;
-        //     return _return;
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new ServiceException(
-        //             ex.toString(),
-        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
-        //     );
-        // }
+        for (String connectionId : queryRecursive.getConnectionId())
+            LOG.fine(String.format("connection ID %s", connectionId));
+        for (String globalReservationId : queryRecursive.getGlobalReservationId())
+            LOG.fine(String.format("global reservation ID %s", globalReservationId));
+        if (queryRecursive.getIfModifiedSince() != null)
+            LOG.fine(String.format("if modified since %s", queryRecursive.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
+            pbQueryReguestBuilder.setHeader(pbHeader);
+            if (queryRecursive.getIfModifiedSince() != null) {
+                pbQueryReguestBuilder.setIfModifiedSince(Timestamps.parse(queryRecursive.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+            }
+            pbQueryReguestBuilder.addAllConnectionId(queryRecursive.getConnectionId());
+            pbQueryReguestBuilder.addAllGlobalReservationId(queryRecursive.getGlobalReservationId());
+            LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
+            GenericAcknowledgment pbQueryResponse = connectionProviderStub
+                    .queryRecursive(pbQueryReguestBuilder.build());
+            // check the protobuf QueryResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQueryResponse.getServiceException().getText(),
+                        toSoap(pbQueryResponse.getServiceException())
+                );
+            }
+            var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+            return objectFactory.createGenericAcknowledgmentType();
+        } catch (ConverterException | ParseException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     public void reserveCommit(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
@@ -228,11 +253,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ReserveCommitRequest pbReserveCommitRequest = ReserveCommitRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbReserveCommitRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReserveCommitRequest`:\n" + pbReserveCommitRequest);
-            ReserveCommitResponse pbReserveCommitResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbReserveCommitRequest);
+            GenericAcknowledgment pbReserveCommitResponse = connectionProviderStub
                     .reserveCommit(pbReserveCommitRequest);
             // check the protobuf ReserveCommitResponse and either return a SOAP ServiceException or the generic Ack
             if (pbReserveCommitResponse.hasServiceException()) {
@@ -256,20 +281,37 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                                   javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC queryNotification from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s", connectionId));
-        LOG.fine(String.format("start notification ID %d", startNotificationId));
-        LOG.fine(String.format("end notification ID %d", endNotificationId));
-        // TODO: replace notImplementedServiceException with queryNotification implementation
-        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryNotification");
-        throw new ServiceException(serviceException.getText(), serviceException);
-
-        // try {
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new ServiceException(
-        //             ex.toString(),
-        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-        //     );
-        // }
+        if (startNotificationId != null)
+            LOG.fine(String.format("start notification ID %d", startNotificationId));
+        if (endNotificationId != null)
+            LOG.fine(String.format("end notification ID %d", endNotificationId));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryNotificationRequest.Builder pbQueryNotificationReguestBuilder = QueryNotificationRequest.newBuilder();
+            pbQueryNotificationReguestBuilder.setHeader(pbHeader);
+            pbQueryNotificationReguestBuilder.setConnectionId(connectionId);
+            if (startNotificationId != null)
+                pbQueryNotificationReguestBuilder.setStartNotificationId(startNotificationId);
+            if (endNotificationId != null)
+                pbQueryNotificationReguestBuilder.setEndNotificationId(endNotificationId);
+            LOG.finer("Built protobuf message `QueryNotificationRequest`:\n" + pbQueryNotificationReguestBuilder.build());
+            GenericAcknowledgment pbQueryNotificationResponse = connectionProviderStub
+                    .queryNotification(pbQueryNotificationReguestBuilder.build());
+            // check the protobuf QueryNotificationResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryNotificationResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQueryNotificationResponse.getServiceException().getText(),
+                        toSoap(pbQueryNotificationResponse.getServiceException())
+                );
+            }
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -278,11 +320,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            TerminateRequest pbTerminateRequest = TerminateRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbTerminateRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `TerminateRequest`:\n" + pbTerminateRequest);
-            TerminateResponse pbTerminateResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbTerminateRequest);
+            GenericAcknowledgment pbTerminateResponse = connectionProviderStub
                     .terminate(pbTerminateRequest);
             // check the protobuf TerminateResponse and either return a SOAP ServiceException or the generic Ack
             if (pbTerminateResponse.hasServiceException()) {
@@ -430,21 +472,33 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                                                                    javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
         LOG.info(String.format("SOAP->gRPC queryResultSync from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s", connectionId));
-        LOG.fine(String.format("start result ID %d", startResultId));
-        LOG.fine(String.format("end result ID %d", endResultId));
-        // TODO: replace notImplementedError with queryResultSync implementation
-        var error = notImplementedError(soapHeader.value.getProviderNSA(), "queryResultSync");
-        throw new Error(error.getServiceException().getText(), error);
-        // try {
-        //     java.util.List<QueryResultResponseType> _return = null;
-        //     return _return;
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new Error(
-        //             ex.toString(),
-        //             genericInternalError(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-        //     );
-        // }
+        if (startResultId != null)
+            LOG.fine(String.format("start result ID %d", startResultId));
+        if (endResultId != null)
+            LOG.fine(String.format("end result ID %d", endResultId));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryResultRequest.Builder pbQueryResultReguestBuilder = QueryResultRequest.newBuilder();
+            pbQueryResultReguestBuilder.setHeader(pbHeader);
+            pbQueryResultReguestBuilder.setConnectionId(connectionId);
+            if (startResultId != null)
+                pbQueryResultReguestBuilder.setStartResultId(startResultId);
+            if (endResultId != null)
+                pbQueryResultReguestBuilder.setEndResultId(endResultId);
+            LOG.finer("Built protobuf message `QueryResultRequest`:\n" + pbQueryResultReguestBuilder.build());
+            // queryResultSync returns a QueryResultConfirmedRequest bypassing the generic Response messages
+            QueryResultConfirmedRequest pbQueryResultConfirmedRequest = connectionProviderStub
+                    .queryResultSync(pbQueryResultReguestBuilder.build());
+            // the pbQueryResultConfirmedRequest does not have a service exception field,
+            // it is assumed that the query operations does not cause exceptions in SuPA
+            return toSoap(pbQueryResultConfirmedRequest);
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
@@ -453,11 +507,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ReleaseRequest pbReleaseRequest = ReleaseRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbReleaseRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReleaseRequest`:\n" + pbReleaseRequest);
-            ReleaseResponse pbReleaseResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbReleaseRequest);
+            GenericAcknowledgment pbReleaseResponse = connectionProviderStub
                     .release(pbReleaseRequest);
             // check the protobuf ReleaseResponse and either return a SOAP ServiceException or the generic Ack
             if (pbReleaseResponse.hasServiceException()) {
@@ -481,11 +535,11 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("connection ID %s", connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            ReserveAbortRequest pbReserveAbortRequest = ReserveAbortRequest.newBuilder().setHeader(pbHeader)
+            GenericRequest pbReserveAbortRequest = GenericRequest.newBuilder().setHeader(pbHeader)
                     .setConnectionId(connectionId).build();
 
-            LOG.finer("Built protobuf message `ReserveAbortRequest`:\n" + pbReserveAbortRequest);
-            ReserveAbortResponse pbReserveAbortResponse = connectionProviderStub
+            LOG.finer("Built protobuf message `GenericRequest`:\n" + pbReserveAbortRequest);
+            GenericAcknowledgment pbReserveAbortResponse = connectionProviderStub
                     .reserveAbort(pbReserveAbortRequest);
             // check the protobuf ReserveAbortResponse and either return a SOAP ServiceException or the generic Ack
             if (pbReserveAbortResponse.hasServiceException()) {
@@ -515,26 +569,26 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             LOG.fine(String.format("if modified since %s", querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
-            QuerySummaryRequest.Builder pbQuerySummaryReguestBuilder = QuerySummaryRequest.newBuilder();
-            pbQuerySummaryReguestBuilder.setHeader(pbHeader);
+            QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
+            pbQueryReguestBuilder.setHeader(pbHeader);
             if (querySummary.getIfModifiedSince() != null) {
-                pbQuerySummaryReguestBuilder.setIfModifiedSince(Timestamps.parse(querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+                pbQueryReguestBuilder.setIfModifiedSince(Timestamps.parse(querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
             }
-            pbQuerySummaryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
-            pbQuerySummaryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
-            LOG.finer("Built protobuf message `QuerySummaryRequest`:\n" + pbQuerySummaryReguestBuilder.build());
-            QuerySummaryResponse pbQuerySummaryResponse = connectionProviderStub
-                    .querySummary(pbQuerySummaryReguestBuilder.build());
-            // check the protobuf QuerySummaryResponse and either return a SOAP ServiceException or the generic Ack
-            if (pbQuerySummaryResponse.hasServiceException()) {
+            pbQueryReguestBuilder.addAllConnectionId(querySummary.getConnectionId());
+            pbQueryReguestBuilder.addAllGlobalReservationId(querySummary.getGlobalReservationId());
+            LOG.finer("Built protobuf message `QueryRequest`:\n" + pbQueryReguestBuilder.build());
+            GenericAcknowledgment pbQueryResponse = connectionProviderStub
+                    .querySummary(pbQueryReguestBuilder.build());
+            // check the protobuf QueryResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryResponse.hasServiceException()) {
                 addHeaders(soapHeader.value);
                 throw new ServiceException(
-                        pbQuerySummaryResponse.getServiceException().getText(),
-                        toSoap(pbQuerySummaryResponse.getServiceException())
+                        pbQueryResponse.getServiceException().getText(),
+                        toSoap(pbQueryResponse.getServiceException())
                 );
             }
-            GenericAcknowledgmentType _return = null;
-            return _return;
+            var objectFactory = new nl.surf.polynsi.soap.connection.types.ObjectFactory();
+            return objectFactory.createGenericAcknowledgmentType();
         } catch (ConverterException | ParseException | StatusRuntimeException ex) {
             addHeaders(soapHeader.value);
             throw new ServiceException(
@@ -549,40 +603,71 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                             javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
         LOG.info(String.format("SOAP->gRPC queryResult from %s", soapHeader.value.getRequesterNSA()));
         LOG.fine(String.format("connection ID %s", connectionId));
-        LOG.fine(String.format("start result ID %d", startResultId));
-        LOG.fine(String.format("end restult ID %d", endResultId));
-        // TODO: replace notImplementedServiceException with queryResult implementation
-        var serviceException = notImplementedServiceException(soapHeader.value.getProviderNSA(), "queryResult");
-        throw new ServiceException(serviceException.getText(), serviceException);
-        // try {
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new ServiceException(
-        //             ex.toString(),
-        //             genericInternalServiceException(soapHeader.value.getProviderNSA(), connectionId, ex.toString())
-        //     );
-        // }
+        if (startResultId != null)
+            LOG.fine(String.format("start result ID %d", startResultId));
+        if (endResultId != null)
+            LOG.fine(String.format("end restult ID %d", endResultId));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryResultRequest.Builder pbQueryResultReguestBuilder = QueryResultRequest.newBuilder();
+            pbQueryResultReguestBuilder.setHeader(pbHeader);
+            pbQueryResultReguestBuilder.setConnectionId(connectionId);
+            if (startResultId != null)
+                pbQueryResultReguestBuilder.setStartResultId(startResultId);
+            if (endResultId != null)
+                pbQueryResultReguestBuilder.setEndResultId(endResultId);
+            LOG.finer("Built protobuf message `QueryResultRequest`:\n" + pbQueryResultReguestBuilder.build());
+            GenericAcknowledgment pbQueryResultResponse = connectionProviderStub
+                    .queryResult(pbQueryResultReguestBuilder.build());
+            // check the protobuf QueryResultResponse and either return a SOAP ServiceException or the generic Ack
+            if (pbQueryResultResponse.hasServiceException()) {
+                addHeaders(soapHeader.value);
+                throw new ServiceException(
+                        pbQueryResultResponse.getServiceException().getText(),
+                        toSoap(pbQueryResultResponse.getServiceException())
+                );
+            }
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new ServiceException(
+                    ex.toString(),
+                    genericInternalServiceException(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public QueryNotificationConfirmedType queryNotificationSync(QueryNotificationType queryNotificationSync,
                                                                 javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
         LOG.info(String.format("SOAP->gRPC queryNotificationSync from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s, %d, %d", queryNotificationSync.getConnectionId(),
-                queryNotificationSync.getStartNotificationId(), queryNotificationSync.getEndNotificationId()));
-        // TODO: replace notImplementedError with queryNotificationSync implementation
-        var error = notImplementedError(soapHeader.value.getProviderNSA(), "queryNotificationSync");
-        throw new Error(error.getServiceException().getText(), error);
-        // try {
-        //     QueryNotificationConfirmedType _return = null;
-        //     return _return;
-        // } catch (java.lang.Exception ex) {
-        //     addHeaders(soapHeader.value);
-        //     throw new Error(
-        //             ex.toString(),
-        //             genericInternalError(soapHeader.value.getProviderNSA(), queryNotificationSync.getConnectionId(), ex.toString())
-        //     );
-        // }
+        LOG.fine(String.format("connection ID %s", queryNotificationSync.getConnectionId()));
+        if (queryNotificationSync.getStartNotificationId() != null)
+            LOG.fine(String.format("start notification ID %d", queryNotificationSync.getStartNotificationId()));
+        if (queryNotificationSync.getEndNotificationId() != null)
+            LOG.fine(String.format("end notification ID %d", queryNotificationSync.getEndNotificationId()));
+        try {
+            Header pbHeader = toProtobuf(soapHeader.value);
+            QueryNotificationRequest.Builder pbQueryNotificationReguestBuilder = QueryNotificationRequest.newBuilder();
+            pbQueryNotificationReguestBuilder.setHeader(pbHeader);
+            pbQueryNotificationReguestBuilder.setConnectionId(queryNotificationSync.getConnectionId());
+            if (queryNotificationSync.getStartNotificationId() != null)
+                pbQueryNotificationReguestBuilder.setStartNotificationId(queryNotificationSync.getStartNotificationId());
+            if (queryNotificationSync.getEndNotificationId() != null)
+                pbQueryNotificationReguestBuilder.setEndNotificationId(queryNotificationSync.getEndNotificationId());
+            LOG.finer("Built protobuf message `QueryNotificationReguest`:\n" + pbQueryNotificationReguestBuilder.build());
+            // queryNotificationSync returns a QueryNotificationConfirmedRequest bypassing the generic Response messages
+            QueryNotificationConfirmedRequest pbQueryConfirmedRequest = connectionProviderStub
+                    .queryNotificationSync(pbQueryNotificationReguestBuilder.build());
+            // the pbQueryConfirmedRequest does not have a service exception field,
+            // it is assumed that the query operations does not cause exceptions in SuPA
+            return toSoap(pbQueryConfirmedRequest);
+        } catch (ConverterException | StatusRuntimeException ex) {
+            addHeaders(soapHeader.value);
+            throw new Error(
+                    ex.toString(),
+                    genericInternalError(soapHeader.value.getProviderNSA(), null, ex.toString())
+            );
+        }
     }
 
 }
