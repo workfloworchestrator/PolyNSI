@@ -4,8 +4,9 @@ COPY . .
 RUN mvn clean package
 
 FROM openjdk:11-jre-slim-buster
-WORKDIR /usr/local/src/polynsi
+WORKDIR /usr/local/polynsi
 COPY --from=build /usr/local/src/polynsi/target/*.jar polynsi.jar
+USER nobody
 EXPOSE 8080/tcp 9090/tcp
 CMD java -jar polynsi.jar
 
