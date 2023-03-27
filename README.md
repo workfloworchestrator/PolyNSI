@@ -60,7 +60,7 @@ compiler needs a plugin to do so.
 # Quick Start
 
 * [install (Open)JDK 11](https://openjdk.java.net/)
-* [install Apache Maven](http://maven.apache.org/install.html})
+* [install Apache Maven](http://maven.apache.org/install.html)
 * mvn clean generate-sources
 * mvn test
 * mvn spring-boot:run
@@ -85,25 +85,53 @@ application it follows Springs Boot's conventions for obtaining
 
 PolyNSI's default configuration resides in
 `src/main/resources/application.properties` where the properiets are documented
-as well (todo). Things that you almost certainly will have to configure are the
-addresses of the NSA's that PolyNSI sits in between:
+as well. Things that you almost certainly will have to configure are the
+SOAP server side of PolyNSI including the SSL configuration,
+and the gRPC side of PolyNSI that faces the gRPC based NSA:
 
 ~~~
-
-             +-------+                                             +-------+                  
-             | SOAP  |                 +---------+                 | gRPC  |                  
-             | based |-----------------| PolyNSI |-----------------| based |                  
-             | NSA   |                 +---------+                 | NSA   |                  
-             +-------+                                             +-------+                  
-                                                                                              
- soap.client.connection_requester.address              grpc.client.connection_provider.address
-
+        cxf.path
+        soap.server.*  +---------+  grp.client.*            +-------+
+        server.*       |         |------------------------->| gRPC  |
+        -------------->| PolyNSI |                          | based |
+                       |         |<-------------------------| NSA   |
+                       +---------+  grpc.server.*           +-------+
 ~~~
 
-In the diagram above you'll see the property names associated with each of the
-adresses of those NSAs. The properties both have `client` in their name,
-because PolyNSI has a SOAP _client_ to communicate with the SOAP based NSA and
-a gRPC _client_ to communcate with the gRPC based NSA.
+A typical `application.properties` contains the following configuration options:
+
+    #
+    # PolyNSI application properties
+    #
+    debug=false
+    logging.config=file:/usr/local/etc/polynsi/logback-spring.xml
+    #
+    # SOAP provider endpoint configuration
+    #
+    cxf.path=/soap
+    soap.server.connection_provider.path=/connection/provider
+    soap.server.connection_requester.path=/connection/requester
+    #
+    # SOAP provider SSL configuration
+    #
+    server.port=8443
+    server.ssl.enabled=true
+    server.ssl.client-auth=need
+    server.ssl.key-store=/usr/local/polynsi/polynsi-keystore.jks
+    server.ssl.key-store-type=jks
+    server.ssl.key-store-password=secret
+    server.ssl.trust-store=/usr/local/polynsi/polynsi-truststore.jks
+    server.ssl.trust-store-type=jks
+    server.ssl.trust-store-password=secret
+    #
+    # gRPC server configuration
+    #
+    grpc.server.port=9090
+    #
+    # gRPC client configuration
+    #
+    grpc.client.connection_provider.address=static://localhost:50051
+    grpc.client.connection_provider.negotiationType=PLAINTEXT
 
 See also:
 * [Application Property Files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files)
