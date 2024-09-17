@@ -352,7 +352,8 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         LOG.fine(String.format("global reservation ID %s", globalReservationId));
         LOG.fine(String.format("description %s", description));
         LOG.fine(String.format("service type %s", soapCriteria.getServiceType()));
-        LOG.fine(String.format("version %d", soapCriteria.getVersion()));
+        if (soapCriteria.getVersion() != null)
+            LOG.fine(String.format("version %d", soapCriteria.getVersion()));
 
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
@@ -369,7 +370,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
             // ReservationRequestCriteria
             ReservationRequestCriteria.Builder pbReservationRequestCriteriaBuilder = ReservationRequestCriteria
-                    .newBuilder().setVersion(soapCriteria.getVersion());
+                    .newBuilder();
+            if (soapCriteria.getVersion() != null)
+                pbReservationRequestCriteriaBuilder.setVersion(soapCriteria.getVersion());
 
             // Schedule
             if (soapCriteria.getSchedule() != null) {
@@ -377,12 +380,12 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                 if (soapCriteria.getSchedule().getStartTime() != null) {
                     LOG.fine(String.format("start time %s", soapCriteria.getSchedule().getStartTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
-                    LOG.fine(String.format("end time %s", soapCriteria.getSchedule().getEndTime()
-                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                     pbScheduleBuilder.setStartTime(Timestamps.parse(soapCriteria.getSchedule().getStartTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
                 if (soapCriteria.getSchedule().getEndTime() != null) {
+                    LOG.fine(String.format("end time %s", soapCriteria.getSchedule().getEndTime()
+                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                     pbScheduleBuilder.setEndTime(Timestamps.parse(soapCriteria.getSchedule().getEndTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
@@ -422,15 +425,19 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                             pbP2PServiceBuilder.setDirectionality(directionality);
                         }
 
-                        /*  TODO Need to test each of the following SOAP elements for null. As some might not be set
+                        /*  Need to test each of the following SOAP elements for null. As some might not be set
                             in case of an Reserve message update. An update generally only specifies a subset. Eg
                             the initial Reservation included the wrong bandwidth. The update Reserve message will then
                             only specifies the bandwidth (with the correct value).
                          */
                         LOG.fine(String.format("source STP %s", soapP2PService.getSourceSTP()));
                         LOG.fine(String.format("destination STP %s", soapP2PService.getDestSTP()));
-                        pbP2PServiceBuilder.setSymmetricPath(soapP2PService.isSymmetricPath())
-                                .setSourceStp(soapP2PService.getSourceSTP()).setDestStp(soapP2PService.getDestSTP());
+                        if (soapP2PService.isSymmetricPath() != null)
+                            pbP2PServiceBuilder.setSymmetricPath(soapP2PService.isSymmetricPath());
+                        if (soapP2PService.getSourceSTP() != null)
+                            pbP2PServiceBuilder.setSourceStp(soapP2PService.getSourceSTP());
+                        if (soapP2PService.getDestSTP() != null)
+                            pbP2PServiceBuilder.setDestStp(soapP2PService.getDestSTP());
 
                         if (soapP2PService.getEro() != null) {
                             List<OrderedStpType> soapOrderedSTP = soapP2PService.getEro().getOrderedSTP();
