@@ -502,15 +502,15 @@ public class Converter {
                 soapReservation.setResultId(pbReservation.getResultId());
             if (pbReservation.getNotificationId() > 0)
                 soapReservation.setNotificationId(pbReservation.getNotificationId());
-            QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
-                    .createQuerySummaryResultCriteriaType();
-            // TODO: when Modify Reservation is implemented, add all criteria
-            QueryResultCriteria pbCriteria = pbReservation.getCriteria(0);
-            soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
-            soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
-            soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
-            soapQuerySummaryResultCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
-            soapReservation.getCriteria().add(soapQuerySummaryResultCriteria);
+            for(QueryResultCriteria pbCriteria : pbReservation.getCriteriaList()) {
+                QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
+                        .createQuerySummaryResultCriteriaType();
+                soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
+                soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+                soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
+                soapQuerySummaryResultCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
+                soapReservation.getCriteria().add(soapQuerySummaryResultCriteria);
+            }
             soapReservations.add(soapReservation);
         }
         return soapReservations;
@@ -533,15 +533,15 @@ public class Converter {
                 soapReservation.setResultId(pbReservation.getResultId());
             if (pbReservation.getNotificationId() > 0)
                 soapReservation.setNotificationId(pbReservation.getNotificationId());
-            QueryRecursiveResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
-                    .createQueryRecursiveResultCriteriaType();
-            // TODO: when Modify Reservation is implemented, add all criteria
-            QueryResultCriteria pbCriteria = pbReservation.getCriteria(0);
-            soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
-            soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
-            soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
-            soapQuerySummaryResultCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
-            soapReservation.getCriteria().add(soapQuerySummaryResultCriteria);
+            for(QueryResultCriteria pbCriteria : pbReservation.getCriteriaList()) {
+                QueryRecursiveResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
+                        .createQueryRecursiveResultCriteriaType();
+                soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
+                soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
+                soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
+                soapQuerySummaryResultCriteria.getAny().add(toSoap(pbCriteria.getPtps()));
+                soapReservation.getCriteria().add(soapQuerySummaryResultCriteria);
+            }
             soapReservations.add(soapReservation);
         }
         return soapReservations;
