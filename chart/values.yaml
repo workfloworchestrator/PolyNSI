@@ -87,6 +87,16 @@ persistence:
     - ReadWriteOnce
   size: 1Gi
 
+keystore:
+  enabled: false
+  secretName: polynsi-keystore
+  key: keystore.jks
+
+truststore:
+  enabled: false
+  secretName: polynsi-truststore
+  key: truststore.jks
+
 config:
   # either read config files from folder or use inline data, filesGlob takes precedence over inline.
   #filesGlob: "config/*"
