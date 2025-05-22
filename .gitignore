@@ -44,3 +44,11 @@ src/main/java/nl/surf/polynsi/soap/services/**/*.java
 ### Maven release plugig
 pom.xml.releaseBackup
 release.properties
+
+### X509 certificates
+*.crt
+*.key
+
+### PolyNSI test config
+nginx.conf
+/config/
