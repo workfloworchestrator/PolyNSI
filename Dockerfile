@@ -1,9 +1,10 @@
-FROM maven:3.8.5-openjdk-11 AS build
+FROM maven:3.9-amazoncorretto-17-debian AS build
 WORKDIR /usr/local/src/polynsi
 COPY . .
 RUN mvn clean package
 
-FROM openjdk:11-jre-slim-buster
+#FROM amazoncorretto:17
+FROM eclipse-temurin:17-jre-centos7
 WORKDIR /usr/local/polynsi
 COPY --from=build /usr/local/src/polynsi/target/*.jar polynsi.jar
 USER nobody
