@@ -100,42 +100,118 @@ and the gRPC side of PolyNSI that faces the gRPC based NSA:
 
 A typical `application.properties` contains the following configuration options:
 
-    #
-    # PolyNSI application properties
-    #
-    debug=false
-    logging.config=file:/usr/local/etc/polynsi/logback-spring.xml
-    #
-    # SOAP provider endpoint configuration
-    #
-    cxf.path=/soap
-    soap.server.connection_provider.path=/connection/provider
-    soap.server.connection_requester.path=/connection/requester
-    #
-    # SOAP provider SSL configuration
-    #
-    server.port=8443
-    server.ssl.enabled=true
-    server.ssl.client-auth=need
-    server.ssl.key-store=/usr/local/polynsi/polynsi-keystore.jks
-    server.ssl.key-store-type=jks
-    server.ssl.key-store-password=secret
-    server.ssl.trust-store=/usr/local/polynsi/polynsi-truststore.jks
-    server.ssl.trust-store-type=jks
-    server.ssl.trust-store-password=secret
-    #
-    # gRPC server configuration
-    #
-    grpc.server.port=9090
-    #
-    # gRPC client configuration
-    #
-    grpc.client.connection_provider.address=static://localhost:50051
-    grpc.client.connection_provider.negotiationType=PLAINTEXT
+```properties
+#
+# PolyNSI application properties
+#
+debug=false
+logging.config=file:/usr/local/etc/polynsi/logback-spring.xml
+#
+# SOAP provider endpoint configuration
+#
+cxf.path=/soap
+soap.server.connection_provider.path=/connection/provider
+soap.server.connection_requester.path=/connection/requester
+#
+# SSL proxy client certificate verification support
+#
+nl.surf.polynsi.verify-ssl-client-subject-dn=false
+nl.surf.polynsi.ssl-client-subject-dn-header=ssl-client-subject-dn
+nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
+#
+# SOAP provider SSL configuration
+#
+server.port=8443
+server.ssl.enabled=true
+server.ssl.client-auth=need
+server.ssl.key-store=/usr/local/polynsi/polynsi-keystore.jks
+server.ssl.key-store-type=jks
+server.ssl.key-store-password=secret
+server.ssl.trust-store=/usr/local/polynsi/polynsi-truststore.jks
+server.ssl.trust-store-type=jks
+server.ssl.trust-store-password=secret
+#
+# gRPC server configuration
+#
+grpc.server.port=9090
+#
+# gRPC client configuration
+#
+grpc.client.connection_provider.address=static://localhost:50051
+grpc.client.connection_provider.negotiationType=PLAINTEXT
+```
 
 See also:
 * [Application Property Files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files)
 * [Common (Spring Boot) Application Properties](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/appendix-application-properties.html#common-application-properties)
+
+## PolyNSI behind an SSL proxy
+
+Sometimes PolyNSI is deployed behind an SSL proxy that terminates the SSL
+session, like a Kubernetes Ingress. If it is not possible to implement per
+client access control on the proxy, access can still be controlled by PolyNSI
+based on the client certificate distinguished name.  In this case the proxy
+will ask the client for a certificate and verifies the issuer against a list of
+configured certificate authorities. When the client certificate is valid, the
+proxy will add a header with the client distinguished name (DN) to the upstream
+HTTP request.  PolyNSI can be configured to look at a certain header and
+compare the value against a list of allowed client certificate DN.
+
+~~~
+                       +---------+     header: client DN     +---------+              +-------+
+            HTTPS      |   SSL   |           HTTP            |         |     HTTP     |       |
+        -------------->|  proxy  |-------------------------->| PolyNSI |------------->| gRPC  |
+                       +---------+                           |         |              | based |
+                                            HTTPS            |         |     HTTP     | NSA   |
+        <----------------------------------------------------|         |<-------------|       |
+                                                             +---------+              +-------+
+~~~
+
+This requires a couple of configuration changes. On PolyNSI, disable SSL for
+incoming traffic, specify the name of the header that contains the client DN,
+and enable the verification of that DN.  Last but not least, a list of allowed
+client DN is configured. Note that, to allow PolyNSI to directly connect back to
+the requesting NSA, the trust- and keystore are still needed.
+
+The following section in the `application.properties` is used when the SSL
+session is directly terminate on PolyNSI.
+
+```properties
+#
+# SOAP provider SSL configuration
+#
+server.port=8443
+server.ssl.enabled=true
+```
+
+In case of an SSL terminating proxy before PolyNSI, the config can be changed
+as shown below.
+
+```properties
+#
+# SSL proxy client certificate verification support
+#
+nl.surf.polynsi.verify-ssl-client-subject-dn=true
+nl.surf.polynsi.ssl-client-subject-dn-header=X-SSL-Client-DN
+#
+# SOAP provider SSL configuration
+#
+server.port=8080
+server.ssl.enabled=false
+```
+
+The list of allowed client certificate DN can be configured in the
+`application.properties` using the indexed property
+`nl.surf.polynsi.client.certificate.distinguished-names`. Note that whitespace
+is preserved automatically, so surounding quotes are not needed, as a matter of
+fact, the quotes will become part of the distinguished name and will therefor
+never match any client certificate DN past by the proxy.
+
+```properties
+nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
+nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
+nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
+```
 
 # Advanced Installation
 

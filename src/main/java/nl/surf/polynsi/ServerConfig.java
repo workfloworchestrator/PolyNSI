@@ -6,7 +6,6 @@ import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ConnectionServiceRequesterPortImpl;
 import org.apache.cxf.Bus;
 import org.apache.cxf.jaxws.EndpointImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,8 +26,8 @@ public class ServerConfig {
     @Value("${soap.server.connection_requester.path}")
     private String connectionRequesterPath;
 
-    @Autowired
-    private Bus bus;
+    @Value("${nl.surf.polynsi.verify-ssl-client-subject-dn:false}")
+    private boolean verifySslClientSubjectDn;
 
     @Bean
     public ConnectionProviderPort connectionProviderPort() {
@@ -41,14 +40,16 @@ public class ServerConfig {
     }
 
     @Bean
-    public Endpoint endpointConnectionProvider() {
-        EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort());
+    public Endpoint endpointConnectionProvider(Bus bus, ConnectionProviderPort connectionProviderPort, AuthInterceptor authInterceptor) {
+        EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort);
         endpoint.publish(this.connectionProviderPath);
+        if(verifySslClientSubjectDn)
+            endpoint.getInInterceptors().add(authInterceptor);
         return endpoint;
     }
 
     @Bean
-    public Endpoint endpointConnectionRequester() {
+    public Endpoint endpointConnectionRequester(Bus bus) {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionRequesterPort());
         endpoint.publish(this.connectionRequesterPath);
         return endpoint;
