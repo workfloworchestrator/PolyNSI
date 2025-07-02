@@ -98,6 +98,7 @@ truststore:
   key: truststore.jks
 
 config:
+  checkExistence: false  # Set to true to not overwrite existing configmap.
   # either read config files from folder or use inline data, filesGlob takes precedence over inline.
   #filesGlob: "config/*"
   inline: |-

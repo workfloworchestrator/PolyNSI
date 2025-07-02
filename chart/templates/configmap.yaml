@@ -1,15 +1,38 @@
+{{- $configMapName := printf "%s-config" (include "PolyNSI.fullname" .) }}
+{{- $existingConfigMap := "" }}
+{{- if .Values.config.checkExistence }}
+{{- $existingConfigMap = lookup "v1" "ConfigMap" .Release.Namespace $configMapName }}
+{{- end }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ printf "%s-config" (include "PolyNSI.fullname" .) }}
+  name: {{ $configMapName }}
 #  namespace: {{ .Release.Namespace }}
+{{- if and .Values.config.checkExistence $existingConfigMap }}
+# Preserve existing ConfigMap data
+{{- if $existingConfigMap.data }}
+data:
+{{- range $key, $value := $existingConfigMap.data }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- if $existingConfigMap.binaryData }}
+binaryData:
+{{- range $key, $value := $existingConfigMap.binaryData }}
+  {{ $key }}: {{ $value }}
+{{- end }}
+{{- end }}
+{{- else }}
+# Create new ConfigMap data from values
 {{- if .Values.config.filesGlob }}
 binaryData:
 {{- range $path, $_ :=  .Files.Glob  .Values.config.filesGlob }}
-{{ $path | base | indent 2 }}: |-
+  {{ $path | base }}: |-
 {{ $.Files.Get $path | b64enc | indent 4 }}
-{{ end }}
-{{ else if .Values.config.inline }}
+{{- end }}
+{{- else if .Values.config.inline }}
 data:
-{{.Values.config.inline | indent 2}}
-{{ end }}
+{{ .Values.config.inline | indent 2 }}
+{{- end }}
+{{- end }}
