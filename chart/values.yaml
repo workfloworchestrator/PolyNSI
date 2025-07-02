@@ -87,7 +87,18 @@ persistence:
     - ReadWriteOnce
   size: 1Gi
 
+keystore:
+  enabled: false
+  secretName: polynsi-keystore
+  key: keystore.jks
+
+truststore:
+  enabled: false
+  secretName: polynsi-truststore
+  key: truststore.jks
+
 config:
+  checkExistence: false  # Set to true to not overwrite existing configmap.
   # either read config files from folder or use inline data, filesGlob takes precedence over inline.
   #filesGlob: "config/*"
   inline: |-
