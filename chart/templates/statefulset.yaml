@@ -71,6 +71,16 @@ spec:
             - name: config
               mountPath: "/usr/local/etc/polynsi"
               readOnly: true
+          {{- if (((.Values.config).keystore).secretName) }}
+            - name: keystore
+              mountPath: "/usr/local/etc/polynsi/key"
+              readOnly: true
+          {{- end }}
+          {{- if (((.Values.config).truststore).secretName) }}
+            - name: truststore
+              mountPath: "/usr/local/etc/polynsi/trust"
+              readOnly: true
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -86,8 +96,43 @@ spec:
       volumes:
         - name: config
           configMap:
+            {{- if .Values.config.configMapName }}
+            name: {{ .Values.config.configMapName }}
+            {{- else }}
             name: {{ printf "%s-config" (include "PolyNSI.fullname" .) }}
-{{- if .Values.persistence.enabled }}
+            {{- end }}
+            items:
+            - key: "application.properties"
+              path: "application.properties"
+            - key: "logback-spring.xml"
+              path: "logback-spring.xml"
+            {{- if (((.Values.config).keystore).secretName) }}
+            {{- else }}
+            - key: "polynsi-keystore.jks"
+              path: "key/polynsi-keystore.jks"
+            {{- end }}
+            {{- if (((.Values.config).truststore).secretName) }}
+            {{- else }}
+            - key: "polynsi-truststore.jks"
+              path: "trust/polynsi-truststore.jks"
+            {{- end }}
+        {{- if (((.Values.config).keystore).secretName) }}
+        - name: keystore
+          secret:
+            secretName: {{ .Values.config.keystore.secretName }}
+            items:
+            - key: {{ .Values.config.keystore.key }}
+              path: polynsi-keystore.jks
+        {{- end }}
+        {{- if (((.Values.config).truststore).secretName) }}
+        - name: truststore
+          secret:
+            secretName: {{ .Values.config.truststore.secretName }}
+            items:
+            - key: {{ .Values.config.truststore.key }}
+              path: polynsi-truststore.jks
+        {{- end }}
+  {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: data
