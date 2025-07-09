@@ -58,6 +58,21 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# if you do not want to use ingress annotations to generate the Certificate manifest
+certificate:
+  enabled: false
+  name: chart-example-tls
+  dnsName: example.domain.toplevel
+  issuerRef:
+    name: letsencrypt
+  secretName: chart-example-tls
+  jks:
+    create: true
+    passwordSecretRef:
+      name: chart-example-certificate-jks-secret
+      key: password
+      password: secret
+
 resources:
    limits:
      cpu: 1000m
