@@ -12,7 +12,9 @@ binaryData:
 {{ $.Files.Get $path | b64enc | indent 4 }}
 {{- end }}
 {{- else }}
+{{- if or .Values.config.inline .Values.config.inlineData }}
 data:
+{{- end }}
 {{- if .Values.config.inline }} {{/* check inline for backwards compatibility */}}
 {{.Values.config.inline | indent 2}}
 {{- end }}
