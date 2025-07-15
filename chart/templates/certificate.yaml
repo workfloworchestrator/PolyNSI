@@ -15,9 +15,11 @@ spec:
   - server auth
   - client auth
   - digital signature
-  jks:
-    create: {{ .Values.certificate.jks.create }}
-    passwordSecretRef:
-      name: {{ .Values.certificate.jks.passwordSecretRef.name }}
-      key: {{ .Values.certificate.jks.passwordSecretRef.key }}
+  keystores:
+    jks:
+      create: {{ .Values.certificate.keystores.jks.create }}
+      password: {{ .Values.certificate.keystores.jks.password }}
+    pkcs12:
+      create: {{ .Values.certificate.keystores.pkcs12.create }}
+      password: {{ .Values.certificate.keystores.pkcs12.password }}
 {{- end }}

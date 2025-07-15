@@ -66,12 +66,13 @@ certificate:
   issuerRef:
     name: letsencrypt
   secretName: chart-example-tls
-  jks:
-    create: true
-    passwordSecretRef:
-      name: chart-example-certificate-jks-secret
-      key: password
-      password: secret
+  keystores:
+    jks:
+      create: false
+      password: "secret"
+    pkcs12:
+      create: false
+      password: "secret"
 
 resources:
    limits:
