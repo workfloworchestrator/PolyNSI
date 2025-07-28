@@ -51,8 +51,18 @@ ingress:
   hosts:
     - host: chart-example.local
       paths:
-        - path: /
+        - path: /soap
           pathType: ImplementationSpecific
+          serviceName: polynsi
+          servicePort: 80
+        - path: /discovery
+          pathType: ImplementationSpecific
+          serviceName: supa
+          servicePort: 80
+        - path: /topology
+          pathType: ImplementationSpecific
+          serviceName: supa
+          servicePort: 80
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -66,6 +76,8 @@ certificate:
   issuerRef:
     name: letsencrypt
   secretName: chart-example-tls
+  privateKey:
+    rotationPolicy: Always
   keystores:
     jks:
       create: false

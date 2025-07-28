@@ -11,6 +11,8 @@ spec:
     kind: Issuer
     name: {{ .Values.certificate.issuerRef.name }}
   secretName: {{ .Values.certificate.secretName }}
+  privateKey:
+    rotationPolicy: {{ .Values.certificate.privateKey.rotationPolicy }}
   usages:
   - server auth
   - client auth
