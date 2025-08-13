@@ -39,7 +39,7 @@ spec:
               cd /truststore
               cp /ca/ca.crt .
               apt-get update
-              apt-get install -y --no-install-recommends openjdk-21-jdk-headless
+              apt-get install -y --no-install-recommends openjdk-21-jre-headless
               awk '/-----BEGIN CERTIFICATE-----/ {out="cert" ++i ".pem"}; out {print >> out} /-----END CERTIFICATE-----/ {out=""}' ca.crt
               for cert in cert*.pem; do
                   cn=$(openssl x509 -in ${cert} -noout -subject | sed -n 's/^subject=//p')
