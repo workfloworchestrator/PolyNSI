@@ -26,6 +26,33 @@ spec:
       serviceAccountName: {{ include "PolyNSI.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.config.caSecretName }}
+      initContainers:
+        - name: ca-to-truststore
+          securityContext:
+            runAsUser: 0
+          image: debian:trixie-slim
+          command:
+            - sh
+            - -c
+            - |
+              cd /truststore
+              cp /ca/ca.crt .
+              apt-get update
+              apt-get install -y --no-install-recommends openjdk-21-jre-headless
+              awk '/-----BEGIN CERTIFICATE-----/ {out="cert" ++i ".pem"}; out {print >> out} /-----END CERTIFICATE-----/ {out=""}' ca.crt
+              for cert in cert*.pem; do
+                  cn=$(openssl x509 -in ${cert} -noout -subject | sed -n 's/^subject=//p')
+                  echo "${cn}"
+                  keytool -trustcacerts -storepass secret -importcert -alias "${cn}" -file ${cert} -keystore polynsi-truststore.jks -storetype jks -noprompt
+              done
+              rm cert*.pem
+          volumeMounts:
+            - name: truststore
+              mountPath: /truststore
+            - name: ca
+              mountPath: /ca
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -50,16 +77,30 @@ spec:
             - name: http-alt
               containerPort: 8080
               protocol: TCP
+          {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
-              path: /soap
-              port: http-alt
-            initialDelaySeconds: 20
+              path: {{ .Values.livenessProbe.path }}
+              port: {{ .Values.livenessProbe.port }}
+              scheme: HTTP
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
-              path: /soap
-              port: http-alt
-            initialDelaySeconds: 20
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.readinessProbe.port }}
+              scheme: HTTP
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
@@ -71,6 +112,20 @@ spec:
             - name: config
               mountPath: "/usr/local/etc/polynsi"
               readOnly: true
+          {{- if (((.Values.config).keystore).secretName) }}
+            - name: keystore
+              mountPath: "/usr/local/etc/polynsi/key"
+              readOnly: true
+          {{- end }}
+          {{- if (((.Values.config).truststore).secretName) }}
+            - name: truststore
+              mountPath: "/usr/local/etc/polynsi/trust"
+              readOnly: true
+          {{- end }}
+          {{- if .Values.config.caSecretName }}
+            - name: truststore
+              mountPath: /truststore
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -86,8 +141,50 @@ spec:
       volumes:
         - name: config
           configMap:
+            {{- if .Values.config.configMapName }}
+            name: {{ .Values.config.configMapName }}
+            {{- else }}
             name: {{ printf "%s-config" (include "PolyNSI.fullname" .) }}
-{{- if .Values.persistence.enabled }}
+            {{- end }}
+            items:
+            - key: "application.properties"
+              path: "application.properties"
+            - key: "logback-spring.xml"
+              path: "logback-spring.xml"
+            {{- if (((.Values.config).keystore).secretName) }}
+            {{- else }}
+            - key: "polynsi-keystore.jks"
+              path: "key/polynsi-keystore.jks"
+            {{- end }}
+            {{- if or (((.Values.config).truststore).secretName) ((.Values.config).caSecretName) }}
+            {{- else }}
+            - key: "polynsi-truststore.jks"
+              path: "trust/polynsi-truststore.jks"
+            {{- end }}
+        {{- if (((.Values.config).keystore).secretName) }}
+        - name: keystore
+          secret:
+            secretName: {{ .Values.config.keystore.secretName }}
+            items:
+            - key: {{ .Values.config.keystore.key }}
+              path: polynsi-keystore.jks
+        {{- end }}
+        {{- if (((.Values.config).truststore).secretName) }}
+        - name: truststore
+          secret:
+            secretName: {{ .Values.config.truststore.secretName }}
+            items:
+            - key: {{ .Values.config.truststore.key }}
+              path: polynsi-truststore.jks
+        {{- end }}
+        {{- if .Values.config.caSecretName }}
+        - name: ca
+          secret:
+            secretName: {{ .Values.config.caSecretName }}
+        - name: truststore
+          emptyDir: {}
+        {{- end }}
+  {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: data
