@@ -26,6 +26,33 @@ spec:
       serviceAccountName: {{ include "PolyNSI.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.config.caSecretName }}
+      initContainers:
+        - name: ca-to-truststore
+          securityContext:
+            runAsUser: 0
+          image: debian:trixie-slim
+          command:
+            - sh
+            - -c
+            - |
+              cd /truststore
+              cp /ca/ca.crt .
+              apt-get update
+              apt-get install -y --no-install-recommends openjdk-21-jdk-headless
+              awk '/-----BEGIN CERTIFICATE-----/ {out="cert" ++i ".pem"}; out {print >> out} /-----END CERTIFICATE-----/ {out=""}' ca.crt
+              for cert in cert*.pem; do
+                  cn=$(openssl x509 -in ${cert} -noout -subject | sed -n 's/^subject=//p')
+                  echo "${cn}"
+                  keytool -trustcacerts -storepass secret -importcert -alias "${cn}" -file ${cert} -keystore polynsi-truststore.jks -storetype jks -noprompt
+              done
+              rm cert*.pem
+          volumeMounts:
+            - name: truststore
+              mountPath: /truststore
+            - name: ca
+              mountPath: /ca
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -95,6 +122,10 @@ spec:
               mountPath: "/usr/local/etc/polynsi/trust"
               readOnly: true
           {{- end }}
+          {{- if .Values.config.caSecretName }}
+            - name: truststore
+              mountPath: /truststore
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -125,7 +156,7 @@ spec:
             - key: "polynsi-keystore.jks"
               path: "key/polynsi-keystore.jks"
             {{- end }}
-            {{- if (((.Values.config).truststore).secretName) }}
+            {{- if or (((.Values.config).truststore).secretName) ((.Values.config).caSecretName) }}
             {{- else }}
             - key: "polynsi-truststore.jks"
               path: "trust/polynsi-truststore.jks"
@@ -145,6 +176,13 @@ spec:
             items:
             - key: {{ .Values.config.truststore.key }}
               path: polynsi-truststore.jks
+        {{- end }}
+        {{- if .Values.config.caSecretName }}
+        - name: ca
+          secret:
+            secretName: {{ .Values.config.caSecretName }}
+        - name: truststore
+          emptyDir: {}
         {{- end }}
   {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:

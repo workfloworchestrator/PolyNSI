@@ -217,3 +217,5 @@ config:
   truststore:
     #secretName: my-polynsi-truststore
     #key: truststore.jks
+  # Create /config/trust/nsi-safnari-truststore.jks from ca.crt from caSecretName mounted under /ca
+  caSecretName: ""
