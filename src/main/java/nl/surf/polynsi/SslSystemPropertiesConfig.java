@@ -21,9 +21,6 @@ public class SslSystemPropertiesConfig {
     @Value("${javax.net.ssl.keyStorePassword}")
     private String keyStorePassword;
 
-    @Value("${javax.net.ssl.keyPassword}")
-    private String keyPassword;
-
     @Value("${javax.net.ssl.trustStoreType}")
     private String trustStoreType;
 
@@ -40,7 +37,6 @@ public class SslSystemPropertiesConfig {
             System.setProperty("javax.net.ssl.keyStoreType", resolveClasspath(keyStoreType));
             System.setProperty("javax.net.ssl.keyStore", resolveClasspath(keyStore));
             System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
-            System.setProperty("javax.net.ssl.keyPassword", keyPassword);
             System.setProperty("javax.net.ssl.trustStoreType", resolveClasspath(trustStoreType));
             System.setProperty("javax.net.ssl.trustStore", resolveClasspath(trustStore));
             System.setProperty("javax.net.ssl.trustStorePassword", trustStorePassword);
