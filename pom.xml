@@ -14,7 +14,7 @@
     <properties>
         <java.version>17</java.version>
         <cxf.version>3.6.6</cxf.version>
-        <grpc.version>1.53.0</grpc.version>
+        <grpc.version>1.75.0</grpc.version>
         <protoc.version>3.20.1</protoc.version>
     </properties>
     <scm>
