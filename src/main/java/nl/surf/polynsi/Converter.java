@@ -26,7 +26,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.*;
+import jakarta.xml.bind.*;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -200,8 +200,7 @@ public class Converter {
 
             // Process NSI extensions that are included in the SOAP header
             for (Object elem : soapHeader.getAny()) {
-                if (elem instanceof Element) {
-                    Element hdElem = (Element) elem;
+                if (elem instanceof Element hdElem) {
                     if (hdElem.getLocalName().equals("pathTrace")) {
                         // dynamically create Java PathTraceType instance from raw XML
                         JAXBContext jc = JAXBContext

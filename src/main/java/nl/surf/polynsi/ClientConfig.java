@@ -65,7 +65,8 @@ public class ClientConfig {
         that is why we only set the fault listener here and not again in ServerConfig.
      */
     @Bean
-    public void config() {
+    public Object config() {
         bus.getProperties().put("org.apache.cxf.logging.FaultListener", new PolyNsiFaultListener());
+        return null;
     }
 }

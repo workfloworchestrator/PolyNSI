@@ -26,12 +26,12 @@ import org.ogf.nsi.grpc.connection.requester.QueryResultConfirmedRequest;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
-import javax.annotation.Generated;
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.Generated;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
-import javax.xml.ws.WebServiceContext;
+import jakarta.xml.ws.WebServiceContext;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -53,7 +53,7 @@ import static nl.surf.polynsi.Converter.toSoap;
 
 
 @org.apache.cxf.feature.Features (features = {"nl.surf.polynsi.soap.connection.provider.PrettyLoggingFeature"})
-@javax.jws.WebService(serviceName = "ConnectionServiceProvider",
+@jakarta.jws.WebService(serviceName = "ConnectionServiceProvider",
         portName = "ConnectionServiceProviderPort",
         targetNamespace = "http://schemas.ogf.org/nsi/2013/12/connection/provider",
         wsdlLocation = "wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl",
@@ -104,7 +104,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         var serviceException = newServiceException(providerNSA, null);
         serviceException.setErrorId("00103");
         serviceException.setText(
-                String.format("NOT_IMPLEMENTED: Requested feature has not been implemented (%s)", feature)
+                "NOT_IMPLEMENTED: Requested feature has not been implemented (%s)".formatted(feature)
         );
         return serviceException;
     }
@@ -120,7 +120,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         var serviceException = newServiceException(providerNSA, connectionId);
         serviceException.setErrorId("00500");
         serviceException.setText(
-                String.format("GENERIC_INTERNAL_ERROR: An internal error has caused a message processing failure (%s)", text)
+                "GENERIC_INTERNAL_ERROR: An internal error has caused a message processing failure (%s)".formatted(text)
         );
         return serviceException;
     }
@@ -133,9 +133,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     }
     
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void provision(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC provision from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+    public void provision(String connectionId, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC provision from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             GenericRequest pbProvisionRequest = GenericRequest.newBuilder().setHeader(pbHeader)
@@ -163,14 +163,14 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public QuerySummaryConfirmedType querySummarySync(QueryType querySummarySync,
-                                                      javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
-        LOG.info(String.format("SOAP->gRPC querySummarySync from %s", soapHeader.value.getRequesterNSA()));
+                                                      jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
+        LOG.info("SOAP->gRPC querySummarySync from %s".formatted(soapHeader.value.getRequesterNSA()));
         for (String connectionId : querySummarySync.getConnectionId())
-            LOG.fine(String.format("connection ID %s", connectionId));
+            LOG.fine("connection ID %s".formatted(connectionId));
         for (String globalReservationId : querySummarySync.getGlobalReservationId())
-            LOG.fine(String.format("global reservation ID %s", globalReservationId));
+            LOG.fine("global reservation ID %s".formatted(globalReservationId));
         if (querySummarySync.getIfModifiedSince() != null)
-            LOG.fine(String.format("if modified since %s", querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+            LOG.fine("if modified since %s".formatted(querySummarySync.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
@@ -209,14 +209,14 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public GenericAcknowledgmentType queryRecursive(QueryType queryRecursive, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC queryRecursive from %s", soapHeader.value.getRequesterNSA()));
+    public GenericAcknowledgmentType queryRecursive(QueryType queryRecursive, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC queryRecursive from %s".formatted(soapHeader.value.getRequesterNSA()));
         for (String connectionId : queryRecursive.getConnectionId())
-            LOG.fine(String.format("connection ID %s", connectionId));
+            LOG.fine("connection ID %s".formatted(connectionId));
         for (String globalReservationId : queryRecursive.getGlobalReservationId())
-            LOG.fine(String.format("global reservation ID %s", globalReservationId));
+            LOG.fine("global reservation ID %s".formatted(globalReservationId));
         if (queryRecursive.getIfModifiedSince() != null)
-            LOG.fine(String.format("if modified since %s", queryRecursive.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+            LOG.fine("if modified since %s".formatted(queryRecursive.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
@@ -248,9 +248,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         }
     }
 
-    public void reserveCommit(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC reserveCommit from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+    public void reserveCommit(String connectionId, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC reserveCommit from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             GenericRequest pbReserveCommitRequest = GenericRequest.newBuilder().setHeader(pbHeader)
@@ -278,13 +278,13 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public void queryNotification(String connectionId, Long startNotificationId, Long endNotificationId,
-                                  javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC queryNotification from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+                                  jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC queryNotification from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         if (startNotificationId != null)
-            LOG.fine(String.format("start notification ID %d", startNotificationId));
+            LOG.fine("start notification ID %d".formatted(startNotificationId));
         if (endNotificationId != null)
-            LOG.fine(String.format("end notification ID %d", endNotificationId));
+            LOG.fine("end notification ID %d".formatted(endNotificationId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryNotificationRequest.Builder pbQueryNotificationReguestBuilder = QueryNotificationRequest.newBuilder();
@@ -315,9 +315,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void terminate(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC terminate from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+    public void terminate(String connectionId, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC terminate from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             GenericRequest pbTerminateRequest = GenericRequest.newBuilder().setHeader(pbHeader)
@@ -343,17 +343,17 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         }
     }
 
-    public void reserve(javax.xml.ws.Holder<String> connectionId, String globalReservationId,
+    public void reserve(jakarta.xml.ws.Holder<String> connectionId, String globalReservationId,
                         String description, ReservationRequestCriteriaType soapCriteria,
-                        javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC reserve from %s", soapHeader.value.getRequesterNSA()));
+                        jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC reserve from %s".formatted(soapHeader.value.getRequesterNSA()));
         if(connectionId.value != null)
-            LOG.fine(String.format("connection ID %s", connectionId.value));
-        LOG.fine(String.format("global reservation ID %s", globalReservationId));
-        LOG.fine(String.format("description %s", description));
-        LOG.fine(String.format("service type %s", soapCriteria.getServiceType()));
+            LOG.fine("connection ID %s".formatted(connectionId.value));
+        LOG.fine("global reservation ID %s".formatted(globalReservationId));
+        LOG.fine("description %s".formatted(description));
+        LOG.fine("service type %s".formatted(soapCriteria.getServiceType()));
         if (soapCriteria.getVersion() != null)
-            LOG.fine(String.format("version %d", soapCriteria.getVersion()));
+            LOG.fine("version %d".formatted(soapCriteria.getVersion()));
 
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
@@ -378,13 +378,13 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
             if (soapCriteria.getSchedule() != null) {
                 Schedule.Builder pbScheduleBuilder = Schedule.newBuilder();
                 if (soapCriteria.getSchedule().getStartTime() != null) {
-                    LOG.fine(String.format("start time %s", soapCriteria.getSchedule().getStartTime()
+                    LOG.fine("start time %s".formatted(soapCriteria.getSchedule().getStartTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                     pbScheduleBuilder.setStartTime(Timestamps.parse(soapCriteria.getSchedule().getStartTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                 }
                 if (soapCriteria.getSchedule().getEndTime() != null) {
-                    LOG.fine(String.format("end time %s", soapCriteria.getSchedule().getEndTime()
+                    LOG.fine("end time %s".formatted(soapCriteria.getSchedule().getEndTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
                     pbScheduleBuilder.setEndTime(Timestamps.parse(soapCriteria.getSchedule().getEndTime()
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
@@ -404,8 +404,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                      `wsdl2java` generated code, but we still need to extract is from a wrapper `JAXBElement` instance.
                      In other words we don't have to explicitly unmarshall it as we had to with `pathTrace`.
                  */
-                if (elem instanceof JAXBElement) {
-                    JAXBElement<?> bodyElem = (JAXBElement<?>) elem;
+                if (elem instanceof JAXBElement<?> bodyElem) {
                     if (bodyElem.getValue() instanceof P2PServiceBaseType) {
                         P2PServiceBaseType soapP2PService = (P2PServiceBaseType) bodyElem.getValue();
 
@@ -430,8 +429,8 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
                             the initial Reservation included the wrong bandwidth. The update Reserve message will then
                             only specifies the bandwidth (with the correct value).
                          */
-                        LOG.fine(String.format("source STP %s", soapP2PService.getSourceSTP()));
-                        LOG.fine(String.format("destination STP %s", soapP2PService.getDestSTP()));
+                        LOG.fine("source STP %s".formatted(soapP2PService.getSourceSTP()));
+                        LOG.fine("destination STP %s".formatted(soapP2PService.getDestSTP()));
                         if (soapP2PService.isSymmetricPath() != null)
                             pbP2PServiceBuilder.setSymmetricPath(soapP2PService.isSymmetricPath());
                         if (soapP2PService.getSourceSTP() != null)
@@ -476,13 +475,13 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public java.util.List<QueryResultResponseType> queryResultSync(String connectionId, Long startResultId, Long endResultId,
-                                                                   javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
-        LOG.info(String.format("SOAP->gRPC queryResultSync from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+                                                                   jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
+        LOG.info("SOAP->gRPC queryResultSync from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         if (startResultId != null)
-            LOG.fine(String.format("start result ID %d", startResultId));
+            LOG.fine("start result ID %d".formatted(startResultId));
         if (endResultId != null)
-            LOG.fine(String.format("end result ID %d", endResultId));
+            LOG.fine("end result ID %d".formatted(endResultId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryResultRequest.Builder pbQueryResultReguestBuilder = QueryResultRequest.newBuilder();
@@ -509,9 +508,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public void release(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC release from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+    public void release(String connectionId, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC release from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             GenericRequest pbReleaseRequest = GenericRequest.newBuilder().setHeader(pbHeader)
@@ -537,9 +536,9 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
         }
     }
 
-    public void reserveAbort(String connectionId, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC reserveAbort from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+    public void reserveAbort(String connectionId, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC reserveAbort from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             GenericRequest pbReserveAbortRequest = GenericRequest.newBuilder().setHeader(pbHeader)
@@ -566,14 +565,14 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     }
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
-    public GenericAcknowledgmentType querySummary(QueryType querySummary, javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC querySummary from %s", soapHeader.value.getRequesterNSA()));
+    public GenericAcknowledgmentType querySummary(QueryType querySummary, jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC querySummary from %s".formatted(soapHeader.value.getRequesterNSA()));
         for (String connectionId : querySummary.getConnectionId())
-            LOG.fine(String.format("connection ID %s", connectionId));
+            LOG.fine("connection ID %s".formatted(connectionId));
         for (String globalReservationId : querySummary.getGlobalReservationId())
-            LOG.fine(String.format("global reservation ID %s", globalReservationId));
+            LOG.fine("global reservation ID %s".formatted(globalReservationId));
         if (querySummary.getIfModifiedSince() != null)
-            LOG.fine(String.format("if modified since %s", querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+            LOG.fine("if modified since %s".formatted(querySummary.getIfModifiedSince().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryRequest.Builder pbQueryReguestBuilder = QueryRequest.newBuilder();
@@ -607,13 +606,13 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public void queryResult(String connectionId, Long startResultId, Long endResultId,
-                            javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
-        LOG.info(String.format("SOAP->gRPC queryResult from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", connectionId));
+                            jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws ServiceException {
+        LOG.info("SOAP->gRPC queryResult from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(connectionId));
         if (startResultId != null)
-            LOG.fine(String.format("start result ID %d", startResultId));
+            LOG.fine("start result ID %d".formatted(startResultId));
         if (endResultId != null)
-            LOG.fine(String.format("end restult ID %d", endResultId));
+            LOG.fine("end restult ID %d".formatted(endResultId));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryResultRequest.Builder pbQueryResultReguestBuilder = QueryResultRequest.newBuilder();
@@ -645,13 +644,13 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
 
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     public QueryNotificationConfirmedType queryNotificationSync(QueryNotificationType queryNotificationSync,
-                                                                javax.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
-        LOG.info(String.format("SOAP->gRPC queryNotificationSync from %s", soapHeader.value.getRequesterNSA()));
-        LOG.fine(String.format("connection ID %s", queryNotificationSync.getConnectionId()));
+                                                                jakarta.xml.ws.Holder<CommonHeaderType> soapHeader) throws Error {
+        LOG.info("SOAP->gRPC queryNotificationSync from %s".formatted(soapHeader.value.getRequesterNSA()));
+        LOG.fine("connection ID %s".formatted(queryNotificationSync.getConnectionId()));
         if (queryNotificationSync.getStartNotificationId() != null)
-            LOG.fine(String.format("start notification ID %d", queryNotificationSync.getStartNotificationId()));
+            LOG.fine("start notification ID %d".formatted(queryNotificationSync.getStartNotificationId()));
         if (queryNotificationSync.getEndNotificationId() != null)
-            LOG.fine(String.format("end notification ID %d", queryNotificationSync.getEndNotificationId()));
+            LOG.fine("end notification ID %d".formatted(queryNotificationSync.getEndNotificationId()));
         try {
             Header pbHeader = toProtobuf(soapHeader.value);
             QueryNotificationRequest.Builder pbQueryNotificationReguestBuilder = QueryNotificationRequest.newBuilder();
