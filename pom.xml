@@ -4,10 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-<!--
-        <version>3.0.13</version>
--->
-        <version>3.2.12</version>
+        <version>3.5.10</version>
     </parent>
     <groupId>nl.surf</groupId>
     <artifactId>polynsi</artifactId>
@@ -128,7 +125,6 @@
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
-            <version>8.0.3.Final</version>
         </dependency>
     </dependencies>
     <build>
@@ -282,7 +278,7 @@
                 <configuration>
                     <exportDatatables>true</exportDatatables>
                     <activeRecipes>
-                        <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+                        <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5</recipe>
                     </activeRecipes>
                 </configuration>
                 <dependencies>
