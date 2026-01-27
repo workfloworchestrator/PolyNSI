@@ -7,7 +7,6 @@ package nl.surf.polynsi.soap.connection.provider;
 
 import com.google.protobuf.util.Timestamps;
 import io.grpc.StatusRuntimeException;
-import net.devh.boot.grpc.client.inject.GrpcClient;
 import nl.surf.polynsi.ConverterException;
 import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
@@ -25,6 +24,7 @@ import org.ogf.nsi.grpc.connection.requester.QueryNotificationConfirmedRequest;
 import org.ogf.nsi.grpc.connection.requester.QueryResultConfirmedRequest;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.annotation.Generated;
 import jakarta.annotation.Resource;
@@ -63,7 +63,7 @@ public class ConnectionServiceProviderPortImpl implements ConnectionProviderPort
     @Generated(value = "org.apache.cxf.tools.wsdlto.WSDLToJava", date = "2020-04-27T16:21:07.875+02:00")
     private static final Logger LOG = Logger.getLogger(ConnectionServiceProviderPortImpl.class.getName());
 
-    @GrpcClient("connection_provider")
+    @Autowired
     private ConnectionProviderGrpc.ConnectionProviderBlockingStub connectionProviderStub;
 
     @Resource

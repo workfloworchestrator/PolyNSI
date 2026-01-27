@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org" xmlns:xsi="http://www.w3.org" xsi:schemaLocation="http://maven.apache.org https://maven.apache.org">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.10</version>
+        <version>4.0.2</version>
     </parent>
     <groupId>nl.surf</groupId>
     <artifactId>polynsi</artifactId>
     <version>0.3.4-SNAPSHOT</version>
-    <name>polynsi</name>
-    <description>A SOAP to gRPC translating proxy server for the NSI protocol.</description>
+
     <properties>
-        <jakarta-servlet.version>5.0.0</jakarta-servlet.version>
-        <java.version>17</java.version>
-        <cxf.version>4.0.10</cxf.version>
+        <java.version>21</java.version>
+        <cxf.version>4.1.4</cxf.version>
+        <cxf.xjc.version>4.0.2</cxf.xjc.version>
+        <!-- Keep these synced -->
+        <protoc.version>4.33.4</protoc.version>
         <grpc.version>1.75.0</grpc.version>
-        <protoc.version>3.25.8</protoc.version>
+        <spring-grpc.version>1.0.1</spring-grpc.version>
     </properties>
+
     <scm>
         <developerConnection>scm:git:git@github.com:workfloworchestrator/PolyNSI</developerConnection>
-        <tag>0.3.2</tag>
+        <tag>HEAD</tag>
     </scm>
     <distributionManagement>
         <repository>
@@ -29,10 +31,31 @@
             <url>https://maven.pkg.github.com/workfloworchestrator/PolyNSI</url>
         </repository>
     </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Official Spring gRPC BOM -->
+            <dependency>
+                <groupId>org.springframework.grpc</groupId>
+                <artifactId>spring-grpc-dependencies</artifactId>
+                <version>${spring-grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Force Protobuf runtime to match compiler version exactly -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protoc.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -41,35 +64,63 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.sun.xml.ws</groupId>
-            <artifactId>jaxws-rt</artifactId>
-            <version>4.0.3</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jetty</artifactId>
         </dependency>
+
+        <!-- Official Spring gRPC Starters (versions managed by BOM) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework.grpc</groupId>
+            <artifactId>spring-grpc-spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.grpc</groupId>
+            <artifactId>spring-grpc-client-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- gRPC Core Components (no explicit versions, let BOM handle them) -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-services</artifactId>
+        </dependency>
+
+       <!-- Protobuf utilities -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protoc.version}</version>
+        </dependency>
+
+        <!-- CXF (SOAP Implementation) -->
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
             <version>${cxf.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.cxf.xjc-utils</groupId>
-            <artifactId>cxf-xjc-runtime</artifactId>
-            <version>3.3.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-features-logging</artifactId>
             <version>${cxf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.cxf.xjc-utils</groupId>
+            <artifactId>cxf-xjc-runtime</artifactId>
+            <version>${cxf.xjc.version}</version>
+        </dependency>
+
+        <!-- Jakarta API baseline for Spring Boot 4 / Jakarta EE 11 -->
         <dependency>
             <groupId>jakarta.xml.ws</groupId>
             <artifactId>jakarta.xml.ws-api</artifactId>
@@ -80,91 +131,59 @@
             <artifactId>jakarta.jws-api</artifactId>
             <version>3.0.0</version>
         </dependency>
+
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>jakarta.el</artifactId>
-            <version>4.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty</artifactId>
-            <version>${grpc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-protobuf</artifactId>
-            <version>${grpc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-stub</artifactId>
-            <version>${grpc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <version>${protoc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.devh</groupId>
-            <artifactId>grpc-spring-boot-starter</artifactId>
-            <version>3.1.0.RELEASE</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.grpc</groupId>
-                    <artifactId>grpc-netty-shaded</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>1.6.2</version>
-            </extension>
-        </extensions>
         <plugins>
+
+            <!-- Protobuf Maven Plugin configuration -->
             <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
+                <groupId>io.github.ascopes</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.6.1</version>
+                <version>4.1.2</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
-                    <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <protoc>${protoc.version}</protoc>
+                    <plugins>
+                        <!-- Updated syntax avoiding deprecated binaryMavenPlugins -->
+                        <plugin kind="binary-maven">
+                            <groupId>io.grpc</groupId>
+                            <artifactId>protoc-gen-grpc-java</artifactId>
+                            <version>${grpc.version}</version>
+                        </plugin>
+                    </plugins>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>compile</goal>
-                            <goal>compile-custom</goal>
+                            <goal>generate</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Standard Spring Boot Maven Plugin, managed version -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <release>${java.version}</release>
+                    <parameters>true</parameters> <!-- Helpful for Spring Boot 4 reflection -->
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
+
+            <!-- CXF Codegen -->
             <plugin>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-codegen-plugin</artifactId>
@@ -173,122 +192,62 @@
                     <execution>
                         <id>generate-sources</id>
                         <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsdl2java</goal>
+                        </goals>
                         <configuration>
+                            <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
                             <defaultOptions>
+                                <markGenerated>true</markGenerated>
+                                <extraargs>
+                                    <extraarg>-exsh</extraarg>
+                                    <extraarg>true</extraarg>
+                                </extraargs>
                                 <bindingFiles>
                                     <bindingFile>${basedir}/src/main/resources/jaxb_bindings.xml</bindingFile>
+                                    <!-- Grouped schema bindings -->
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_types_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_framework_headers_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_framework_types_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_definition_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_p2p_v2_0.xsd</bindingFile>
                                     <bindingFile>${basedir}/src/main/resources/wsdl/connection/pathtrace.xsd</bindingFile>
-                                    <bindingFile>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_types_v2_0.xsd</bindingFile>
-                                    <bindingFile>${basedir}/src/main/resources/wsdl/connection/saml-schema-assertion-2.0.xsd</bindingFile>
-                                    <bindingFile>${basedir}/src/main/resources/wsdl/connection/xenc-schema.xsd</bindingFile>
-                                    <bindingFile>${basedir}/src/main/resources/wsdl/connection/xmldsig-core-schema.xsd</bindingFile>
                                 </bindingFiles>
                             </defaultOptions>
                             <wsdlOptions>
                                 <wsdlOption>
                                     <wsdl>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl</wsdl>
-                                    <wsdlLocation>wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl</wsdlLocation>
+                                    <wsdlLocation>classpath:wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl</wsdlLocation>
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.provider</extraarg>
-                                        <extraarg>-exsh</extraarg>
-                                        <extraarg>true</extraarg>
-                                        <extraarg>-mark-generated</extraarg>
                                     </extraargs>
                                 </wsdlOption>
                                 <wsdlOption>
                                     <wsdl>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl</wsdl>
-                                    <wsdlLocation>wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl</wsdlLocation>
+                                    <wsdlLocation>classpath:wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl</wsdlLocation>
                                     <extraargs>
                                         <extraarg>-p</extraarg>
                                         <extraarg>nl.surf.polynsi.soap.connection.requester</extraarg>
-                                        <extraarg>-exsh</extraarg>
-                                        <extraarg>true</extraarg>
-                                        <extraarg>-mark-generated</extraarg>
                                     </extraargs>
                                 </wsdlOption>
                             </wsdlOptions>
                         </configuration>
-                        <goals>
-                            <goal>wsdl2java</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxb2-maven-plugin</artifactId>
-                <version>4.1.0</version>
-                <configuration>
-                    <addGeneratedAnnotation>true</addGeneratedAnnotation>
-                    <target>3.0</target>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>xjc-service-schemas</id>
-                        <goals>
-                            <goal>xjc</goal>
-                        </goals>
-                        <configuration>
-                            <xjbSources>
-                                <xjbSource>{$basedir}/src/main/resources/jaxb_bindings.xml</xjbSource>
-                            </xjbSources>
-                            <packageName>nl.surf.polynsi.soap.services</packageName>
-                            <sources>
-                                <source>${basedir}/src/main/resources/wsdl/connection/ogf_nsi_services_p2p_v2_0.xsd</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>xjc-policy-schemas</id>
-                        <goals>
-                            <goal>xjc</goal>
-                        </goals>
-                        <configuration>
-                            <xjbSources>
-                                <xjbSource>{$basedir}/src/main/resources/jaxb_bindings.xml</xjbSource>
-                            </xjbSources>
-                            <packageName>nl.surf.polynsi.soap.policies</packageName>
-                            <sources>
-                                <source>${basedir}/src/main/resources/wsdl/connection/pathtrace.xsd</source>
-                            </sources>
-                            <!--
-                                Don't clear the output directory before generating the sources.
-                                Clearing the output directory removes the p2p schema from above.
-                            -->
-                            <clearOutputDir>false</clearOutputDir>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+
+            <!-- Release Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.0-M6</version>
-            </plugin>
-            <plugin>
-                <groupId>org.openrewrite.maven</groupId>
-                <artifactId>rewrite-maven-plugin</artifactId>
-                <version>6.27.1</version>
+                <version>3.1.1</version>
                 <configuration>
-                    <exportDatatables>true</exportDatatables>
-                    <activeRecipes>
-                        <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5</recipe>
-                    </activeRecipes>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.openrewrite.recipe</groupId>
-                        <artifactId>rewrite-spring</artifactId>
-                        <version>6.22.1</version>
-                    </dependency>
-                </dependencies>
             </plugin>
+
         </plugins>
     </build>
 </project>

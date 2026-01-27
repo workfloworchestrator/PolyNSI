@@ -3,9 +3,11 @@ package nl.surf.polynsi;
 import org.apache.cxf.Bus;
 import org.apache.cxf.logging.FaultListener;
 import org.apache.cxf.message.Message;
+import org.ogf.nsi.grpc.connection.provider.ConnectionProviderGrpc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.grpc.client.ImportGrpcClients;
 
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -19,6 +21,7 @@ import java.util.logging.Logger;
  Boot's dependency injection. It makes searching for things a little difficult.
  */
 @Configuration
+@ImportGrpcClients(basePackages = "org.ogf.nsi.grpc", target = "connection-provider", types = ConnectionProviderGrpc.class)
 public class ClientConfig {
 
     @Autowired

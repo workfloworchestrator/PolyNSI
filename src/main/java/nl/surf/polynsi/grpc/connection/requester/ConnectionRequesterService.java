@@ -1,10 +1,12 @@
 package nl.surf.polynsi.grpc.connection.requester;
 
+import io.grpc.ForwardingServerCallListener;
+import io.grpc.Metadata;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import net.devh.boot.grpc.server.advice.GrpcAdvice;
-import net.devh.boot.grpc.server.advice.GrpcExceptionHandler;
-import net.devh.boot.grpc.server.service.GrpcService;
 import nl.surf.polynsi.ConverterException;
 import nl.surf.polynsi.Direction;
 import nl.surf.polynsi.ProxyException;
@@ -16,6 +18,8 @@ import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.ogf.nsi.grpc.connection.common.GenericAcknowledgment;
 import org.ogf.nsi.grpc.connection.requester.*;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import jakarta.xml.ws.Holder;
 import jakarta.xml.ws.WebServiceException;
@@ -26,7 +30,7 @@ import java.util.logging.Logger;
 import static com.google.protobuf.util.Timestamps.EPOCH;
 import static nl.surf.polynsi.Converter.*;
 
-@GrpcService
+@Service
 public class ConnectionRequesterService extends ConnectionRequesterGrpc.ConnectionRequesterImplBase {
     private static final Logger LOG = Logger.getLogger(ConnectionRequesterService.class.getName());
 
@@ -34,6 +38,10 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
         Catch ProxyException that can be thrown during gRPC -> SOAP processing and
         send a gRPC UNAVAILABLE back with the cause from the exception.
      */
+    /*
+         @GrpcAdvice will be introduced in Sprint gRPC v1.1 again.
+    */
+    /*
     @GrpcAdvice
     public static class GrpcExceptionAdvice {
 
@@ -44,6 +52,31 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             return Status.UNAVAILABLE.withDescription(description).withCause(e);
         }
     }
+    */
+    /*
+        Temporary replacement for @GrpcAdive.
+     */
+    @Component
+    public class GlobalExceptionInterceptor implements ServerInterceptor {
+        @Override
+        public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+                ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
+
+            ServerCall.Listener<ReqT> delegate = next.startCall(call, headers);
+
+            return new ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(delegate) {
+                @Override
+                public void onHalfClose() {
+                    try {
+                        super.onHalfClose();
+                    } catch (Exception ex) {
+                        call.close(Status.INTERNAL.withDescription(ex.getMessage()), new Metadata());
+                    }
+                }
+            };
+        }
+    }
+
 
     /*
         Create connection requester proxy to send SOAP message.
