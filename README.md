@@ -59,12 +59,16 @@ compiler needs a plugin to do so.
 
 # Quick Start
 
-* [install (Open)JDK 11](https://openjdk.java.net/)
+* [install (Open)JDK 21](https://openjdk.java.net/)
 * [install Apache Maven](http://maven.apache.org/install.html)
-* mvn clean generate-sources
-* mvn test
-* mvn spring-boot:run
-* point your browser at: http://localhost:8080/soap
+
+```shell
+mvn clean generate-sources
+mvn test
+mvn spring-boot:run
+```
+
+And point your browser to `http://localhost:8080/soap`.
 
 # Installation
 
@@ -72,16 +76,51 @@ Normally the Quick Start instructions should be all that's required to get
 PolyNSI installed and running with a default configuration. Maven will find
 everything it needs and installs it into its local repository. Thus making it
 available to PolyNSI. This includes binary dependencies such as the Protocol
-Buffers compiler with its gRPC plugin. However, for some less common, but
-otherwise equally relevant OSes in the networkin space, such as FreeBSD, a bit
-more work is required. See the section 
-[Advanced Installation](#Advanced-Installation) for more details.  
+Buffers compiler with its gRPC plugin. However, when deploying PolyNSI in
+production, a more hardended approach is advised.
+
+## Create and run a JAR
+
+To generate the Java code from the proto files, and compile and package everything
+info a JAR, use the following command:
+
+```shell
+mvn clean package
+```
+
+The resulting JAR is stored in the `target` folder, and can be started with:
+
+```shell
+java -jar target/polynsi-x.y.z.jar
+```
+
+When the default configuration does not suffice, change the properties as can be found in
+`src/main/resources/application.properties` and supply it on the command line:
+
+```shell
+java -Dspring.config.additional-location=file:path/to/updated/application.properties -jar target/polynsi-x.y.z.jar
+```
+
+## Containers
+
+Pre-build containers based on [Google Distroless Java](https://github.com/GoogleContainerTools/distroless/tree/main/java) can be found at the [GitHub container registry for PolyNSI](https://github.com/workfloworchestrator/PolyNSI/pkgs/container/polynsi), and can be used to deploy to Kubernetes, or run directly with Docker:
+
+```shell
+docker run \
+	--publish 8080:8080 \
+	--publish 9090:9090 \
+	--volume `pwd`/config/application.properties:/config/application.properties \
+	--interactive \
+	--tty \
+	ghcr.io/workfloworchestrator/polynsi:latest \
+	java -Dspring.config.additional-location=/config/application.properties -jar polynsi.jar
+```
 
 # Configuration
 
 All PolyNSI configuration is done by properties. As PolyNSI is a Spring Boot
 application it follows Springs Boot's conventions for obtaining 
-[those properties from files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files).  
+[those properties from files](https://docs.spring.io/spring-boot/reference/features/external-config.html).  
 
 PolyNSI's default configuration resides in
 `src/main/resources/application.properties` where the properiets are documented
@@ -213,132 +252,34 @@ nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=C
 nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
 ```
 
-# Advanced Installation
+## Support for PEM encoded private key and certificates
 
-As detailed in the section [Installation](#Installation) some OSes, such as
-FreeBSD, require a bit more work to install PolyNSI on. The reason for this is
-that the Protocol Buffers and gRPC projects do not provide precompiled versions
-of their compiler and plugin for them. Hence we need to compile these
-ourselves. In some cases the package manager of the OS in question might help us
-with that. That happens to be the case with FreeBSD as we will shortly see. 
+Instead of supplying a Java key- and truststore with the `server.ssl.key-store` and `server.ssl.trust-store`
+properties, it is also possible to supply the server private key, certificate and chain, and the trusted
+CA bundle, in PEM encoded format using the following properties:
 
+```properties
+spring.ssl.bundle.pem.polynsi-bundle.keystore.certificate=file:server-certificate.pem
+spring.ssl.bundle.pem.polynsi-bundle.keystore.private-key=file:server-private-key.pem
+spring.ssl.bundle.pem.polynsi-bundle.keystore.certificate-chain=file:ca-chain.pem
+spring.ssl.bundle.pem.polynsi-bundle.keystore.private-key-password=secret
+spring.ssl.bundle.pem.polynsi-bundle.truststore.certificate=file:trusted-bundle.pem
+server.ssl.bundle=polynsi-bundle
+```
 
-## Building the gRPC protoc plugin on FreeBSD
+# Debug logging
 
-First install the `protobuf` package:
+In case things do no seem to work as expected, debug logging can be enabled with the following properties:
 
-    $ sudo pkg protobuf
-    
-This not only installs the `protoc` compiler, but also all the relevant
-header files needed, to build the gRPC compiler plugin. For Maven to use the
-`protoc` compiler we need to tell it where to find it:
-
-    $ mvn install:install-file \
-        -DgroupId=com.google.protobuf \
-        -DartifactId=protoc \
-        -Dversion=3.12.2 \
-        -Dclassifier=freebsd-x86_64 \
-        -Dpackaging=exe \
-        -Dfile=/usr/local/bin/protoc
-
-Next checkout the 1.29 branch of the `grpc-java` project. This project
-contains a `protoc` plugin that generates Java files.
-
-    $ git clone -b v1.29.0 https://github.com/grpc/grpc-java
-    
-On FreeBSD, third party libraries and headers files are located in `/usr
-/local/lib` and `/urs/local/include` by default. The `grpc-java` build
-system is unaware of those locations. Hence, we need to tell it about them:
-
-    $ export CXXFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib"
-    
-Yes, the `protoc` compiler is a C++ application and so is the gRPC
-plugin for Java!
- 
-We also need to tell the `grpc-java` build system where to find the
-`protoc` compiler. Furthermore, we are not interested in building things
-for Android. So we create a file `grpc-java/gradle.properties` and add
-the following lines to it:
- 
-    skipAndroid=true
-    protoc=/usr/local/bin/protoc
-    
-Before we build the plugin, we need to do one last thing; patch a
-Bash script that sanity checks the build artifact. Currently, it only
-recognizes artifacts (the plugin) built on Linux, MacOS and
-Windows. The patch teaches it about FreeBSD:
-
-    $ cd grpc-java/compiler
-    $ git apply <...>/polynsi/grpc-java-compiler.patch
- 
-Building the plugin should now be a simple matter of (while still being
-in the directory `grpc-java/compile`):
-
-    $ ../gradlew clean java_pluginExecutable test publishToMavenLocal
-
-To test whether the plugin now actually resides in your local Maven 
-repository, execute:
-
-    $ ls -l ~/.m2/repository/io/grpc/protoc-gen-grpc-java/1.29.0/
-    
-That directory should have a file called.
-`protoc-gen-grpc-java-1.29.0-freebsd-x86_64.exe`
-
-## Building protobuf-java jars on FreeBSD
-
-Generally, the required `protobuf-java` jars are available from the Maven Central
-Repository and will be downloaded by Maven automatically. However sometimes we
-want to build them from source if we need a specific version that's not yet
-available from the Maven Central Repository. 
-
-Building the `protobuf-java` jars requires the `protoc` compiler, that we
-already have installed, but in a different location from where the build
-configuration expects it. Contrary to `grpc-java` that uses the Gradle build
-system, `protobuf-java` uses Maven. As such, specifying the location of the
-`protoc` compiler is a little different. Even more so as protobuf-java uses an
-aggregate POM. With an aggregrate POM, properties specified on the command line
-using the `-D` parameter, are not passed on to submodules (POMs). That makes it
-less than trivial to set a value for the `protoc` property if it needs to be
-shared by all submodules. However, with a `settings.xml` file in the `~/.m2`
-directory we will be able to set property values that will be picked up by any
-POM, whether it is a submodule or not.
-
-So create a file `~/.m2/settings.xml` with the following contents:
-
-    <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
-        <profiles>
-            <profile>
-                <id>freebsd</id>
-                <activation>
-                    <activeByDefault>true</activeByDefault>
-                </activation>
-                <properties>
-                    <protoc>/usr/local/bin/protoc</protoc>
-                </properties>
-            </profile>
-        </profiles>
-    </settings>
-
-With that out of the way we now need to clone the `protobuf` repository:
-
-    $ git clone git@github.com:protocolbuffers/protobuf.git
-
-The version of the `protobuf-java` jars we want to build, need to match the
-version of the protoc compiler:
-
-    $ protoc --version
-    libprotoc 3.12.2
-
-This shows that we need to checkout the v3.12.2 release:
-
-    $ cd protobuf
-    $ git checkout v3.12.2
-    
-And, finally, build the `protobuf-java` jars:
-
-    $ cd java
-    $ mvn install
-
+```properties
+# Spring Boot
+debug=true
+# PolyNSI application
+logging.level.nl.surf.polynsi=DEBUG
+# gRPC server
+logging.level.org.springframework.grpc=DEBUG
+# SOAP server
+logging.level.org.apache.cxf=DEBUG
+# gRPC messages
+logging.level.io.grpc=DEBUG
+```
