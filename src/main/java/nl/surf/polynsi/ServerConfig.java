@@ -42,6 +42,7 @@ public class ServerConfig {
     @Bean
     public Endpoint endpointConnectionProvider(Bus bus, ConnectionProviderPort connectionProviderPort, AuthInterceptor authInterceptor) {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort);
+        endpoint.setWsdlLocation("wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl");
         endpoint.publish(this.connectionProviderPath);
         if(verifySslClientSubjectDn)
             endpoint.getInInterceptors().add(authInterceptor);
@@ -51,6 +52,7 @@ public class ServerConfig {
     @Bean
     public Endpoint endpointConnectionRequester(Bus bus) {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionRequesterPort());
+        endpoint.setWsdlLocation("wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl");
         endpoint.publish(this.connectionRequesterPath);
         return endpoint;
     }
