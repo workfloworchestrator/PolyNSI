@@ -14,10 +14,16 @@ import nl.surf.polynsi.soap.connection.requester.ConnectionRequesterPort;
 import nl.surf.polynsi.soap.connection.requester.ServiceException;
 import nl.surf.polynsi.soap.connection.types.*;
 import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
-import org.apache.cxf.ext.logging.LoggingFeature;
+import org.apache.cxf.configuration.jsse.TLSClientParameters;
+import org.apache.cxf.endpoint.Client;
+import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
+import org.apache.cxf.transport.http.HTTPConduit;
 import org.ogf.nsi.grpc.connection.common.GenericAcknowledgment;
 import org.ogf.nsi.grpc.connection.requester.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ssl.NoSuchSslBundleException;
+import org.springframework.boot.ssl.SslBundle;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -81,16 +87,26 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     /*
         Create connection requester proxy to send SOAP message.
      */
+    @Autowired
+    private org.springframework.boot.ssl.SslBundles sslBundles;
+
     private ConnectionRequesterPort connectionRequesterProxy(String replyTo) {
-        JaxWsProxyFactoryBean jaxWsProxyFactoryBean = new JaxWsProxyFactoryBean();
-        jaxWsProxyFactoryBean.setServiceClass(ConnectionRequesterPort.class);
-        jaxWsProxyFactoryBean.setAddress(replyTo);
-        LoggingFeature loggingFeature = new LoggingFeature();
-        loggingFeature.setPrettyLogging(true);
-        loggingFeature.setVerbose(true);
-        loggingFeature.setLogMultipart(true);
-        jaxWsProxyFactoryBean.getFeatures().add(loggingFeature);
-        return (ConnectionRequesterPort) jaxWsProxyFactoryBean.create();
+        JaxWsProxyFactoryBean factory = new JaxWsProxyFactoryBean();
+        factory.setServiceClass(ConnectionRequesterPort.class);
+        factory.setAddress(replyTo);
+        ConnectionRequesterPort proxy = (ConnectionRequesterPort) factory.create();
+        try {
+            SslBundle bundle = sslBundles.getBundle("nsi-soap-client");
+            TLSClientParameters tlsParams = new TLSClientParameters();
+            tlsParams.setKeyManagers(bundle.getManagers().getKeyManagers());
+            tlsParams.setTrustManagers(bundle.getManagers().getTrustManagers());
+            Client client = ClientProxy.getClient(proxy);
+            HTTPConduit conduit = (HTTPConduit) client.getConduit();
+            conduit.setTlsClientParameters(tlsParams);
+        } catch (NoSuchSslBundleException ex) {
+            LOG.warning("gRPC->SOAP SSL Bundle 'nsi-soap-client' not found, sending message with default configuration");
+        }
+        return proxy;
     }
 
     @Override

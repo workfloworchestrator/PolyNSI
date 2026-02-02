@@ -9,7 +9,7 @@
     <!-- set to WARN to prevent ReflectionServiceFactoryBean create message -->
     <logger name="org.apache.cxf.wsdl.service.factory.ReflectionServiceFactoryBean" level="WARN"/>
 
-    <!-- set to WARN to suppress logging of in and out SOAP message -->
+    <!-- set to TRACE to enable logging of in and out SOAP message -->
     <logger name="org.apache.cxf.services" level="WARN"/>
 
     <!-- set to TRACE for detailed connection provider logging including protobuf message -->
