@@ -103,6 +103,7 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             Client client = ClientProxy.getClient(proxy);
             HTTPConduit conduit = (HTTPConduit) client.getConduit();
             conduit.setTlsClientParameters(tlsParams);
+            LOG.finer("gRPC->SOAP using SSL Bundle 'nsi-soap-client'");
         } catch (NoSuchSslBundleException ex) {
             LOG.warning("gRPC->SOAP SSL Bundle 'nsi-soap-client' not found, sending message with default configuration");
         }
