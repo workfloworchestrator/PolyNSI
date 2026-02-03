@@ -54,3 +54,7 @@ release.properties
 nginx.conf
 /config/
 values.yaml
+
+### various backup files
+*.bak
+*.swp
