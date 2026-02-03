@@ -12,8 +12,28 @@ public class ClientCertificateProperties {
 
     private static final Logger LOG = Logger.getLogger(ClientCertificateProperties.class.getName());
 
+    private AuthorizeDnType authorizeDn = AuthorizeDnType.NO;
+    private String sslClientSubjectDnHeader = "ssl-client-subject-dn";
     private List<String> distinguishedNames;
     private List<String> subjectPublicKeyInfo;
+
+    public AuthorizeDnType getAuthorizeDn() {
+        return authorizeDn;
+    }
+
+    public void setAuthorizeDn(AuthorizeDnType authorizeDn) {
+        this.authorizeDn = authorizeDn;
+        LOG.fine("client certificate authorize distinguished name: " + authorizeDn);
+    }
+
+    public String getSslClientSubjectDnHeader() {
+        return sslClientSubjectDnHeader;
+    }
+
+    public void setSslClientSubjectDnHeader(String sslClientSubjectDnHeader) {
+        this.sslClientSubjectDnHeader = sslClientSubjectDnHeader;
+        LOG.fine("client certificate subject distinguished name header: " + sslClientSubjectDnHeader);
+    }
 
     public List<String> getDistinguishedNames() {
         return distinguishedNames;

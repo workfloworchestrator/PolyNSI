@@ -26,8 +26,11 @@ public class ServerConfig {
     @Value("${soap.server.connection_requester.path}")
     private String connectionRequesterPath;
 
-    @Value("${nl.surf.polynsi.verify-ssl-client-subject-dn:false}")
-    private boolean verifySslClientSubjectDn;
+    private final ClientCertificateProperties clientCertificateProperties;
+
+    public ServerConfig(ClientCertificateProperties clientCertificateProperties) {
+        this.clientCertificateProperties = clientCertificateProperties;
+    }
 
     @Bean
     public ConnectionProviderPort connectionProviderPort() {
@@ -44,7 +47,7 @@ public class ServerConfig {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort);
         endpoint.setWsdlLocation("wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl");
         endpoint.publish(this.connectionProviderPath);
-        if(verifySslClientSubjectDn)
+        if(clientCertificateProperties.getAuthorizeDn() != AuthorizeDnType.NO)
             endpoint.getInInterceptors().add(authInterceptor);
         return endpoint;
     }
