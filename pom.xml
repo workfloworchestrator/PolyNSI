@@ -15,7 +15,7 @@
     <properties>
         <java.version>21</java.version>
         <cxf.version>4.1.4</cxf.version>
-        <cxf.xjc.version>4.0.2</cxf.xjc.version>
+        <cxf.xjc.version>4.1.2</cxf.xjc.version>
         <!-- Keep these synced -->
         <protoc.version>4.33.5</protoc.version>
         <grpc.version>1.75.0</grpc.version>
