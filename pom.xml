@@ -18,7 +18,7 @@
         <cxf.xjc.version>4.0.2</cxf.xjc.version>
         <!-- Keep these synced -->
         <protoc.version>4.33.5</protoc.version>
-        <grpc.version>1.75.0</grpc.version>
+        <grpc.version>1.79.0</grpc.version>
         <spring-grpc.version>1.0.2</spring-grpc.version>
     </properties>
 
