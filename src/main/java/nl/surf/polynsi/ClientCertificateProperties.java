@@ -1,10 +1,9 @@
 package nl.surf.polynsi;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.logging.Logger;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "nl.surf.polynsi.client.certificate")
@@ -41,7 +40,7 @@ public class ClientCertificateProperties {
 
     public void setDistinguishedNames(List<String> distinguishedNames) {
         this.distinguishedNames = distinguishedNames;
-        for(String distinguishedName : distinguishedNames)
+        for (String distinguishedName : distinguishedNames)
             LOG.fine("client certificate distinguished name: " + distinguishedName);
     }
 
@@ -52,6 +51,6 @@ public class ClientCertificateProperties {
 
     public void setSubjectPublicKeyInfo(List<String> subjectPublicKeyInfo) {
         this.subjectPublicKeyInfo = subjectPublicKeyInfo;
-        for(String info : subjectPublicKeyInfo)
-            LOG.fine("client certificate subject public key info: " + info);      }
+        for (String info : subjectPublicKeyInfo) LOG.fine("client certificate subject public key info: " + info);
+    }
 }

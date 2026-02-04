@@ -7,7 +7,7 @@ public class ProxyException extends RuntimeException {
         super(message, cause);
         switch (direction) {
             case GRPC_TO_SOAP:
-                this.messagePrefix = "gRPC->SOAP " ;
+                this.messagePrefix = "gRPC->SOAP ";
                 break;
             case SOAP_TO_GRPC:
                 this.messagePrefix = "SOAP->gRPC ";

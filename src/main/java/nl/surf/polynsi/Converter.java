@@ -1,6 +1,30 @@
 package nl.surf.polynsi;
 
 import com.google.protobuf.Timestamp;
+import jakarta.xml.bind.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.stream.Collectors;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import nl.surf.polynsi.soap.connection.requester.PathTraceType;
 import nl.surf.polynsi.soap.connection.requester.SegmentType;
 import nl.surf.polynsi.soap.connection.requester.StpType;
@@ -26,32 +50,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import jakarta.xml.bind.*;
-import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.stream.Collectors;
-
-
 /**
  * Class to convert between SOAP and Protobuf values.
  * <p>
@@ -74,7 +72,10 @@ public class Converter {
      */
     public static Timestamp toProtobuf(OffsetDateTime soapTimestamp) {
         Instant instant = soapTimestamp.toInstant();
-        return Timestamp.newBuilder().setSeconds(instant.getEpochSecond()).setNanos(instant.getNano()).build();
+        return Timestamp.newBuilder()
+                .setSeconds(instant.getEpochSecond())
+                .setNanos(instant.getNano())
+                .build();
     }
 
     /**
@@ -87,8 +88,8 @@ public class Converter {
      * @return Timestamp used by SOAP (with offset set to +00:00, eg UTC)
      */
     public static OffsetDateTime toSoap(Timestamp pbTimestamp) {
-        return OffsetDateTime
-                .ofInstant(Instant.ofEpochSecond(pbTimestamp.getSeconds(), pbTimestamp.getNanos()), ZoneOffset.UTC);
+        return OffsetDateTime.ofInstant(
+                Instant.ofEpochSecond(pbTimestamp.getSeconds(), pbTimestamp.getNanos()), ZoneOffset.UTC);
     }
 
     /**
@@ -115,13 +116,15 @@ public class Converter {
     protected static String fromSessionSecurityAttr(CommonHeaderType soapHeader) throws ConverterException {
         try {
             // Explicitly add classes to marshall. Include PathTraceType.class.
-            JAXBContext ssaContext = JAXBContext.newInstance(CommonHeaderType.class, nl.surf.polynsi.soap.connection.provider.PathTraceType.class);
+            JAXBContext ssaContext = JAXBContext.newInstance(
+                    CommonHeaderType.class, nl.surf.polynsi.soap.connection.provider.PathTraceType.class);
             Marshaller marshaller = ssaContext.createMarshaller();
             // Enable formatted output when debugging.
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             StringWriter sw = new StringWriter();
             // Wrap it, as CommonHeaderType is not annotated with @XMLRootElement
-            JAXBElement<CommonHeaderType> jaxbElemHeader = new JAXBElement<>(new QName("", "header"), CommonHeaderType.class, soapHeader);
+            JAXBElement<CommonHeaderType> jaxbElemHeader =
+                    new JAXBElement<>(new QName("", "header"), CommonHeaderType.class, soapHeader);
             marshaller.marshal(jaxbElemHeader, sw);
             InputSource xmlHeader = new InputSource(new StringReader(sw.toString()));
             XPath xPath = XPathFactory.newInstance().newXPath();
@@ -151,19 +154,18 @@ public class Converter {
      */
     protected static ArrayList<SessionSecurityAttrType> toSessionSecurityAttr(String xmlSSA) throws ConverterException {
         try {
-            JAXBContext jc = JAXBContext
-                    .newInstance("nl.surf.polynsi.soap.framework.headers",
-                            nl.surf.polynsi.soap.framework.headers.ObjectFactory.class
-                            .getClassLoader());
+            JAXBContext jc = JAXBContext.newInstance(
+                    "nl.surf.polynsi.soap.framework.headers",
+                    nl.surf.polynsi.soap.framework.headers.ObjectFactory.class.getClassLoader());
             Unmarshaller unmarshaller = jc.createUnmarshaller();
 
             /*
-             TODO: CommonHeaderType.sessionSecurityAttribute is an ArrayList, meaning we might need to iterate
-                   over certain XML elements and unmarshal them into separate SessionAttributeSecurityType's.
-                   However we don't know what elements make up separate SessionAttributeSecurityType and what
-                   elements belong to the same SessionAttributeSecurityType. We need SAML expertise for that. For
-                   now we consider all the elements to belong to the same single SessionAttributeSecurityType.
-             */
+            TODO: CommonHeaderType.sessionSecurityAttribute is an ArrayList, meaning we might need to iterate
+                  over certain XML elements and unmarshal them into separate SessionAttributeSecurityType's.
+                  However we don't know what elements make up separate SessionAttributeSecurityType and what
+                  elements belong to the same SessionAttributeSecurityType. We need SAML expertise for that. For
+                  now we consider all the elements to belong to the same single SessionAttributeSecurityType.
+            */
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             DocumentBuilder dBuilder = factory.newDocumentBuilder();
@@ -182,14 +184,16 @@ public class Converter {
     public static Header toProtobuf(CommonHeaderType soapHeader) throws ConverterException {
         try {
             Header.Builder pbHeaderBuilder = Header.newBuilder();
-            pbHeaderBuilder.setProtocolVersion(soapHeader.getProtocolVersion())
-                    .setCorrelationId(soapHeader.getCorrelationId()).setRequesterNsa(soapHeader.getRequesterNSA())
+            pbHeaderBuilder
+                    .setProtocolVersion(soapHeader.getProtocolVersion())
+                    .setCorrelationId(soapHeader.getCorrelationId())
+                    .setRequesterNsa(soapHeader.getRequesterNSA())
                     .setProviderNsa(soapHeader.getProviderNSA());
             /*
-                Optional values in SOAP are set to `null` when not present. Protobuf however does not
-                serialize `null` values. Instead if values are not present they simple should not be set. Hence
-                the pattern of testing for `null` and conditionally setting Protobuf values.
-             */
+               Optional values in SOAP are set to `null` when not present. Protobuf however does not
+               serialize `null` values. Instead if values are not present they simple should not be set. Hence
+               the pattern of testing for `null` and conditionally setting Protobuf values.
+            */
             if (soapHeader.getReplyTo() != null) {
                 pbHeaderBuilder.setReplyTo(soapHeader.getReplyTo());
             }
@@ -203,18 +207,19 @@ public class Converter {
                 if (elem instanceof Element hdElem) {
                     if (hdElem.getLocalName().equals("pathTrace")) {
                         // dynamically create Java PathTraceType instance from raw XML
-                        JAXBContext jc = JAXBContext
-                                .newInstance("nl.surf.polynsi.soap.policies",
-                                        nl.surf.polynsi.soap.connection.provider.ObjectFactory.class
-                                        .getClassLoader());
+                        JAXBContext jc = JAXBContext.newInstance(
+                                "nl.surf.polynsi.soap.policies",
+                                nl.surf.polynsi.soap.connection.provider.ObjectFactory.class.getClassLoader());
                         JAXBElement<PathTraceType> root = jc.createUnmarshaller()
                                 .unmarshal(hdElem.getOwnerDocument().getDocumentElement(), PathTraceType.class);
                         PathTraceType soapPathTrace = root.getValue();
 
                         // Build protobuf PathTrace message
-                        PathTrace.Builder pbPathTraceBuilder = PathTrace.newBuilder().setId(soapPathTrace.getId())
+                        PathTrace.Builder pbPathTraceBuilder = PathTrace.newBuilder()
+                                .setId(soapPathTrace.getId())
                                 .setConnectionId(soapPathTrace.getConnectionId());
-                        for (nl.surf.polynsi.soap.connection.requester.PathType soapPathType : soapPathTrace.getPath()) {
+                        for (nl.surf.polynsi.soap.connection.requester.PathType soapPathType :
+                                soapPathTrace.getPath()) {
                             Path.Builder pbPathBuilder = Path.newBuilder();
                             List<SegmentType> soapSegmentTypes = soapPathType.getSegment();
                             /*
@@ -229,17 +234,19 @@ public class Converter {
                             */
                             soapSegmentTypes.sort(Comparator.comparing(SegmentType::getOrder));
                             for (SegmentType soapSegmentType : soapSegmentTypes) {
-                                Segment.Builder pbSegmentBuilder = Segment.newBuilder().setId(soapSegmentType.getId())
+                                Segment.Builder pbSegmentBuilder = Segment.newBuilder()
+                                        .setId(soapSegmentType.getId())
                                         .setConnectionId(soapSegmentType.getConnectionId());
                                 List<StpType> soapStpTypes = soapSegmentType.getStp();
                                 /*
-                                 Similarly to SOAP `segment` elements, SOAP `stp` elements, although being part of a
-                                 list, have an explicit `order` attribute. Suggesting they might not be ordered
-                                 based on their order of appearance. The protobuf version does rely on the order of
-                                 appearance, hence we sort them first.
-                                 */
+                                Similarly to SOAP `segment` elements, SOAP `stp` elements, although being part of a
+                                list, have an explicit `order` attribute. Suggesting they might not be ordered
+                                based on their order of appearance. The protobuf version does rely on the order of
+                                appearance, hence we sort them first.
+                                */
                                 soapStpTypes.sort(Comparator.comparing(StpType::getOrder));
-                                pbSegmentBuilder.addAllStps(soapStpTypes.stream().map(StpType::getValue)
+                                pbSegmentBuilder.addAllStps(soapStpTypes.stream()
+                                        .map(StpType::getValue)
                                         .collect(Collectors.toList()));
                                 pbPathBuilder.addSegments(pbSegmentBuilder);
                             }
@@ -272,7 +279,8 @@ public class Converter {
         }
         if (pbHeader.hasPathTrace()) {
             PathTrace pbPathTrace = pbHeader.getPathTrace();
-            nl.surf.polynsi.soap.connection.requester.ObjectFactory policiesObjFactory = new nl.surf.polynsi.soap.connection.requester.ObjectFactory();
+            nl.surf.polynsi.soap.connection.requester.ObjectFactory policiesObjFactory =
+                    new nl.surf.polynsi.soap.connection.requester.ObjectFactory();
             PathTraceType pathTraceType = policiesObjFactory.createPathTraceType();
             pathTraceType.setId(pbPathTrace.getId());
             pathTraceType.setConnectionId(pbPathTrace.getConnectionId());
@@ -280,7 +288,8 @@ public class Converter {
             for (Path pbPath : pbPathTrace.getPathsList()) {
                 nl.surf.polynsi.soap.connection.requester.PathType soapPath = policiesObjFactory.createPathType();
                 List<SegmentType> soapSegments = soapPath.getSegment();
-                ListIterator<Segment> pbSegmentsIterator = pbPath.getSegmentsList().listIterator();
+                ListIterator<Segment> pbSegmentsIterator =
+                        pbPath.getSegmentsList().listIterator();
                 while (pbSegmentsIterator.hasNext()) {
                     int segOrder = pbSegmentsIterator.nextIndex();
                     Segment pbSegment = pbSegmentsIterator.next();
@@ -289,7 +298,8 @@ public class Converter {
                     soapSegment.setId(pbSegment.getId());
                     soapSegment.setConnectionId(pbSegment.getConnectionId());
                     List<StpType> soapStps = soapSegment.getStp();
-                    ListIterator<String> pbStpsIterator = pbSegment.getStpsList().listIterator();
+                    ListIterator<String> pbStpsIterator =
+                            pbSegment.getStpsList().listIterator();
                     while (pbStpsIterator.hasNext()) {
                         StpType soapStp = policiesObjFactory.createStpType();
                         soapStp.setOrder(pbStpsIterator.nextIndex());
@@ -306,7 +316,6 @@ public class Converter {
         }
         return soapHeader;
     }
-
 
     public static Schedule toProtobuf(ScheduleType soapSchedule) {
         if (soapSchedule == null) {
@@ -461,7 +470,7 @@ public class Converter {
         if (pbServiceException.getChildExceptionCount() > 0) {
             List<ServiceExceptionType> soapChildExceptions = soapServiceException.getChildException();
             List<ServiceException> pbChildExceptions = pbServiceException.getChildExceptionList();
-            for (ServiceException pbChildException: pbChildExceptions) {
+            for (ServiceException pbChildException : pbChildExceptions) {
                 soapChildExceptions.add(toSoap(pbChildException));
             }
         }
@@ -475,8 +484,7 @@ public class Converter {
         Directionality pbDirectionality = pbPtps.getDirectionality();
         if (pbDirectionality == Directionality.UNI_DIRECTIONAL)
             soapP2PServiceType.setDirectionality(DirectionalityType.UNIDIRECTIONAL);
-        else
-            soapP2PServiceType.setDirectionality(DirectionalityType.BIDIRECTIONAL);
+        else soapP2PServiceType.setDirectionality(DirectionalityType.BIDIRECTIONAL);
         soapP2PServiceType.setCapacity(pbPtps.getCapacity());
         soapP2PServiceType.setSymmetricPath(pbPtps.getSymmetricPath());
         soapP2PServiceType.setSourceSTP(pbPtps.getSourceStp());
@@ -497,13 +505,12 @@ public class Converter {
                 soapReservation.setGlobalReservationId(pbReservation.getGlobalReservationId());
             if (pbReservation.getDescription().length() > 0)
                 soapReservation.setDescription(pbReservation.getDescription());
-            if (pbReservation.getResultId() > 0)
-                soapReservation.setResultId(pbReservation.getResultId());
+            if (pbReservation.getResultId() > 0) soapReservation.setResultId(pbReservation.getResultId());
             if (pbReservation.getNotificationId() > 0)
                 soapReservation.setNotificationId(pbReservation.getNotificationId());
-            for(QueryResultCriteria pbCriteria : pbReservation.getCriteriaList()) {
-                QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
-                        .createQuerySummaryResultCriteriaType();
+            for (QueryResultCriteria pbCriteria : pbReservation.getCriteriaList()) {
+                QuerySummaryResultCriteriaType soapQuerySummaryResultCriteria =
+                        objectFactory.createQuerySummaryResultCriteriaType();
                 soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
                 soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
                 soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
@@ -528,13 +535,12 @@ public class Converter {
                 soapReservation.setGlobalReservationId(pbReservation.getGlobalReservationId());
             if (pbReservation.getDescription().length() > 0)
                 soapReservation.setDescription(pbReservation.getDescription());
-            if (pbReservation.getResultId() > 0)
-                soapReservation.setResultId(pbReservation.getResultId());
+            if (pbReservation.getResultId() > 0) soapReservation.setResultId(pbReservation.getResultId());
             if (pbReservation.getNotificationId() > 0)
                 soapReservation.setNotificationId(pbReservation.getNotificationId());
-            for(QueryResultCriteria pbCriteria : pbReservation.getCriteriaList()) {
-                QueryRecursiveResultCriteriaType soapQuerySummaryResultCriteria = objectFactory
-                        .createQueryRecursiveResultCriteriaType();
+            for (QueryResultCriteria pbCriteria : pbReservation.getCriteriaList()) {
+                QueryRecursiveResultCriteriaType soapQuerySummaryResultCriteria =
+                        objectFactory.createQueryRecursiveResultCriteriaType();
                 soapQuerySummaryResultCriteria.setVersion(pbCriteria.getVersion());
                 soapQuerySummaryResultCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
                 soapQuerySummaryResultCriteria.setServiceType(pbCriteria.getServiceType());
@@ -546,21 +552,33 @@ public class Converter {
         return soapReservations;
     }
 
-    public static QueryNotificationConfirmedType toSoap(QueryNotificationConfirmedRequest pbQueryNotificationConfirmed) throws ConverterException {
+    public static QueryNotificationConfirmedType toSoap(QueryNotificationConfirmedRequest pbQueryNotificationConfirmed)
+            throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
-        QueryNotificationConfirmedType soapQueryNotificationConfirmed = objectFactory.createQueryNotificationConfirmedType();
+        QueryNotificationConfirmedType soapQueryNotificationConfirmed =
+                objectFactory.createQueryNotificationConfirmedType();
         for (ErrorEventRequest pbErrorEvent : pbQueryNotificationConfirmed.getErrorEventList())
-            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbErrorEvent));
+            soapQueryNotificationConfirmed
+                    .getErrorEventOrReserveTimeoutOrDataPlaneStateChange()
+                    .add(toSoap(pbErrorEvent));
         for (ReserveTimeoutRequest pbReserveTimeout : pbQueryNotificationConfirmed.getReserveTimeoutList())
-            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbReserveTimeout));
-        for (DataPlaneStateChangeRequest pbDataPlaneStateChange : pbQueryNotificationConfirmed.getDataPlaneStateChangeList())
-            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbDataPlaneStateChange));
-        for (MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout : pbQueryNotificationConfirmed.getMessageDeliveryTimeoutList())
-            soapQueryNotificationConfirmed.getErrorEventOrReserveTimeoutOrDataPlaneStateChange().add(toSoap(pbMessageDeliveryTimeout));
+            soapQueryNotificationConfirmed
+                    .getErrorEventOrReserveTimeoutOrDataPlaneStateChange()
+                    .add(toSoap(pbReserveTimeout));
+        for (DataPlaneStateChangeRequest pbDataPlaneStateChange :
+                pbQueryNotificationConfirmed.getDataPlaneStateChangeList())
+            soapQueryNotificationConfirmed
+                    .getErrorEventOrReserveTimeoutOrDataPlaneStateChange()
+                    .add(toSoap(pbDataPlaneStateChange));
+        for (MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout :
+                pbQueryNotificationConfirmed.getMessageDeliveryTimeoutList())
+            soapQueryNotificationConfirmed
+                    .getErrorEventOrReserveTimeoutOrDataPlaneStateChange()
+                    .add(toSoap(pbMessageDeliveryTimeout));
         return soapQueryNotificationConfirmed;
     }
 
-    private static void addNotificationBase (Notification pbNotification, NotificationBaseType soapNotification) {
+    private static void addNotificationBase(Notification pbNotification, NotificationBaseType soapNotification) {
         soapNotification.setConnectionId(pbNotification.getConnectionId());
         soapNotification.setNotificationId(pbNotification.getNotificationId());
         soapNotification.setTimeStamp(toSoap(pbNotification.getTimeStamp()));
@@ -590,7 +608,8 @@ public class Converter {
 
     public static DataPlaneStateChangeRequestType toSoap(DataPlaneStateChangeRequest pbDataPlaneStateChange) {
         ObjectFactory objectFactory = new ObjectFactory();
-        DataPlaneStateChangeRequestType soapDataPlaneStateChange = objectFactory.createDataPlaneStateChangeRequestType();
+        DataPlaneStateChangeRequestType soapDataPlaneStateChange =
+                objectFactory.createDataPlaneStateChangeRequestType();
         addNotificationBase(pbDataPlaneStateChange.getNotification(), soapDataPlaneStateChange);
         soapDataPlaneStateChange.setDataPlaneStatus(toSoap(pbDataPlaneStateChange.getDataPlaneStatus()));
         return soapDataPlaneStateChange;
@@ -598,7 +617,8 @@ public class Converter {
 
     public static MessageDeliveryTimeoutRequestType toSoap(MessageDeliveryTimeoutRequest pbMessageDeliveryTimeout) {
         ObjectFactory objectFactory = new ObjectFactory();
-        MessageDeliveryTimeoutRequestType soapMessageDeliveryTimeout = objectFactory.createMessageDeliveryTimeoutRequestType();
+        MessageDeliveryTimeoutRequestType soapMessageDeliveryTimeout =
+                objectFactory.createMessageDeliveryTimeoutRequestType();
         addNotificationBase(pbMessageDeliveryTimeout.getNotification(), soapMessageDeliveryTimeout);
         soapMessageDeliveryTimeout.setCorrelationId(pbMessageDeliveryTimeout.getCorrelationId());
         return soapMessageDeliveryTimeout;
@@ -606,7 +626,8 @@ public class Converter {
 
     public static ReservationConfirmCriteriaType toSoap(ReservationConfirmCriteria pbCriteria) {
         ObjectFactory objectFactory = new ObjectFactory();
-        ReservationConfirmCriteriaType soapReservationConfirmCriteria = objectFactory.createReservationConfirmCriteriaType();
+        ReservationConfirmCriteriaType soapReservationConfirmCriteria =
+                objectFactory.createReservationConfirmCriteriaType();
         soapReservationConfirmCriteria.setVersion(pbCriteria.getVersion());
         soapReservationConfirmCriteria.setSchedule(toSoap(pbCriteria.getSchedule()));
         soapReservationConfirmCriteria.setServiceType(pbCriteria.getServiceType());
@@ -649,7 +670,8 @@ public class Converter {
         return soapError;
     }
 
-    public static List<QueryResultResponseType> toSoap(QueryResultConfirmedRequest pbQueryResultConfirmed) throws ConverterException {
+    public static List<QueryResultResponseType> toSoap(QueryResultConfirmedRequest pbQueryResultConfirmed)
+            throws ConverterException {
         ObjectFactory objectFactory = new ObjectFactory();
         List<QueryResultResponseType> soapResultResponses = new ArrayList<>();
         for (ResultResponse pbResultResponse : pbQueryResultConfirmed.getResultList()) {

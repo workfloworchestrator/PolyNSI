@@ -17,8 +17,8 @@ public class ConverterException extends Exception {
         super(cause);
     }
 
-    protected ConverterException(String message, Throwable cause, boolean enableSuppression,
-                                 boolean writableStackTrace) {
+    protected ConverterException(
+            String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

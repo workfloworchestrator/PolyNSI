@@ -1,5 +1,11 @@
 package nl.surf.polynsi;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.xml.namespace.QName;
 import org.apache.cxf.binding.soap.SoapFault;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Message;
@@ -8,20 +14,12 @@ import org.apache.cxf.phase.Phase;
 import org.apache.cxf.transport.http.AbstractHTTPDestination;
 import org.springframework.stereotype.Component;
 
-import jakarta.servlet.http.HttpServletRequest;
-import javax.xml.namespace.QName;
-import java.security.cert.X509Certificate;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.logging.Logger;
-
 @Component
 public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
 
     private static final Logger LOG = Logger.getLogger(AuthInterceptor.class.getName());
     private final ClientCertificateProperties clientCertificateProperties;
     private final QName faultCode = new QName("http://schemas.xmlsoap.org/soap/envelope/", "AuthInterceptor");
-
 
     public AuthInterceptor(ClientCertificateProperties clientCertificateProperties) {
         super(Phase.RECEIVE);
@@ -33,12 +31,12 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
         String sslClientSubjectDn = null;
 
         HttpServletRequest request = (HttpServletRequest) message.get(AbstractHTTPDestination.HTTP_REQUEST);
-        if (request == null)
-            throw new SoapFault("HttpServletRequest not found on incoming request", faultCode);
+        if (request == null) throw new SoapFault("HttpServletRequest not found on incoming request", faultCode);
 
         switch (clientCertificateProperties.getAuthorizeDn()) {
             case AuthorizeDnType.CERTIFICATE:
-                X509Certificate[] certificates = (X509Certificate[]) request.getAttribute("jakarta.servlet.request.X509Certificate");
+                X509Certificate[] certificates =
+                        (X509Certificate[]) request.getAttribute("jakarta.servlet.request.X509Certificate");
                 if (certificates == null || certificates.length == 0) {
                     throw new SoapFault("Client certificate not found on incoming request", faultCode);
                 }
@@ -54,14 +52,16 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                     LOG.fine("HTTP header " + headerName + ": " + headerValue);
                 }
                 if (sslClientSubjectDn == null)
-                    throw new SoapFault(clientCertificateProperties.getSslClientSubjectDnHeader() + " header not found on HTTP request", faultCode);
+                    throw new SoapFault(
+                            clientCertificateProperties.getSslClientSubjectDnHeader()
+                                    + " header not found on HTTP request",
+                            faultCode);
                 break;
         }
 
         if (!isAllowed(sslClientSubjectDn))
             throw new SoapFault(sslClientSubjectDn + " not in list of allowed DNs", faultCode);
-        else
-            LOG.fine(sslClientSubjectDn + " in list of allowed DNs");
+        else LOG.fine(sslClientSubjectDn + " in list of allowed DNs");
     }
 
     private boolean isAllowed(String sslClientSubjectDn) {
