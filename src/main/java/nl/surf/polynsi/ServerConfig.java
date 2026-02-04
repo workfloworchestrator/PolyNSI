@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.xml.ws.Endpoint;
+import jakarta.xml.ws.Endpoint;
 
 /*
  This server config pertains to the configuration of the SOAP servers. The gRPC servers are 'configured'
@@ -26,8 +26,11 @@ public class ServerConfig {
     @Value("${soap.server.connection_requester.path}")
     private String connectionRequesterPath;
 
-    @Value("${nl.surf.polynsi.verify-ssl-client-subject-dn:false}")
-    private boolean verifySslClientSubjectDn;
+    private final ClientCertificateProperties clientCertificateProperties;
+
+    public ServerConfig(ClientCertificateProperties clientCertificateProperties) {
+        this.clientCertificateProperties = clientCertificateProperties;
+    }
 
     @Bean
     public ConnectionProviderPort connectionProviderPort() {
@@ -42,8 +45,9 @@ public class ServerConfig {
     @Bean
     public Endpoint endpointConnectionProvider(Bus bus, ConnectionProviderPort connectionProviderPort, AuthInterceptor authInterceptor) {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort);
+        endpoint.setWsdlLocation("wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl");
         endpoint.publish(this.connectionProviderPath);
-        if(verifySslClientSubjectDn)
+        if(clientCertificateProperties.getAuthorizeDn() != AuthorizeDnType.NO)
             endpoint.getInInterceptors().add(authInterceptor);
         return endpoint;
     }
@@ -51,6 +55,7 @@ public class ServerConfig {
     @Bean
     public Endpoint endpointConnectionRequester(Bus bus) {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionRequesterPort());
+        endpoint.setWsdlLocation("wsdl/connection/ogf_nsi_connection_requester_v2_0.wsdl");
         endpoint.publish(this.connectionRequesterPath);
         return endpoint;
     }

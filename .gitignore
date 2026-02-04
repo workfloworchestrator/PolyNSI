@@ -48,8 +48,13 @@ release.properties
 ### X509 certificates
 *.crt
 *.key
+*.pem
 
 ### PolyNSI test config
 nginx.conf
 /config/
 values.yaml
+
+### various backup files
+*.bak
+*.swp

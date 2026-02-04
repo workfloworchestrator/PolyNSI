@@ -1,6 +1,6 @@
 package nl.surf.polynsi.soap;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 

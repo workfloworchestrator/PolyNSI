@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-               xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-               xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" xmlns="http://java.sun.com/xml/ns/jaxws"
-               jaxb:extensionBindingPrefixes="xjc" jaxb:version="2.0">
+<jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+               xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+               xmlns="https://jakarta.ee/xml/ns/jaxws"
+               jaxb:extensionBindingPrefixes="xjc"
+               jaxb:version="3.0">
     <jaxb:globalBindings xmlns:xs="http://www.w3.org/2001/XMLSchema" generateElementProperty="false">
         <xjc:javaType name="java.time.OffsetDateTime" xmlType="xs:dateTime"
                       adapter="nl.surf.polynsi.soap.DataTypeAdapter"/>

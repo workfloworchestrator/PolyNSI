@@ -1,6 +1,6 @@
 # PolyNSI
 
-A bidirectional SOAP to gRPC translating proxy server for the NSI protocol.
+A bidirectional SOAP tot gRPC translating proxy server for the NSI protocol.
 
 # Introduction and Rationale
 
@@ -59,12 +59,16 @@ compiler needs a plugin to do so.
 
 # Quick Start
 
-* [install (Open)JDK 11](https://openjdk.java.net/)
+* [install (Open)JDK 21](https://openjdk.java.net/)
 * [install Apache Maven](http://maven.apache.org/install.html)
-* mvn clean generate-sources
-* mvn test
-* mvn spring-boot:run
-* point your browser at: http://localhost:8080/soap
+
+```shell
+mvn clean generate-sources
+mvn test
+mvn spring-boot:run
+```
+
+And point your browser to `http://localhost:8080/soap`.
 
 # Installation
 
@@ -72,78 +76,179 @@ Normally the Quick Start instructions should be all that's required to get
 PolyNSI installed and running with a default configuration. Maven will find
 everything it needs and installs it into its local repository. Thus making it
 available to PolyNSI. This includes binary dependencies such as the Protocol
-Buffers compiler with its gRPC plugin. However, for some less common, but
-otherwise equally relevant OSes in the networkin space, such as FreeBSD, a bit
-more work is required. See the section 
-[Advanced Installation](#Advanced-Installation) for more details.  
+Buffers compiler with its gRPC plugin. However, when deploying PolyNSI in
+production, a more hardened approach is advised.
+
+## Create and run a JAR
+
+To generate the Java code from the proto files, and compile and package
+everything info a JAR, use the following command:
+
+```shell
+mvn clean package
+```
+
+The resulting JAR is stored in the `target` folder, and can be started with:
+
+```shell
+java -jar target/polynsi-x.y.z.jar
+```
+
+When the default configuration does not suffice, change the properties as can
+be found in `src/main/resources/application.properties` and supply it on the
+command line:
+
+```shell
+java -Dspring.config.additional-location=file:path/to/updated/application.properties -jar target/polynsi-x.y.z.jar
+```
+
+## Containers
+
+Pre-build containers based on [Google Distroless Java](https://github.com/GoogleContainerTools/distroless/tree/main/java) can be found at the [GitHub container registry for PolyNSI](https://github.com/workfloworchestrator/PolyNSI/pkgs/container/polynsi), and can be used to deploy to Kubernetes, or run directly with Docker:
+
+```shell
+docker run \
+	--publish 8080:8080 \
+	--publish 9090:9090 \
+	--volume `pwd`/config/application.properties:/config/application.properties \
+	--interactive \
+	--tty \
+	ghcr.io/workfloworchestrator/polynsi:latest \
+	java -Dspring.config.additional-location=/config/application.properties -jar polynsi.jar
+```
 
 # Configuration
 
-All PolyNSI configuration is done by properties. As PolyNSI is a Spring Boot
+All PolyNSI configuration is done through properties. As PolyNSI is a Spring Boot
 application it follows Springs Boot's conventions for obtaining 
-[those properties from files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files).  
+[those properties from files](https://docs.spring.io/spring-boot/reference/features/external-config.html).  
 
 PolyNSI's default configuration resides in
-`src/main/resources/application.properties` where the properiets are documented
-as well. Things that you almost certainly will have to configure are the
-SOAP server side of PolyNSI including the SSL configuration,
-and the gRPC side of PolyNSI that faces the gRPC based NSA:
+`src/main/resources/application.properties` where the properties are documented
+as well. Things that you almost certainly will have to configure are the SOAP
+server side of PolyNSI including the SSL configuration, and the gRPC side of
+PolyNSI that faces the gRPC based NSA:
 
 ~~~
+        spring.ssl.bundle.*
         cxf.path
-        soap.server.*  +---------+  grp.client.*            +-------+
-        server.*       |         |------------------------->| gRPC  |
-        -------------->| PolyNSI |                          | based |
-                       |         |<-------------------------| NSA   |
-                       +---------+  grpc.server.*           +-------+
+        soap.server.*
+        server.*             +---------+  spring.grp.client.*         +-------+
+        -------------------->|         |----------------------------->| gRPC  |
+                             | PolyNSI |                              | based |
+        <--------------------|         |<-----------------------------| NSA   |
+        spring.ssl.bundle.*  +---------+  spring.grpc.server.*        +-------+
 ~~~
 
-A typical `application.properties` contains the following configuration options:
+> [!IMPORTANT]
+> In PolyNSI version 0.4.0, the `grpc.*` properties are renamed to
+> `spring.grpc.*`.
+
+## PolyNSI without SSL
+
+The `application.properties` for PolyNSI without SSL, where also the outgoing
+SOAP messages do not require SSL, looks as follows:
 
 ```properties
 #
-# PolyNSI application properties
-#
-debug=false
-logging.config=file:/usr/local/etc/polynsi/logback-spring.xml
-#
-# SOAP provider endpoint configuration
+# SOAP server configuration
 #
 cxf.path=/soap
 soap.server.connection_provider.path=/connection/provider
 soap.server.connection_requester.path=/connection/requester
+server.port=8080
+server.ssl.enabled=false
+server.ssl.client-auth=none
+nl.surf.polynsi.client.certificate.authorize-dn=no
 #
-# SSL proxy client certificate verification support
+# gRPC server and client configuration
 #
-nl.surf.polynsi.verify-ssl-client-subject-dn=false
-nl.surf.polynsi.ssl-client-subject-dn-header=ssl-client-subject-dn
-nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
+spring.grpc.server.port=9090
+spring.grpc.client.channels.connection-provider.address=static://localhost:50051
+spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
+```
+
+## PolyNSI with SSL
+
+When PolyNSI is used in an production environment where SSL is enabled, and
+mTLS is used to authorize the clients, two separate SSL bundles are used. The
+SOAP server uses a SSL bundle with name `nsi-soap-server`, the keystore part of
+the bundle contains the the server certificate and key, and the truststore part
+contains the Certificate Authorities to verify that the presented client
+certificate is valid. Access is authorized when the client certificate DN is
+found in the list of allowed client `distinguished-names`. A second bundle with
+name `nsi-soap-client` is used for the SOAP client, the keystore part contains
+the certificate and key used by this server to identify itself, through mTLS,
+to other Network Server Agents, and the truststore contains CA certificates to
+verify the other NSA certificate.  In the example below, the certificate and key of
+the SOAP server and client are the same, this is the most common case. 
+
+The list of allowed client certificate DN can be configured in the
+`application.properties` using the indexed property
+`nl.surf.polynsi.client.certificate.distinguished-names`. Note that whitespace
+is preserved automatically, so surrounding quotes are not needed, as a matter
+of fact, the quotes will become part of the distinguished name and will
+therefor never match any client certificate DN past by the proxy.
+
+The `application.properties` for PolyNSI with SSL looks as follows:
+
+```properties
 #
-# SOAP provider SSL configuration
+# SOAP server configuration
 #
+cxf.path=/soap
+soap.server.connection_provider.path=/connection/provider
+soap.server.connection_requester.path=/connection/requester
 server.port=8443
 server.ssl.enabled=true
 server.ssl.client-auth=need
-server.ssl.key-store=/usr/local/polynsi/polynsi-keystore.jks
-server.ssl.key-store-type=jks
-server.ssl.key-store-password=secret
-server.ssl.trust-store=/usr/local/polynsi/polynsi-truststore.jks
-server.ssl.trust-store-type=jks
-server.ssl.trust-store-password=secret
+nl.surf.polynsi.client.certificate.authorize-dn=certificate
+nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
+nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
+nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
+spring.ssl.bundle.pem.nsi-soap-server.keystore.certificate=file:server-certificate.pem
+spring.ssl.bundle.pem.nsi-soap-server.keystore.private-key=file:server-private-key.pem
+spring.ssl.bundle.pem.nsi-soap-server.key.password=secret
+spring.ssl.bundle.pem.nsi-soap-server.truststore.certificate=file:client-nsa-trusted-bundle.pem
+spring.ssl.bundle.pem.nsi-soap-client.keystore.certificate=file:server-certificate.pem
+spring.ssl.bundle.pem.nsi-soap-client.keystore.private-key=file:server-private-key.pem
+spring.ssl.bundle.pem.nsi-soap-client.key.password=secret
+spring.ssl.bundle.pem.nsi-soap-client.truststore.certificate=file:other-nsa-trusted-bundle.pem
 #
-# gRPC server configuration
+# gRPC server and client configuration
 #
-grpc.server.port=9090
-#
-# gRPC client configuration
-#
-grpc.client.connection_provider.address=static://localhost:50051
-grpc.client.connection_provider.negotiationType=PLAINTEXT
+spring.grpc.server.port=9090
+spring.grpc.client.channels.connection-provider.address=static://localhost:50051
+spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
 ```
 
-See also:
-* [Application Property Files](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/spring-boot-features.html#boot-features-external-config-application-property-files)
-* [Common (Spring Boot) Application Properties](https://docs.spring.io/spring-boot/docs/2.3.2.RELEASE/reference/html/appendix-application-properties.html#common-application-properties)
+Both the SOAP server and client bundle can be configured with Java key- and truststores as well, with
+support for both JKS and PKCS12, as is shown below for the `nsi-soap-server` bundle:
+
+```properties
+spring.ssl.bundle.jks.nsi-soap-server.keystore.location=file:keystore.jks
+spring.ssl.bundle.jks.nsi-soap-server.keystore.password=secret
+spring.ssl.bundle.jks.nsi-soap-server.keystore.type=JKS
+spring.ssl.bundle.jks.nsi-soap-server.key.password=secret
+spring.ssl.bundle.jks.nsi-soap-server.key.alias=my-server
+spring.ssl.bundle.jks.nsi-soap-server.truststore.location=file:truststore.jks
+spring.ssl.bundle.jks.nsi-soap-server.truststore.password=secret
+spring.ssl.bundle.jks.nsi-soap-server.truststore.type=PKCS12
+```
+
+SSL hot reloading, both for JKS and PEM bundles, is supported as well:
+
+```properties
+spring.ssl.bundle.jks.nsi-soap-server.reload-on-update=true
+spring.ssl.bundle.pem.nsi-soap-cleint.reload-on-update=true
+```
+
+> [!IMPORTANT]
+> Support for the `javax.net.ssl.` properties is removed in PolyNSI version 0.4.0
+
+> [!NOTE]
+> The use of `server.ssl.*` is deprecated in favour of `spring.ssl.bundle.*`,
+> but can still be used to configure the SOAP server.
 
 ## PolyNSI behind an SSL proxy
 
@@ -169,176 +274,35 @@ compare the value against a list of allowed client certificate DN.
 
 This requires a couple of configuration changes. On PolyNSI, disable SSL for
 incoming traffic, specify the name of the header that contains the client DN,
-and enable the verification of that DN.  Last but not least, a list of allowed
-client DN is configured. Note that, to allow PolyNSI to directly connect back to
-the requesting NSA, the trust- and keystore are still needed.
+and enable the authorization of that DN.  Last but not least, a list of allowed
+client DN is configured. Note that, to allow PolyNSI to directly connect back
+to the requesting NSA, the trust- and keystore are still needed.
 
-The following section in the `application.properties` is used when the SSL
-session is directly terminate on PolyNSI.
-
-```properties
-#
-# SOAP provider SSL configuration
-#
-server.port=8443
-server.ssl.enabled=true
-```
-
-In case of an SSL terminating proxy before PolyNSI, the config can be changed
-as shown below.
+The `application.properties` for PolyNSI behind an SSL SSL looks as follows:
 
 ```properties
 #
-# SSL proxy client certificate verification support
+# SOAP server configuration
 #
-nl.surf.polynsi.verify-ssl-client-subject-dn=true
-nl.surf.polynsi.ssl-client-subject-dn-header=X-SSL-Client-DN
-#
-# SOAP provider SSL configuration
-#
+cxf.path=/soap
+soap.server.connection_provider.path=/connection/provider
+soap.server.connection_requester.path=/connection/requester
 server.port=8080
 server.ssl.enabled=false
-```
-
-The list of allowed client certificate DN can be configured in the
-`application.properties` using the indexed property
-`nl.surf.polynsi.client.certificate.distinguished-names`. Note that whitespace
-is preserved automatically, so surounding quotes are not needed, as a matter of
-fact, the quotes will become part of the distinguished name and will therefor
-never match any client certificate DN past by the proxy.
-
-```properties
+server.ssl.client-auth=none
+nl.surf.polynsi.client.certificate.authorize-dn=header
+nl.surf.polynsi.client.certificate.ssl-client-subject-dn-header=ssl-client-subject-dn
 nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
+spring.ssl.bundle.pem.nsi-soap-client.keystore.certificate=file:server-certificate.pem
+spring.ssl.bundle.pem.nsi-soap-client.keystore.private-key=file:server-private-key.pem
+spring.ssl.bundle.pem.nsi-soap-client.key.password=secret
+spring.ssl.bundle.pem.nsi-soap-client.truststore.certificate=file:other-nsa-trusted-bundle.pem
+#
+# gRPC server and client configuration
+#
+spring.grpc.server.port=9090
+spring.grpc.client.channels.connection-provider.address=static://localhost:50051
+spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
 ```
-
-# Advanced Installation
-
-As detailed in the section [Installation](#Installation) some OSes, such as
-FreeBSD, require a bit more work to install PolyNSI on. The reason for this is
-that the Protocol Buffers and gRPC projects do not provide precompiled versions
-of their compiler and plugin for them. Hence we need to compile these
-ourselves. In some cases the package manager of the OS in question might help us
-with that. That happens to be the case with FreeBSD as we will shortly see. 
-
-
-## Building the gRPC protoc plugin on FreeBSD
-
-First install the `protobuf` package:
-
-    $ sudo pkg protobuf
-    
-This not only installs the `protoc` compiler, but also all the relevant
-header files needed, to build the gRPC compiler plugin. For Maven to use the
-`protoc` compiler we need to tell it where to find it:
-
-    $ mvn install:install-file \
-        -DgroupId=com.google.protobuf \
-        -DartifactId=protoc \
-        -Dversion=3.12.2 \
-        -Dclassifier=freebsd-x86_64 \
-        -Dpackaging=exe \
-        -Dfile=/usr/local/bin/protoc
-
-Next checkout the 1.29 branch of the `grpc-java` project. This project
-contains a `protoc` plugin that generates Java files.
-
-    $ git clone -b v1.29.0 https://github.com/grpc/grpc-java
-    
-On FreeBSD, third party libraries and headers files are located in `/usr
-/local/lib` and `/urs/local/include` by default. The `grpc-java` build
-system is unaware of those locations. Hence, we need to tell it about them:
-
-    $ export CXXFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib"
-    
-Yes, the `protoc` compiler is a C++ application and so is the gRPC
-plugin for Java!
- 
-We also need to tell the `grpc-java` build system where to find the
-`protoc` compiler. Furthermore, we are not interested in building things
-for Android. So we create a file `grpc-java/gradle.properties` and add
-the following lines to it:
- 
-    skipAndroid=true
-    protoc=/usr/local/bin/protoc
-    
-Before we build the plugin, we need to do one last thing; patch a
-Bash script that sanity checks the build artifact. Currently, it only
-recognizes artifacts (the plugin) built on Linux, MacOS and
-Windows. The patch teaches it about FreeBSD:
-
-    $ cd grpc-java/compiler
-    $ git apply <...>/polynsi/grpc-java-compiler.patch
- 
-Building the plugin should now be a simple matter of (while still being
-in the directory `grpc-java/compile`):
-
-    $ ../gradlew clean java_pluginExecutable test publishToMavenLocal
-
-To test whether the plugin now actually resides in your local Maven 
-repository, execute:
-
-    $ ls -l ~/.m2/repository/io/grpc/protoc-gen-grpc-java/1.29.0/
-    
-That directory should have a file called.
-`protoc-gen-grpc-java-1.29.0-freebsd-x86_64.exe`
-
-## Building protobuf-java jars on FreeBSD
-
-Generally, the required `protobuf-java` jars are available from the Maven Central
-Repository and will be downloaded by Maven automatically. However sometimes we
-want to build them from source if we need a specific version that's not yet
-available from the Maven Central Repository. 
-
-Building the `protobuf-java` jars requires the `protoc` compiler, that we
-already have installed, but in a different location from where the build
-configuration expects it. Contrary to `grpc-java` that uses the Gradle build
-system, `protobuf-java` uses Maven. As such, specifying the location of the
-`protoc` compiler is a little different. Even more so as protobuf-java uses an
-aggregate POM. With an aggregrate POM, properties specified on the command line
-using the `-D` parameter, are not passed on to submodules (POMs). That makes it
-less than trivial to set a value for the `protoc` property if it needs to be
-shared by all submodules. However, with a `settings.xml` file in the `~/.m2`
-directory we will be able to set property values that will be picked up by any
-POM, whether it is a submodule or not.
-
-So create a file `~/.m2/settings.xml` with the following contents:
-
-    <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
-        <profiles>
-            <profile>
-                <id>freebsd</id>
-                <activation>
-                    <activeByDefault>true</activeByDefault>
-                </activation>
-                <properties>
-                    <protoc>/usr/local/bin/protoc</protoc>
-                </properties>
-            </profile>
-        </profiles>
-    </settings>
-
-With that out of the way we now need to clone the `protobuf` repository:
-
-    $ git clone git@github.com:protocolbuffers/protobuf.git
-
-The version of the `protobuf-java` jars we want to build, need to match the
-version of the protoc compiler:
-
-    $ protoc --version
-    libprotoc 3.12.2
-
-This shows that we need to checkout the v3.12.2 release:
-
-    $ cd protobuf
-    $ git checkout v3.12.2
-    
-And, finally, build the `protobuf-java` jars:
-
-    $ cd java
-    $ mvn install
-
