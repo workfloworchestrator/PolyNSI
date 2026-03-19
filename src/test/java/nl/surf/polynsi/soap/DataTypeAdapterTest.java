@@ -1,6 +1,6 @@
 package nl.surf.polynsi.soap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,5 +30,17 @@ public class DataTypeAdapterTest {
 
         OffsetDateTime dtWithNanoSec = OffsetDateTime.parse(DT_WITH_NANO_SEC, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         assertEquals(DT_WITH_NANO_SEC, dta.marshal(dtWithNanoSec));
+    }
+
+    @Test
+    public void unmarshallNull() {
+        DataTypeAdapter dta = new DataTypeAdapter();
+        assertNull(dta.unmarshal(null));
+    }
+
+    @Test
+    public void marshallNull() {
+        DataTypeAdapter dta = new DataTypeAdapter();
+        assertNull(dta.marshal(null));
     }
 }
