@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import nl.surf.polynsi.soap.connection.types.*;
+import nl.surf.polynsi.soap.framework.headers.CommonHeaderType;
 import nl.surf.polynsi.soap.framework.headers.SessionSecurityAttrType;
 import nl.surf.polynsi.soap.framework.types.ServiceExceptionType;
 import nl.surf.polynsi.soap.framework.types.TypeValuePairType;
@@ -23,6 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.oasis.saml.AttributeType;
 import org.ogf.nsi.grpc.connection.common.*;
 import org.ogf.nsi.grpc.connection.requester.*;
+import org.ogf.nsi.grpc.policy.Path;
+import org.ogf.nsi.grpc.policy.PathTrace;
+import org.ogf.nsi.grpc.policy.Segment;
 import org.ogf.nsi.grpc.services.Directionality;
 import org.ogf.nsi.grpc.services.PointToPointService;
 
@@ -1003,6 +1007,769 @@ class ConverterTest {
             assertNotNull(results.get(0).getError());
             assertEquals(
                     "00500", results.get(0).getError().getServiceException().getErrorId());
+        }
+
+        @Test
+        void toSoapQueryResultConfirmedWithReserveFailed() throws ConverterException {
+            QueryResultConfirmedRequest pbRequest = QueryResultConfirmedRequest.newBuilder()
+                    .addResult(ResultResponse.newBuilder()
+                            .setResultId(10)
+                            .setCorrelationId("corr-10")
+                            .setTimeStamp(Timestamp.newBuilder()
+                                    .setSeconds(1704067200)
+                                    .build())
+                            .setReserveFailed(GenericFailedRequest.newBuilder()
+                                    .setConnectionId("conn-fail")
+                                    .setConnectionStates(ConnectionStates.newBuilder()
+                                            .setReservationState(ReservationState.RESERVE_FAILED)
+                                            .setProvisionState(ProvisionState.RELEASED)
+                                            .setLifecycleState(LifecycleState.CREATED)
+                                            .setDataPlaneStatus(DataPlaneStatus.newBuilder()
+                                                    .setActive(false)
+                                                    .setVersion(0)
+                                                    .setVersionConsistent(true)
+                                                    .build())
+                                            .build())
+                                    .setServiceException(ServiceException.newBuilder()
+                                            .setNsaId("nsa-fail")
+                                            .setConnectionId("conn-fail")
+                                            .setServiceType("service")
+                                            .setErrorId("00100")
+                                            .setText("Reserve failed")
+                                            .build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QueryResultResponseType> results = Converter.toSoap(pbRequest);
+
+            assertEquals(1, results.size());
+            QueryResultResponseType result = results.get(0);
+            assertNotNull(result.getReserveFailed());
+            assertEquals("conn-fail", result.getReserveFailed().getConnectionId());
+            assertEquals(
+                    ReservationStateEnumType.RESERVE_FAILED,
+                    result.getReserveFailed().getConnectionStates().getReservationState());
+            assertEquals(
+                    "00100", result.getReserveFailed().getServiceException().getErrorId());
+        }
+
+        @Test
+        void toSoapQueryResultConfirmedWithReserveCommitConfirmed() throws ConverterException {
+            QueryResultConfirmedRequest pbRequest = QueryResultConfirmedRequest.newBuilder()
+                    .addResult(ResultResponse.newBuilder()
+                            .setResultId(11)
+                            .setCorrelationId("corr-11")
+                            .setTimeStamp(Timestamp.newBuilder()
+                                    .setSeconds(1704067200)
+                                    .build())
+                            .setReserveCommitConfirmed(GenericConfirmedRequest.newBuilder()
+                                    .setConnectionId("conn-commit")
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QueryResultResponseType> results = Converter.toSoap(pbRequest);
+
+            assertEquals(1, results.size());
+            assertNotNull(results.get(0).getReserveCommitConfirmed());
+            assertEquals(
+                    "conn-commit", results.get(0).getReserveCommitConfirmed().getConnectionId());
+        }
+
+        @Test
+        void toSoapQueryResultConfirmedWithReserveCommitFailed() throws ConverterException {
+            QueryResultConfirmedRequest pbRequest = QueryResultConfirmedRequest.newBuilder()
+                    .addResult(ResultResponse.newBuilder()
+                            .setResultId(12)
+                            .setCorrelationId("corr-12")
+                            .setTimeStamp(Timestamp.newBuilder()
+                                    .setSeconds(1704067200)
+                                    .build())
+                            .setReserveCommitFailed(GenericFailedRequest.newBuilder()
+                                    .setConnectionId("conn-commit-fail")
+                                    .setConnectionStates(ConnectionStates.newBuilder()
+                                            .setReservationState(ReservationState.RESERVE_START)
+                                            .setProvisionState(ProvisionState.RELEASED)
+                                            .setLifecycleState(LifecycleState.CREATED)
+                                            .setDataPlaneStatus(DataPlaneStatus.newBuilder()
+                                                    .setActive(false)
+                                                    .setVersion(0)
+                                                    .setVersionConsistent(true)
+                                                    .build())
+                                            .build())
+                                    .setServiceException(ServiceException.newBuilder()
+                                            .setNsaId("nsa")
+                                            .setConnectionId("conn-commit-fail")
+                                            .setServiceType("service")
+                                            .setErrorId("00200")
+                                            .setText("Commit failed")
+                                            .build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QueryResultResponseType> results = Converter.toSoap(pbRequest);
+
+            assertEquals(1, results.size());
+            assertNotNull(results.get(0).getReserveCommitFailed());
+            assertEquals(
+                    "conn-commit-fail", results.get(0).getReserveCommitFailed().getConnectionId());
+            assertEquals(
+                    "00200",
+                    results.get(0)
+                            .getReserveCommitFailed()
+                            .getServiceException()
+                            .getErrorId());
+        }
+
+        @Test
+        void toSoapQueryResultConfirmedWithReserveAbortConfirmed() throws ConverterException {
+            QueryResultConfirmedRequest pbRequest = QueryResultConfirmedRequest.newBuilder()
+                    .addResult(ResultResponse.newBuilder()
+                            .setResultId(13)
+                            .setCorrelationId("corr-13")
+                            .setTimeStamp(Timestamp.newBuilder()
+                                    .setSeconds(1704067200)
+                                    .build())
+                            .setReserveAbortConfirmed(GenericConfirmedRequest.newBuilder()
+                                    .setConnectionId("conn-abort")
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QueryResultResponseType> results = Converter.toSoap(pbRequest);
+
+            assertEquals(1, results.size());
+            assertNotNull(results.get(0).getReserveAbortConfirmed());
+            assertEquals("conn-abort", results.get(0).getReserveAbortConfirmed().getConnectionId());
+        }
+    }
+
+    @Nested
+    class HeaderToSoapConversions {
+        @Test
+        void toSoapHeaderWithMandatoryFields() throws ConverterException {
+            Header pbHeader = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("urn:ogf:network:example.net:2024:requester-nsa")
+                    .setProviderNsa("urn:ogf:network:example.net:2024:provider-nsa")
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(pbHeader);
+
+            assertEquals("application/vnd.ogf.nsi.cs.v2.provider+soap", soapHeader.getProtocolVersion());
+            assertEquals("urn:uuid:12345678-1234-1234-1234-123456789abc", soapHeader.getCorrelationId());
+            assertEquals("urn:ogf:network:example.net:2024:requester-nsa", soapHeader.getRequesterNSA());
+            assertEquals("urn:ogf:network:example.net:2024:provider-nsa", soapHeader.getProviderNSA());
+            assertNull(soapHeader.getReplyTo());
+            assertTrue(soapHeader.getSessionSecurityAttr().isEmpty());
+            assertTrue(soapHeader.getAny().isEmpty());
+        }
+
+        @Test
+        void toSoapHeaderWithReplyTo() throws ConverterException {
+            Header pbHeader = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("urn:ogf:network:example.net:2024:requester-nsa")
+                    .setProviderNsa("urn:ogf:network:example.net:2024:provider-nsa")
+                    .setReplyTo("https://example.net/nsi/callback")
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(pbHeader);
+
+            assertEquals("https://example.net/nsi/callback", soapHeader.getReplyTo());
+        }
+
+        @Test
+        void toSoapHeaderWithoutReplyToLeavesNull() throws ConverterException {
+            Header pbHeader = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("requester")
+                    .setProviderNsa("provider")
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(pbHeader);
+
+            assertNull(soapHeader.getReplyTo());
+        }
+
+        @Test
+        void toSoapHeaderWithPathTrace() throws ConverterException {
+            Header pbHeader = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("requester-nsa")
+                    .setProviderNsa("provider-nsa")
+                    .setPathTrace(PathTrace.newBuilder()
+                            .setId("urn:ogf:network:example.net:2024:nsa")
+                            .setConnectionId("urn:uuid:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+                            .addPaths(Path.newBuilder()
+                                    .addSegments(Segment.newBuilder()
+                                            .setId("urn:ogf:network:example.net:2024:nsa")
+                                            .setConnectionId("urn:uuid:11111111-2222-3333-4444-555555555555")
+                                            .addStps("urn:ogf:network:example.net:2024:port-in")
+                                            .addStps("urn:ogf:network:example.net:2024:port-out")
+                                            .build())
+                                    .build())
+                            .build())
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(pbHeader);
+
+            assertFalse(soapHeader.getAny().isEmpty());
+            assertEquals(1, soapHeader.getAny().size());
+        }
+
+        @Test
+        void toSoapHeaderWithMultipleSegmentsPreservesOrder() throws ConverterException {
+            Header pbHeader = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("requester")
+                    .setProviderNsa("provider")
+                    .setPathTrace(PathTrace.newBuilder()
+                            .setId("urn:ogf:network:example.net:2024:nsa")
+                            .setConnectionId("urn:uuid:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+                            .addPaths(Path.newBuilder()
+                                    .addSegments(Segment.newBuilder()
+                                            .setId("seg-0")
+                                            .setConnectionId("conn-0")
+                                            .addStps("stp-0a")
+                                            .addStps("stp-0b")
+                                            .build())
+                                    .addSegments(Segment.newBuilder()
+                                            .setId("seg-1")
+                                            .setConnectionId("conn-1")
+                                            .addStps("stp-1a")
+                                            .build())
+                                    .build())
+                            .build())
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(pbHeader);
+
+            assertFalse(soapHeader.getAny().isEmpty());
+        }
+
+        @Test
+        void toSoapHeaderWithSessionSecurityAttr() throws ConverterException {
+            var xmlSSA = "<sessionSecurityAttr><ns4:Attribute Name=\"user\" "
+                    + "xmlns:ns4=\"urn:oasis:names:tc:SAML:2.0:assertion\">"
+                    + "<ns4:AttributeValue xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" "
+                    + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                    + "xsi:type=\"xs:string\">testuser</ns4:AttributeValue>"
+                    + "</ns4:Attribute></sessionSecurityAttr>";
+
+            Header pbHeader = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("requester")
+                    .setProviderNsa("provider")
+                    .setSessionSecurityAttributes(xmlSSA)
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(pbHeader);
+
+            assertFalse(soapHeader.getSessionSecurityAttr().isEmpty());
+            assertEquals(1, soapHeader.getSessionSecurityAttr().size());
+        }
+    }
+
+    @Nested
+    class HeaderToProtobufConversions {
+        @Test
+        void toProtobufHeaderWithMandatoryFields() throws ConverterException {
+            nl.surf.polynsi.soap.framework.headers.ObjectFactory headerObjFactory =
+                    new nl.surf.polynsi.soap.framework.headers.ObjectFactory();
+            CommonHeaderType soapHeader = headerObjFactory.createCommonHeaderType();
+            soapHeader.setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap");
+            soapHeader.setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc");
+            soapHeader.setRequesterNSA("urn:ogf:network:example.net:2024:requester-nsa");
+            soapHeader.setProviderNSA("urn:ogf:network:example.net:2024:provider-nsa");
+
+            Header pbHeader = Converter.toProtobuf(soapHeader);
+
+            assertEquals("application/vnd.ogf.nsi.cs.v2.provider+soap", pbHeader.getProtocolVersion());
+            assertEquals("urn:uuid:12345678-1234-1234-1234-123456789abc", pbHeader.getCorrelationId());
+            assertEquals("urn:ogf:network:example.net:2024:requester-nsa", pbHeader.getRequesterNsa());
+            assertEquals("urn:ogf:network:example.net:2024:provider-nsa", pbHeader.getProviderNsa());
+            assertTrue(pbHeader.getReplyTo().isEmpty());
+            assertTrue(pbHeader.getSessionSecurityAttributes().isEmpty());
+            assertFalse(pbHeader.hasPathTrace());
+        }
+
+        @Test
+        void toProtobufHeaderWithReplyTo() throws ConverterException {
+            nl.surf.polynsi.soap.framework.headers.ObjectFactory headerObjFactory =
+                    new nl.surf.polynsi.soap.framework.headers.ObjectFactory();
+            CommonHeaderType soapHeader = headerObjFactory.createCommonHeaderType();
+            soapHeader.setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap");
+            soapHeader.setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc");
+            soapHeader.setRequesterNSA("requester");
+            soapHeader.setProviderNSA("provider");
+            soapHeader.setReplyTo("https://example.net/nsi/callback");
+
+            Header pbHeader = Converter.toProtobuf(soapHeader);
+
+            assertEquals("https://example.net/nsi/callback", pbHeader.getReplyTo());
+        }
+
+        @Test
+        void toProtobufHeaderWithoutReplyToLeavesEmpty() throws ConverterException {
+            nl.surf.polynsi.soap.framework.headers.ObjectFactory headerObjFactory =
+                    new nl.surf.polynsi.soap.framework.headers.ObjectFactory();
+            CommonHeaderType soapHeader = headerObjFactory.createCommonHeaderType();
+            soapHeader.setProtocolVersion("v2");
+            soapHeader.setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc");
+            soapHeader.setRequesterNSA("requester");
+            soapHeader.setProviderNSA("provider");
+
+            Header pbHeader = Converter.toProtobuf(soapHeader);
+
+            assertTrue(pbHeader.getReplyTo().isEmpty());
+        }
+    }
+
+    @Nested
+    class HeaderRoundTrip {
+        @Test
+        void roundTripHeaderWithMandatoryFields() throws ConverterException {
+            Header original = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("urn:ogf:network:example.net:2024:requester-nsa")
+                    .setProviderNsa("urn:ogf:network:example.net:2024:provider-nsa")
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(original);
+            Header roundTripped = Converter.toProtobuf(soapHeader);
+
+            assertEquals(original.getProtocolVersion(), roundTripped.getProtocolVersion());
+            assertEquals(original.getCorrelationId(), roundTripped.getCorrelationId());
+            assertEquals(original.getRequesterNsa(), roundTripped.getRequesterNsa());
+            assertEquals(original.getProviderNsa(), roundTripped.getProviderNsa());
+        }
+
+        @Test
+        void roundTripHeaderWithReplyTo() throws ConverterException {
+            Header original = Header.newBuilder()
+                    .setProtocolVersion("application/vnd.ogf.nsi.cs.v2.provider+soap")
+                    .setCorrelationId("urn:uuid:12345678-1234-1234-1234-123456789abc")
+                    .setRequesterNsa("requester")
+                    .setProviderNsa("provider")
+                    .setReplyTo("https://example.net/nsi/callback")
+                    .build();
+
+            CommonHeaderType soapHeader = Converter.toSoap(original);
+            Header roundTripped = Converter.toProtobuf(soapHeader);
+
+            assertEquals("https://example.net/nsi/callback", roundTripped.getReplyTo());
+        }
+    }
+
+    @Nested
+    class QuerySummaryResultOptionalFields {
+        @Test
+        void toSoapQuerySummaryResultWithResultIdAndNotificationId() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed = QueryConfirmedRequest.newBuilder()
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-1")
+                            .setRequesterNsa("nsa-1")
+                            .setResultId(42)
+                            .setNotificationId(99)
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_HELD)
+                                    .setProvisionState(ProvisionState.RELEASED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QuerySummaryResultType> results = Converter.toSoap(pbQueryConfirmed);
+
+            assertEquals(1, results.size());
+            QuerySummaryResultType result = results.get(0);
+            assertEquals(42, result.getResultId());
+            assertEquals(99, result.getNotificationId());
+        }
+
+        @Test
+        void toSoapQuerySummaryResultWithZeroResultIdAndNotificationIdLeavesUnset() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed = QueryConfirmedRequest.newBuilder()
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-1")
+                            .setRequesterNsa("nsa-1")
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_START)
+                                    .setProvisionState(ProvisionState.RELEASED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QuerySummaryResultType> results = Converter.toSoap(pbQueryConfirmed);
+
+            QuerySummaryResultType result = results.get(0);
+            assertNull(result.getResultId());
+            assertNull(result.getNotificationId());
+        }
+
+        @Test
+        void toSoapQuerySummaryResultWithEmptyCriteriaList() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed = QueryConfirmedRequest.newBuilder()
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-no-criteria")
+                            .setRequesterNsa("nsa")
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_HELD)
+                                    .setProvisionState(ProvisionState.RELEASED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QuerySummaryResultType> results = Converter.toSoap(pbQueryConfirmed);
+
+            assertTrue(results.get(0).getCriteria().isEmpty());
+        }
+
+        @Test
+        void toSoapQuerySummaryResultWithMultipleCriteria() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed = QueryConfirmedRequest.newBuilder()
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-multi-criteria")
+                            .setRequesterNsa("nsa")
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_HELD)
+                                    .setProvisionState(ProvisionState.RELEASED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .addCriteria(QueryResultCriteria.newBuilder()
+                                    .setVersion(1)
+                                    .setServiceType("service-v1")
+                                    .setPtps(PointToPointService.newBuilder()
+                                            .setDirectionality(Directionality.BI_DIRECTIONAL)
+                                            .setCapacity(100)
+                                            .setSourceStp("src")
+                                            .setDestStp("dst")
+                                            .build())
+                                    .build())
+                            .addCriteria(QueryResultCriteria.newBuilder()
+                                    .setVersion(2)
+                                    .setServiceType("service-v2")
+                                    .setPtps(PointToPointService.newBuilder()
+                                            .setDirectionality(Directionality.BI_DIRECTIONAL)
+                                            .setCapacity(200)
+                                            .setSourceStp("src2")
+                                            .setDestStp("dst2")
+                                            .build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QuerySummaryResultType> results = Converter.toSoap(pbQueryConfirmed);
+
+            assertEquals(2, results.get(0).getCriteria().size());
+            assertEquals(1, results.get(0).getCriteria().get(0).getVersion());
+            assertEquals(2, results.get(0).getCriteria().get(1).getVersion());
+        }
+    }
+
+    @Nested
+    class QueryRecursiveResultAdditional {
+        @Test
+        void toSoapQueryRecursiveResultWithoutOptionals() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed = QueryConfirmedRequest.newBuilder()
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-recursive-no-opts")
+                            .setRequesterNsa("nsa")
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_START)
+                                    .setProvisionState(ProvisionState.RELEASED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QueryRecursiveResultType> results = Converter.toSoapQueryRecursiveResult(pbQueryConfirmed);
+
+            assertEquals(1, results.size());
+            QueryRecursiveResultType result = results.get(0);
+            assertEquals("conn-recursive-no-opts", result.getConnectionId());
+            assertNull(result.getGlobalReservationId());
+            assertNull(result.getDescription());
+            assertTrue(result.getCriteria().isEmpty());
+        }
+
+        @Test
+        void toSoapMultipleQueryRecursiveResults() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed = QueryConfirmedRequest.newBuilder()
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-r1")
+                            .setRequesterNsa("nsa-1")
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_HELD)
+                                    .setProvisionState(ProvisionState.PROVISIONED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .build())
+                    .addReservation(QueryResult.newBuilder()
+                            .setConnectionId("conn-r2")
+                            .setRequesterNsa("nsa-2")
+                            .setConnectionStates(ConnectionStates.newBuilder()
+                                    .setReservationState(ReservationState.RESERVE_COMMITTING)
+                                    .setProvisionState(ProvisionState.RELEASED)
+                                    .setLifecycleState(LifecycleState.CREATED)
+                                    .setDataPlaneStatus(
+                                            DataPlaneStatus.newBuilder().build())
+                                    .build())
+                            .build())
+                    .build();
+
+            List<QueryRecursiveResultType> results = Converter.toSoapQueryRecursiveResult(pbQueryConfirmed);
+
+            assertEquals(2, results.size());
+            assertEquals("conn-r1", results.get(0).getConnectionId());
+            assertEquals("conn-r2", results.get(1).getConnectionId());
+        }
+    }
+
+    @Nested
+    class ServiceExceptionEdgeCases {
+        @Test
+        void toSoapServiceExceptionDeeplyNested() {
+            ServiceException grandchild = ServiceException.newBuilder()
+                    .setNsaId("grandchild-nsa")
+                    .setConnectionId("grandchild-conn")
+                    .setServiceType("grandchild-service")
+                    .setErrorId("00300")
+                    .setText("Grandchild error")
+                    .build();
+
+            ServiceException child = ServiceException.newBuilder()
+                    .setNsaId("child-nsa")
+                    .setConnectionId("child-conn")
+                    .setServiceType("child-service")
+                    .setErrorId("00200")
+                    .setText("Child error")
+                    .addChildException(grandchild)
+                    .build();
+
+            ServiceException parent = ServiceException.newBuilder()
+                    .setNsaId("parent-nsa")
+                    .setConnectionId("parent-conn")
+                    .setServiceType("parent-service")
+                    .setErrorId("00100")
+                    .setText("Parent error")
+                    .addChildException(child)
+                    .build();
+
+            ServiceExceptionType soapException = Converter.toSoap(parent);
+
+            assertEquals(1, soapException.getChildException().size());
+            ServiceExceptionType soapChild = soapException.getChildException().get(0);
+            assertEquals("child-nsa", soapChild.getNsaId());
+            assertEquals(1, soapChild.getChildException().size());
+            ServiceExceptionType soapGrandchild = soapChild.getChildException().get(0);
+            assertEquals("grandchild-nsa", soapGrandchild.getNsaId());
+            assertEquals("00300", soapGrandchild.getErrorId());
+            assertTrue(soapGrandchild.getChildException().isEmpty());
+        }
+
+        @Test
+        void toSoapServiceExceptionWithoutOptionalFields() {
+            ServiceException pbException = ServiceException.newBuilder()
+                    .setNsaId("nsa-minimal")
+                    .setErrorId("00100")
+                    .setText("Minimal error")
+                    .build();
+
+            ServiceExceptionType soapException = Converter.toSoap(pbException);
+
+            assertEquals("nsa-minimal", soapException.getNsaId());
+            assertEquals("00100", soapException.getErrorId());
+            assertEquals("Minimal error", soapException.getText());
+            assertEquals("", soapException.getConnectionId());
+            assertEquals("", soapException.getServiceType());
+            assertTrue(soapException.getChildException().isEmpty());
+        }
+
+        @Test
+        void toSoapServiceExceptionWithMultipleChildren() {
+            ServiceException child1 = ServiceException.newBuilder()
+                    .setNsaId("child-1")
+                    .setErrorId("00201")
+                    .setText("First child")
+                    .build();
+
+            ServiceException child2 = ServiceException.newBuilder()
+                    .setNsaId("child-2")
+                    .setErrorId("00202")
+                    .setText("Second child")
+                    .build();
+
+            ServiceException parent = ServiceException.newBuilder()
+                    .setNsaId("parent")
+                    .setErrorId("00100")
+                    .setText("Parent")
+                    .addChildException(child1)
+                    .addChildException(child2)
+                    .build();
+
+            ServiceExceptionType soapException = Converter.toSoap(parent);
+
+            assertEquals(2, soapException.getChildException().size());
+            assertEquals("child-1", soapException.getChildException().get(0).getNsaId());
+            assertEquals("child-2", soapException.getChildException().get(1).getNsaId());
+        }
+    }
+
+    @Nested
+    class ScheduleAdditional {
+        @Test
+        void toSoapScheduleWithOnlyStartTime() {
+            Schedule pbSchedule = Schedule.newBuilder()
+                    .setStartTime(Timestamp.newBuilder().setSeconds(1704067200).build())
+                    .build();
+
+            ScheduleType soapSchedule = Converter.toSoap(pbSchedule);
+
+            assertNotNull(soapSchedule);
+            assertNotNull(soapSchedule.getStartTime());
+            assertEquals(1704067200, soapSchedule.getStartTime().toInstant().getEpochSecond());
+        }
+
+        @Test
+        void toSoapScheduleWithOnlyEndTime() {
+            Schedule pbSchedule = Schedule.newBuilder()
+                    .setEndTime(Timestamp.newBuilder().setSeconds(1735689599).build())
+                    .build();
+
+            ScheduleType soapSchedule = Converter.toSoap(pbSchedule);
+
+            assertNotNull(soapSchedule);
+            assertNotNull(soapSchedule.getEndTime());
+            assertEquals(1735689599, soapSchedule.getEndTime().toInstant().getEpochSecond());
+        }
+
+        @Test
+        void roundTripSchedulePreservesTimestamps() {
+            OffsetDateTime start = OffsetDateTime.parse("2024-01-01T00:00:00Z");
+            OffsetDateTime end = OffsetDateTime.parse("2024-12-31T23:59:59Z");
+
+            ScheduleType originalSoap = new ScheduleType();
+            originalSoap.setStartTime(start);
+            originalSoap.setEndTime(end);
+
+            Schedule pbSchedule = Converter.toProtobuf(originalSoap);
+            ScheduleType roundTripped = Converter.toSoap(pbSchedule);
+
+            assertEquals(
+                    start.toInstant().getEpochSecond(),
+                    roundTripped.getStartTime().toInstant().getEpochSecond());
+            assertEquals(
+                    end.toInstant().getEpochSecond(),
+                    roundTripped.getEndTime().toInstant().getEpochSecond());
+        }
+    }
+
+    @Nested
+    class QueryNotificationConfirmedAdditional {
+        @Test
+        void toSoapQueryNotificationConfirmedWithErrorEventsOnly() throws ConverterException {
+            QueryNotificationConfirmedRequest pbRequest = QueryNotificationConfirmedRequest.newBuilder()
+                    .addErrorEvent(ErrorEventRequest.newBuilder()
+                            .setNotification(Notification.newBuilder()
+                                    .setConnectionId("conn-err-1")
+                                    .setNotificationId(1)
+                                    .setTimeStamp(Timestamp.newBuilder()
+                                            .setSeconds(1704067200)
+                                            .build())
+                                    .build())
+                            .setEvent(EventType.ACTIVATE_FAILED)
+                            .setOriginatingConnectionId("orig-conn")
+                            .setOriginatingNsa("orig-nsa")
+                            .setServiceException(ServiceException.newBuilder()
+                                    .setNsaId("nsa")
+                                    .setErrorId("00100")
+                                    .setText("Activate failed")
+                                    .build())
+                            .build())
+                    .addErrorEvent(ErrorEventRequest.newBuilder()
+                            .setNotification(Notification.newBuilder()
+                                    .setConnectionId("conn-err-2")
+                                    .setNotificationId(2)
+                                    .setTimeStamp(Timestamp.newBuilder()
+                                            .setSeconds(1704067300)
+                                            .build())
+                                    .build())
+                            .setEvent(EventType.DATAPLANE_ERROR)
+                            .setOriginatingConnectionId("orig-conn-2")
+                            .setOriginatingNsa("orig-nsa-2")
+                            .setServiceException(ServiceException.newBuilder()
+                                    .setNsaId("nsa")
+                                    .setErrorId("00200")
+                                    .setText("Dataplane error")
+                                    .build())
+                            .build())
+                    .build();
+
+            QueryNotificationConfirmedType soapResult = Converter.toSoap(pbRequest);
+
+            assertEquals(
+                    2,
+                    soapResult
+                            .getErrorEventOrReserveTimeoutOrDataPlaneStateChange()
+                            .size());
+        }
+    }
+
+    @Nested
+    class EmptyReservationsList {
+        @Test
+        void toSoapQuerySummaryWithNoReservations() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed =
+                    QueryConfirmedRequest.newBuilder().build();
+
+            List<QuerySummaryResultType> results = Converter.toSoap(pbQueryConfirmed);
+
+            assertTrue(results.isEmpty());
+        }
+
+        @Test
+        void toSoapQueryRecursiveWithNoReservations() throws ConverterException {
+            QueryConfirmedRequest pbQueryConfirmed =
+                    QueryConfirmedRequest.newBuilder().build();
+
+            List<QueryRecursiveResultType> results = Converter.toSoapQueryRecursiveResult(pbQueryConfirmed);
+
+            assertTrue(results.isEmpty());
+        }
+
+        @Test
+        void toSoapQueryResultConfirmedWithNoResults() throws ConverterException {
+            QueryResultConfirmedRequest pbRequest =
+                    QueryResultConfirmedRequest.newBuilder().build();
+
+            List<QueryResultResponseType> results = Converter.toSoap(pbRequest);
+
+            assertTrue(results.isEmpty());
         }
     }
 }
