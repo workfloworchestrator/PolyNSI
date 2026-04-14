@@ -33,7 +33,7 @@ class AuthInterceptorTest {
     class CertificateAuth {
         @BeforeEach
         void setUp() {
-            properties.setAuthorizeDn(AuthorizeDnType.CERTIFICATE);
+            properties.setAuthorizeDnType(AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT);
             properties.setDistinguishedNames(List.of("CN=test,O=SURF,C=NL"));
         }
 
@@ -89,8 +89,8 @@ class AuthInterceptorTest {
     class HeaderAuth {
         @BeforeEach
         void setUp() {
-            properties.setAuthorizeDn(AuthorizeDnType.HEADER);
-            properties.setSslClientSubjectDnHeader("ssl-client-subject-dn");
+            properties.setAuthorizeDnType(AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN);
+            properties.setTlsClientAuthNHeader("ssl-client-subject-dn");
             properties.setDistinguishedNames(List.of("CN=test,O=SURF,C=NL"));
         }
 
@@ -129,7 +129,7 @@ class AuthInterceptorTest {
 
     @Test
     void rejectsMissingHttpServletRequest() {
-        properties.setAuthorizeDn(AuthorizeDnType.CERTIFICATE);
+        properties.setAuthorizeDnType(AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT);
         properties.setDistinguishedNames(List.of("CN=test"));
         when(message.get(AbstractHTTPDestination.HTTP_REQUEST)).thenReturn(null);
 
@@ -141,7 +141,7 @@ class AuthInterceptorTest {
 
     @Test
     void rejectsNullDistinguishedNamesList() {
-        properties.setAuthorizeDn(AuthorizeDnType.CERTIFICATE);
+        properties.setAuthorizeDnType(AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT);
         // Don't set distinguishedNames, leaving it null
 
         X509Certificate cert = mock(X509Certificate.class);
@@ -150,7 +150,7 @@ class AuthInterceptorTest {
                 .thenReturn(new X509Certificate[] {cert});
 
         ClientCertificateProperties nullDnProps = new ClientCertificateProperties();
-        nullDnProps.setAuthorizeDn(AuthorizeDnType.CERTIFICATE);
+        nullDnProps.setAuthorizeDnType(AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT);
         AuthInterceptor interceptor = new AuthInterceptor(nullDnProps);
 
         SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));

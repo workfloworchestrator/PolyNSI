@@ -29,57 +29,65 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
 
     @Override
     public void handleMessage(Message message) throws Fault {
-        javax.security.auth.x500.X500Principal sslClientSubjectPrincipal = null;
+        X500Principal tlsClientSubjectPrincipal = null;
 
         HttpServletRequest request = (HttpServletRequest) message.get(AbstractHTTPDestination.HTTP_REQUEST);
         if (request == null) throw new SoapFault("HttpServletRequest not found on incoming request", faultCode);
 
-        switch (clientCertificateProperties.getAuthorizeDn()) {
+        AuthorizeDnType at = clientCertificateProperties.getAuthorizeDnType();
+        switch (at) {
             // ARNOTODO: Client cert passed as PEM or Info summary from Traefik
-            case AuthorizeDnType.CERTIFICATE:
-                X509Certificate[] certificates =
-                        (X509Certificate[]) request.getAttribute("jakarta.servlet.request.X509Certificate");
+            case AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT:
+                X509Certificate[] certificates = (X509Certificate[])
+                        request.getAttribute(ClientCertificateProperties.JAKARTA_SERVLET_TLS_CLIENT_CERT_HEADER);
                 if (certificates == null || certificates.length == 0) {
                     throw new SoapFault("Client certificate not found on incoming request", faultCode);
                 }
                 // Get name as Principal object from certificate
-                sslClientSubjectPrincipal = certificates[0].getSubjectX500Principal();
+                tlsClientSubjectPrincipal = certificates[0].getSubjectX500Principal();
                 break;
-            case AuthorizeDnType.HEADER:
+            case AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN:
+            case AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN:
+            case AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT:
                 Enumeration<String> headerNames = request.getHeaderNames();
                 while (headerNames.hasMoreElements()) {
                     String headerName = headerNames.nextElement();
                     String headerValue = request.getHeader(headerName);
-                    if (headerName.equals(clientCertificateProperties.getSslClientSubjectDnHeader())) {
-                        // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
-                        try {
-                            // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
-                            X500Principal p = new X500Principal(headerValue);
-                            sslClientSubjectPrincipal = p;
-                        } catch (Exception e) {
-                            throw new SoapFault(
-                                    clientCertificateProperties.getSslClientSubjectDnHeader()
-                                            + " header does not contain valid RFC2253 name",
-                                    faultCode);
+                    if (headerName.equals(clientCertificateProperties.getTlsClientAuthNHeader())) {
+                        if (at == AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN
+                                || at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN) {
+                            // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
+                            try {
+                                // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
+                                X500Principal p = new X500Principal(headerValue);
+                                tlsClientSubjectPrincipal = p;
+                            } catch (Exception e) {
+                                throw new SoapFault(
+                                        clientCertificateProperties.getTlsClientAuthNHeader()
+                                                + " header does not contain valid RFC2253 name",
+                                        faultCode);
+                            }
+                        } else if (at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT) {
+                            // ARNOTODO: decode Traefik PEM, see ClientCertificateProperties for format.
+                            LOG.fine("HTTP cert header " + headerName + "unsupported: " + headerValue);
                         }
                     }
                     LOG.fine("HTTP header " + headerName + ": " + headerValue);
                 }
-                if (sslClientSubjectPrincipal == null)
+                if (tlsClientSubjectPrincipal == null)
                     throw new SoapFault(
-                            clientCertificateProperties.getSslClientSubjectDnHeader()
-                                    + " header not found on HTTP request",
+                            clientCertificateProperties.getTlsClientAuthNHeader() + " header not found on HTTP request",
                             faultCode);
                 break;
         }
 
-        String rfc2253Dn = sslClientSubjectPrincipal.getName(X500Principal.RFC2253);
-        if (!isAllowed(sslClientSubjectPrincipal))
+        String rfc2253Dn = tlsClientSubjectPrincipal.getName(X500Principal.RFC2253);
+        if (!isAllowed(tlsClientSubjectPrincipal))
             throw new SoapFault(rfc2253Dn + " not in list of allowed DNs", faultCode);
         else LOG.fine(rfc2253Dn + " in list of allowed DNs");
     }
 
-    private boolean isAllowed(X500Principal sslClientSubjectPrincipal) {
+    private boolean isAllowed(X500Principal tlsClientSubjectPrincipal) {
         List<String> distinguishedNames = clientCertificateProperties.getDistinguishedNames();
         if (distinguishedNames == null) {
             throw new SoapFault("list of allowed DNs is empty", faultCode);
@@ -90,6 +98,6 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
         if (cps == null) {
             throw new SoapFault("list of allowed Principals is empty", faultCode);
         }
-        return cps.isAllowedPrincipal(sslClientSubjectPrincipal);
+        return cps.isAllowedPrincipal(tlsClientSubjectPrincipal);
     }
 }
