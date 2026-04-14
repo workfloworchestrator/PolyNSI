@@ -35,6 +35,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
         if (request == null) throw new SoapFault("HttpServletRequest not found on incoming request", faultCode);
 
         switch (clientCertificateProperties.getAuthorizeDn()) {
+            // ARNOTODO: Client cert passed as PEM or Info summary from Traefik
             case AuthorizeDnType.CERTIFICATE:
                 X509Certificate[] certificates =
                         (X509Certificate[]) request.getAttribute("jakarta.servlet.request.X509Certificate");
@@ -52,6 +53,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                     if (headerName.equals(clientCertificateProperties.getSslClientSubjectDnHeader())) {
                         // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
                         try {
+                            // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
                             javax.security.auth.x500.X500Principal p = javax.security.auth.x500.X500Principal(headerValue);
                             sslClientSubjectPrincipal = p;
                         }
