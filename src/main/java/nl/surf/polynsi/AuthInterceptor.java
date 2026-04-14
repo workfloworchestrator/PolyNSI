@@ -74,7 +74,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                 break;
         }
 
-        String rfc2253Dn = sslClientSubjectPrincipal.getName(javax.security.auth.x500.X500Principal.RFC2253)
+        String rfc2253Dn = sslClientSubjectPrincipal.getName(javax.security.auth.x500.X500Principal.RFC2253);
         if (!isAllowed(sslClientSubjectPrincipal))
             throw new SoapFault(rfc2253Dn + " not in list of allowed DNs", faultCode);
         else LOG.fine(rfc2253Dn + " in list of allowed DNs");
@@ -87,7 +87,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
         }
         // Not ideal to convert strings to Objects on each call, but otherwise conflicts with Properties-based
         // config. And we must use the Principal equals() method for comparison.
-        ClientPrincipals cps = ClientPrincipals(distinguishedNames)
+        ClientPrincipals cps = ClientPrincipals(distinguishedNames);
         if (cps == null) {
             throw new SoapFault("list of allowed Principals is empty", faultCode);
         }
