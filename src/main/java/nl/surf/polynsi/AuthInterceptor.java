@@ -2,10 +2,10 @@ package nl.surf.polynsi;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.cert.X509Certificate;
-import javax.security.auth.x500.X500Principal;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.security.auth.x500.X500Principal;
 import javax.xml.namespace.QName;
 import org.apache.cxf.binding.soap.SoapFault;
 import org.apache.cxf.interceptor.Fault;
@@ -54,14 +54,13 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                         // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
                         try {
                             // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
-                            javax.security.auth.x500.X500Principal p = javax.security.auth.x500.X500Principal(headerValue);
+                            X500Principal p = new X500Principal(headerValue);
                             sslClientSubjectPrincipal = p;
-                        }
-                        catch(Exception e) {
+                        } catch (Exception e) {
                             throw new SoapFault(
-                                clientCertificateProperties.getSslClientSubjectDnHeader()
-                                    + " header does not contain valid RFC2253 name",
-                            faultCode);
+                                    clientCertificateProperties.getSslClientSubjectDnHeader()
+                                            + " header does not contain valid RFC2253 name",
+                                    faultCode);
                         }
                     }
                     LOG.fine("HTTP header " + headerName + ": " + headerValue);
@@ -74,20 +73,20 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                 break;
         }
 
-        String rfc2253Dn = sslClientSubjectPrincipal.getName(javax.security.auth.x500.X500Principal.RFC2253);
+        String rfc2253Dn = sslClientSubjectPrincipal.getName(X500Principal.RFC2253);
         if (!isAllowed(sslClientSubjectPrincipal))
             throw new SoapFault(rfc2253Dn + " not in list of allowed DNs", faultCode);
         else LOG.fine(rfc2253Dn + " in list of allowed DNs");
     }
 
-    private boolean isAllowed(javax.security.auth.x500.X500Principal sslClientSubjectPrincipal) {
+    private boolean isAllowed(X500Principal sslClientSubjectPrincipal) {
         List<String> distinguishedNames = clientCertificateProperties.getDistinguishedNames();
         if (distinguishedNames == null) {
             throw new SoapFault("list of allowed DNs is empty", faultCode);
         }
         // Not ideal to convert strings to Objects on each call, but otherwise conflicts with Properties-based
         // config. And we must use the Principal equals() method for comparison.
-        ClientPrincipals cps = ClientPrincipals(distinguishedNames);
+        ClientPrincipals cps = new ClientPrincipals(distinguishedNames);
         if (cps == null) {
             throw new SoapFault("list of allowed Principals is empty", faultCode);
         }
