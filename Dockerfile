@@ -4,7 +4,7 @@ COPY pom.xml .
 COPY src src
 RUN mvn clean package
 
-FROM gcr.io/distroless/java21@sha256:bcdca3804642f766b51c188aa1d080a1bf59bb0dc03361d6cba7636b78597d4e
+FROM gcr.io/distroless/java21@sha256:d733014a9c574dcdd7e1596ffb7f03a0ea2d03da85820efbb71a7c10fe116a0f
 WORKDIR /usr/local/polynsi
 COPY --from=build /usr/local/src/polynsi/target/*.jar polynsi.jar
 USER nobody
