@@ -72,7 +72,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                         } else if (at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT) {
                             // Decode Traefik PEM, see ClientCertificateProperties for format.
                             try {
-                                String pemString = null;
+                                String base64String = null;
                                 if (headerValue.contains(",")) {
                                     /*
                                     # Undocumented: assume client cert is first in list
@@ -82,17 +82,25 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                                     #  --- https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R288
                                     # If Traefik this is in PEM with some changes, see above
                                     */
-                                    String[] pemStrings = headerValue.split("[,]");
-                                    pemString = pemStrings[0];
+                                    String[] base64Strings = headerValue.split("[,]");
+                                    base64String = base64Strings[0];
                                 } else {
-                                    pemString = headerValue;
+                                    base64String = headerValue;
                                 }
+                                /* From: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/cert/CertificateFactory.html#generateCertificate(java.io.InputStream)
+                                "In the case of a certificate factory for X.509 certificates, the certificate provided in inStream must be DER-encoded and may be supplied in binary or printable (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by -----BEGIN CERTIFICATE-----, and must be bounded at the end by -----END CERTIFICATE-----."
+                                Note this does not say the PEM should be split into e.g. 64 character-wide lines, which is indeed not required.
+                                */
+                                String pemString = "-----BEGIN CERTIFICATE-----\n";
+                                pemString = pemString + base64String;
+                                pemString = pemString + "-----END CERTIFICATE-----\n";
                                 ByteArrayInputStream pemStream = new ByteArrayInputStream(pemString.getBytes());
                                 CertificateFactory factory = CertificateFactory.getInstance("X.509");
                                 X509Certificate cert =
                                         (java.security.cert.X509Certificate) factory.generateCertificate(pemStream);
                                 tlsClientSubjectPrincipal = cert.getSubjectX500Principal();
                             } catch (Exception e) {
+                                System.out.println(e.getMessage());
                                 throw new SoapFault(
                                         clientCertificateProperties.getTlsClientAuthNHeader()
                                                 + " header does not contain valid PEM certificate",

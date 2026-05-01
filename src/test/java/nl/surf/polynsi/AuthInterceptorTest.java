@@ -30,7 +30,7 @@ class AuthInterceptorTest {
     }
 
     @Nested
-    class CertificateAuth {
+    class JakartaCertificateAuth {
         @BeforeEach
         void setUp() {
             properties.setAuthorizeDnType(AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT);
@@ -155,5 +155,61 @@ class AuthInterceptorTest {
 
         SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
         assertTrue(fault.getMessage().contains("list of allowed DNs is empty"));
+    }
+
+    @Nested
+    class TraefikCertificateAuth {
+
+        /* From: https://raw.githubusercontent.com/pyca/cryptography/refs/heads/main/docs/x509/reference.rst
+         * Subject: CN=Good CA,O=Test Certificates 2011,C=US
+         */
+        public static final String _TRUST_ANCHOR_CERT_PEM =
+                "-----BEGIN CERTIFICATE-----" + "MIIDfDCCAmSgAwIBAgIBAjANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJVUzEf"
+                        + "MB0GA1UEChMWVGVzdCBDZXJ0aWZpY2F0ZXMgMjAxMTEVMBMGA1UEAxMMVHJ1c3Qg"
+                        + "QW5jaG9yMB4XDTEwMDEwMTA4MzAwMFoXDTMwMTIzMTA4MzAwMFowQDELMAkGA1UE"
+                        + "BhMCVVMxHzAdBgNVBAoTFlRlc3QgQ2VydGlmaWNhdGVzIDIwMTExEDAOBgNVBAMT"
+                        + "B0dvb2QgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCQWJpHYo37"
+                        + "Xfb7oJSPe+WvfTlzIG21WQ7MyMbGtK/m8mejCzR6c+f/pJhEH/OcDSMsXq8h5kXa"
+                        + "BGqWK+vSwD/Pzp5OYGptXmGPcthDtAwlrafkGOS4GqIJ8+k9XGKs+vQUXJKsOk47"
+                        + "RuzD6PZupq4s16xaLVqYbUC26UcY08GpnoLNHJZS/EmXw1ZZ3d4YZjNlpIpWFNHn"
+                        + "UGmdiGKXUPX/9H0fVjIAaQwjnGAbpgyCumWgzIwPpX+ElFOUr3z7BoVnFKhIXze+"
+                        + "VmQGSWxZxvWDUN90Ul0tLEpLgk3OVxUB4VUGuf15OJOpgo1xibINPmWt14Vda2N9"
+                        + "yrNKloJGZNqLAgMBAAGjfDB6MB8GA1UdIwQYMBaAFOR9X9FclYYILAWuvnW2ZafZ"
+                        + "XahmMB0GA1UdDgQWBBRYAYQkG7wrUpRKPaUQchRR9a86yTAOBgNVHQ8BAf8EBAMC"
+                        + "AQYwFwYDVR0gBBAwDjAMBgpghkgBZQMCATABMA8GA1UdEwEB/wQFMAMBAf8wDQYJ"
+                        + "KoZIhvcNAQELBQADggEBADWHlxbmdTXNwBL/llwhQqwnazK7CC2WsXBBqgNPWj7m"
+                        + "tvQ+aLG8/50Qc2Sun7o2VnwF9D18UUe8Gj3uPUYH+oSI1vDdyKcjmMbKRU4rk0eo"
+                        + "3UHNDXwqIVc9CQS9smyV+x1HCwL4TTrq+LXLKx/qVij0Yqk+UJfAtrg2jnYKXsCu"
+                        + "FMBQQnWCGrwa1g1TphRp/RmYHnMynYFmZrXtzFz+U9XEA7C+gPq4kqDI/iVfIT1s"
+                        + "6lBtdB50lrDVwl2oYfAvW/6sC2se2QleZidUmrziVNP4oEeXINokU6T6p//HM1FG"
+                        + "QYw2jOvpKcKtWCSAnegEbgsGYzATKjmPJPJ0npHFqzM="
+                        + "-----END CERTIFICATE-----";
+
+        @BeforeEach
+        void setUp() {
+            properties.setAuthorizeDnType(AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT);
+            properties.setTlsClientAuthNHeader("X-Forwarded-Tls-Client-Cert");
+            String chainSubjectDN =
+                    "CN=University Corporation For Advanced Internet Development,emailAddress=knewell@internet2.edu,organizationIdentifier=NTRUS\\+MI-801069584,O=University Corporation For Advanced Internet Development,ST=Michigan,C=US";
+            properties.setDistinguishedNames(List.of("CN=Good CA,O=Test Certificates 2011,C=US", chainSubjectDN));
+        }
+
+        String getPemCertString() {
+            String pemString = _TRUST_ANCHOR_CERT_PEM;
+            pemString = pemString.replaceFirst("-----BEGIN CERTIFICATE-----", "");
+            pemString = pemString.replaceFirst("-----END CERTIFICATE-----", "");
+            return pemString.strip();
+        }
+
+        @Test
+        void allowsValidPEMHeader() {
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(getPemCertString());
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            assertDoesNotThrow(() -> interceptor.handleMessage(message));
+        }
     }
 }
