@@ -1,6 +1,8 @@
 package nl.surf.polynsi;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.List;
@@ -68,8 +70,34 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                                         faultCode);
                             }
                         } else if (at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT) {
-                            // ARNOTODO: decode Traefik PEM, see ClientCertificateProperties for format.
-                            LOG.fine("HTTP cert header " + headerName + "unsupported: " + headerValue);
+                            // Decode Traefik PEM, see ClientCertificateProperties for format.
+                            try {
+                                String pemString = null;
+                                if (headerValue.contains(",")) {
+                                    /*
+                                    # Undocumented: assume client cert is first in list
+                                    # This issue says client cert comes first: https://github.com/keycloak/keycloak/issues/46395#issuecomment-3915177071
+                                    # Code suggest extra certs follow client cert: https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R236
+                                    # "Traefik sends the client certificate and any intermediate CA certificates as PEM blocks in a single `X-Forwarded-Tls-Client-Cert` header, separated by commas."
+                                    #  --- https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R288
+                                    # If Traefik this is in PEM with some changes, see above
+                                    */
+                                    String[] pemStrings = headerValue.split("[,]");
+                                    pemString = pemStrings[0];
+                                } else {
+                                    pemString = headerValue;
+                                }
+                                ByteArrayInputStream pemStream = new ByteArrayInputStream(pemString.getBytes());
+                                CertificateFactory factory = CertificateFactory.getInstance("X.509");
+                                X509Certificate cert =
+                                        (java.security.cert.X509Certificate) factory.generateCertificate(pemStream);
+                                tlsClientSubjectPrincipal = cert.getSubjectX500Principal();
+                            } catch (Exception e) {
+                                throw new SoapFault(
+                                        clientCertificateProperties.getTlsClientAuthNHeader()
+                                                + " header does not contain valid PEM certificate",
+                                        faultCode);
+                            }
                         }
                     }
                     LOG.fine("HTTP header " + headerName + ": " + headerValue);
