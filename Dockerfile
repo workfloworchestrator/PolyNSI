@@ -1,4 +1,4 @@
-FROM maven:3-eclipse-temurin-21@sha256:98819eb3745bd2007c3f1a19b59085c1fa3929aecb7dbfa431dfcf5a4f18ce3c AS build
+FROM maven:3-eclipse-temurin-21@sha256:d6e32a254897415a445654a3c43c30fbc731a4d946cf5c66d1cb9184141c20c1 AS build
 WORKDIR /usr/local/src/polynsi
 COPY pom.xml .
 COPY src src
