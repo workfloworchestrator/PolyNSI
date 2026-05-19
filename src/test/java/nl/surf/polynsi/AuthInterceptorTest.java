@@ -104,7 +104,6 @@ class AuthInterceptorTest {
             assertDoesNotThrow(() -> interceptor.handleMessage(message));
         }
 
-        // WARNING: Arno: Claude didn't like getHeaderNames() iteration. Refactor may break this test
         @Test
         void rejectsMissingHeader() {
             when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("other-header")));
@@ -211,6 +210,20 @@ class AuthInterceptorTest {
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
             assertDoesNotThrow(() -> interceptor.handleMessage(message));
+        }
+
+        @Test
+        void rejectsInvalidPEMHeader() {
+            String badPemString = getPemCertString();
+            badPemString = badPemString.replaceFirst("[MQPXY]+", "S");
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemString);
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+            assertTrue(fault.getMessage().contains("not contain valid PEM certificate"));
         }
     }
 }
