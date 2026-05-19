@@ -278,7 +278,7 @@ class AuthInterceptorTest {
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
-            System.out.println("UNAUTH MESSAGE " + fault.getMessage());
+
             assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
         }
     }
@@ -376,7 +376,7 @@ class AuthInterceptorTest {
         }
 
         @Test
-        void allowsAuthorizedPemCertWithProblematicOIDs() {
+        void allowsAuthorizedPemCertChain() {
             when(httpRequest.getHeaderNames())
                     .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(_AUTHORIZED_CERT_PEM_CHAIN);
@@ -384,6 +384,40 @@ class AuthInterceptorTest {
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
             assertDoesNotThrow(() -> interceptor.handleMessage(message));
+        }
+
+        @Test
+        void rejectsBadlySeparatedPemCertChain() {
+            String badPemChainString = _AUTHORIZED_CERT_PEM_CHAIN;
+            badPemChainString = badPemChainString.replaceFirst(",", "#");
+
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemChainString);
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+            assertTrue(fault.getMessage().contains("not contain valid PEM certificate"));
+        }
+
+        @Test
+        void rejectsWrongOrderPemCertChain() {
+            String badPemChainString = _AUTHORIZED_CERT_PEM_CHAIN;
+            String[] base64Strings = badPemChainString.split("[,]");
+            badPemChainString = base64Strings[2] + "," + base64Strings[1] + "," + base64Strings[0];
+
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemChainString);
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+
+            System.out.println("UNAUTH MESSAGE " + fault.getMessage());
+
+            assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
         }
     }
 }
