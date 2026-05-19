@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
@@ -38,7 +37,6 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
 
         AuthorizeDnType at = clientCertificateProperties.getAuthorizeDnType();
         switch (at) {
-            // ARNOTODO: Client cert passed as PEM or Info summary from Traefik
             case AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT:
                 X509Certificate[] certificates = (X509Certificate[])
                         request.getAttribute(ClientCertificateProperties.JAKARTA_SERVLET_TLS_CLIENT_CERT_HEADER);
@@ -51,70 +49,71 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
             case AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN:
             case AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN:
             case AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT:
-                Enumeration<String> headerNames = request.getHeaderNames();
-                while (headerNames.hasMoreElements()) {
-                    String headerName = headerNames.nextElement();
-                    String headerValue = request.getHeader(headerName);
-                    if (headerName.equals(clientCertificateProperties.getTlsClientAuthNHeader())) {
-                        if (at == AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN
-                                || at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN) {
-                            // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
-                            try {
-                                // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
-                                X500Principal p = new X500Principal(headerValue);
-                                tlsClientSubjectPrincipal = p;
-                            } catch (Exception e) {
-                                throw new SoapFault(
-                                        clientCertificateProperties.getTlsClientAuthNHeader()
-                                                + " header does not contain valid RFC2253 name",
-                                        faultCode);
-                            }
-                        } else if (at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT) {
-                            // Decode Traefik PEM, see ClientCertificateProperties for format.
-                            try {
-                                String base64String = null;
-                                if (headerValue.contains(",")) {
-                                    /*
-                                    # Undocumented: assume client cert is first in list
-                                    # This issue says client cert comes first: https://github.com/keycloak/keycloak/issues/46395#issuecomment-3915177071
-                                    # Code suggest extra certs follow client cert: https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R236
-                                    # "Traefik sends the client certificate and any intermediate CA certificates as PEM blocks in a single `X-Forwarded-Tls-Client-Cert` header, separated by commas."
-                                    #  --- https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R288
-                                    # If Traefik this is in PEM with some changes, see above
-                                    */
-                                    String[] base64Strings = headerValue.split("[,]");
-                                    base64String = base64Strings[0];
-                                } else {
-                                    base64String = headerValue;
-                                }
-                                /* From: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/cert/CertificateFactory.html#generateCertificate(java.io.InputStream)
-                                "In the case of a certificate factory for X.509 certificates, the certificate provided in inStream must be DER-encoded and may be supplied in binary or printable (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by -----BEGIN CERTIFICATE-----, and must be bounded at the end by -----END CERTIFICATE-----."
-                                Note this does not say the PEM should be split into e.g. 64 character-wide lines, which is indeed not required.
+                String expectHeaderName = clientCertificateProperties.getTlsClientAuthNHeader();
+                String headerValue = request.getHeader(expectHeaderName);
+                if (headerValue != null) {
+                    LOG.fine("Found HTTP header " + expectHeaderName + ": " + headerValue);
+                    if (at == AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN
+                            || at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN) {
+                        // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
+                        try {
+                            // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
+                            X500Principal p = new X500Principal(headerValue);
+                            tlsClientSubjectPrincipal = p;
+                        } catch (Exception e) {
+                            throw new SoapFault(
+                                    clientCertificateProperties.getTlsClientAuthNHeader()
+                                            + " header does not contain valid RFC2253 name",
+                                    faultCode);
+                        }
+                    } else if (at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT) {
+                        // Decode Traefik PEM, see ClientCertificateProperties for format.
+                        try {
+                            String base64String = null;
+                            if (headerValue.contains(",")) {
+                                /*
+                                # Undocumented: assume client cert is first in list
+                                # This issue says client cert comes first: https://github.com/keycloak/keycloak/issues/46395#issuecomment-3915177071
+                                # Code suggest extra certs follow client cert: https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R236
+                                # "Traefik sends the client certificate and any intermediate CA certificates as PEM blocks in a single `X-Forwarded-Tls-Client-Cert` header, separated by commas."
+                                #  --- https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R288
+                                # If Traefik this is in PEM with some changes, see above
                                 */
-                                String pemString = "-----BEGIN CERTIFICATE-----\n";
-                                pemString = pemString + base64String;
-                                pemString = pemString + "-----END CERTIFICATE-----\n";
-                                ByteArrayInputStream pemStream = new ByteArrayInputStream(pemString.getBytes());
-                                CertificateFactory factory = CertificateFactory.getInstance("X.509");
-                                X509Certificate cert =
-                                        (java.security.cert.X509Certificate) factory.generateCertificate(pemStream);
-                                tlsClientSubjectPrincipal = cert.getSubjectX500Principal();
-                            } catch (Exception e) {
-                                System.out.println(e.getMessage());
-                                throw new SoapFault(
-                                        clientCertificateProperties.getTlsClientAuthNHeader()
-                                                + " header does not contain valid PEM certificate",
-                                        faultCode);
+                                String[] base64Strings = headerValue.split("[,]");
+                                base64String = base64Strings[0];
+                            } else {
+                                base64String = headerValue;
                             }
+                            /* From: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/cert/CertificateFactory.html#generateCertificate(java.io.InputStream)
+                            "In the case of a certificate factory for X.509 certificates, the certificate provided in inStream must be DER-encoded and may be supplied in binary or printable (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by -----BEGIN CERTIFICATE-----, and must be bounded at the end by -----END CERTIFICATE-----."
+                            Note this does not say the PEM should be split into e.g. 64 character-wide lines, which is indeed not required.
+                            */
+                            String pemString = "-----BEGIN CERTIFICATE-----\n";
+                            pemString = pemString + base64String;
+                            pemString = pemString + "-----END CERTIFICATE-----\n";
+                            ByteArrayInputStream pemStream = new ByteArrayInputStream(pemString.getBytes());
+                            CertificateFactory factory = CertificateFactory.getInstance("X.509");
+                            X509Certificate cert =
+                                    (java.security.cert.X509Certificate) factory.generateCertificate(pemStream);
+                            tlsClientSubjectPrincipal = cert.getSubjectX500Principal();
+                        } catch (Exception e) {
+                            LOG.fine("Error processing PEM cert: " + e.getMessage());
+                            throw new SoapFault(
+                                    clientCertificateProperties.getTlsClientAuthNHeader()
+                                            + " header does not contain valid PEM certificate",
+                                    faultCode);
                         }
                     }
-                    LOG.fine("HTTP header " + headerName + ": " + headerValue);
+                } else {
+                    LOG.fine("Expected HTTP header " + expectHeaderName + "missing.");
                 }
                 if (tlsClientSubjectPrincipal == null)
                     throw new SoapFault(
                             clientCertificateProperties.getTlsClientAuthNHeader() + " header not found on HTTP request",
                             faultCode);
                 break;
+            default:
+                throw new SoapFault(clientCertificateProperties.getAuthorizeDnType() + " set to NO.", faultCode);
         }
 
         String rfc2253Dn = tlsClientSubjectPrincipal.getName(X500Principal.RFC2253);

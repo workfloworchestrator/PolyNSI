@@ -104,6 +104,7 @@ class AuthInterceptorTest {
             assertDoesNotThrow(() -> interceptor.handleMessage(message));
         }
 
+        // WARNING: Arno: Claude didn't like getHeaderNames() iteration. Refactor may break this test
         @Test
         void rejectsMissingHeader() {
             when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("other-header")));
@@ -158,7 +159,7 @@ class AuthInterceptorTest {
     }
 
     @Nested
-    class TraefikCertificateAuth {
+    class TraefikSingleCertificateAuth {
 
         /* From: https://raw.githubusercontent.com/pyca/cryptography/refs/heads/main/docs/x509/reference.rst
          * Subject: CN=Good CA,O=Test Certificates 2011,C=US

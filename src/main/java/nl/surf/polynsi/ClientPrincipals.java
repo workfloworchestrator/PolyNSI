@@ -40,8 +40,12 @@ public class ClientPrincipals {
         this.allowedPrincipals = new ArrayList<X500Principal>();
         for (String propDistinguishedName : propDistinguishedNames) {
             try {
+                // Arno: this parser is somewhat flexible regarding format. WONTFIX more flexible parsing as in
+                // nsi-auth.
+                // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String)
+                // "The distinguished name must be specified using the grammar defined in RFC 1779 or RFC 2253 (either
+                // format is acceptable)."
                 X500Principal p = new X500Principal(propDistinguishedName);
-                // rfc2253DistinguishedName = p.getName(X500Principal.RFC2253);
                 this.allowedPrincipals.add(p);
             } catch (Exception e) {
                 LOG.fine(propDistinguishedName + " not a proper DN:" + e);
