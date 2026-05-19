@@ -163,7 +163,7 @@ class AuthInterceptorTest {
         /* From: https://raw.githubusercontent.com/pyca/cryptography/refs/heads/main/docs/x509/reference.rst
          * Subject: CN=Good CA,O=Test Certificates 2011,C=US
          */
-        public static final String _TRUST_ANCHOR_CERT_PEM =
+        public static final String _AUTHORIZED_CERT_PEM =
                 "-----BEGIN CERTIFICATE-----" + "MIIDfDCCAmSgAwIBAgIBAjANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJVUzEf"
                         + "MB0GA1UEChMWVGVzdCBDZXJ0aWZpY2F0ZXMgMjAxMTEVMBMGA1UEAxMMVHJ1c3Qg"
                         + "QW5jaG9yMB4XDTEwMDEwMTA4MzAwMFoXDTMwMTIzMTA4MzAwMFowQDELMAkGA1UE"
@@ -185,6 +185,48 @@ class AuthInterceptorTest {
                         + "QYw2jOvpKcKtWCSAnegEbgsGYzATKjmPJPJ0npHFqzM="
                         + "-----END CERTIFICATE-----";
 
+        public static final String _UNAUTH_CERT_PEM =
+                "-----BEGIN CERTIFICATE-----" + "MIIHKjCCBRKgAwIBAgIQT3TgVL+kR4NPPrgo4CwCwTANBgkqhkiG9w0BAQwFADBG"
+                        + "MQswCQYDVQQGEwJOTDEZMBcGA1UEChMQR0VBTlQgVmVyZW5pZ2luZzEcMBoGA1UE"
+                        + "AxMTR0VBTlQgUGVyc29uYWwgQ0EgNDAeFw0yNDExMDcwMDAwMDBaFw0yNjExMDcy"
+                        + "MzU5NTlaMIGmMQswCQYDVQQGEwJOTDEQMA4GA1UECBMHVXRyZWNodDESMBAGA1UE"
+                        + "ChMJU1VSRiBCLlYuMRcwFQYDVQRhEw5OVFJOTC01MDI3NzM3NTEiMCAGCSqGSIb3"
+                        + "DQEJARYTYXJuby5iYWtrZXJAc3VyZi5ubDEPMA0GA1UEBBMGQmFra2VyMQ0wCwYD"
+                        + "VQQqEwRBcm5vMRQwEgYDVQQDEwtBcm5vIEJha2tlcjCCAiIwDQYJKoZIhvcNAQEB"
+                        + "BQADggIPADCCAgoCggIBAI+7fvRM4fU5dgZ91/fsn1uRuR+i+4Cbg1F5XhL97VU7"
+                        + "+zPelZKiDme+kseAbRNSuuWcODy/Itd3Rp+tTbJvUk/E5D9U6i5QnA60IRyJbqVf"
+                        + "v1aOmk6MBXd4dLsjLYGUV/4oUSBiQNyr/kIRlUykKBh4wW/XneTfkzeq+ZaSfPts"
+                        + "ztzfluHsEIba4zVcPFUxk/V0jR1hnp+QNewtrjwY7pZ5Gc54UVZHiwxOcbUQlpmV"
+                        + "KElo9VTBbxJ3YdWWWi8Iz0EqZk/bg6Q7ug0ZNQbw0rQru0zzqxgz+5QVQg5uzqzi"
+                        + "BJOQUILhF6tI3ZdHq7qYK3ZjjNBOX7b3VildE8xpF0eoKGdewd5qRQfE2nHcifTk"
+                        + "oXMdA03XLFnSZ/YwUi3OXsX0P6w2GjomLbwDaOC9ub7H3Qr5J1Ji2j1o5ZIHEB4M"
+                        + "Tp5iX9q/LlMiiT1iFNO8CEILqHpkwB8FbyL1yO8mwlFtztGJk0etnjFkKBMZjr2A"
+                        + "PYCG/DRdL4vqA3q8ggw3tK49+fOxHs0JSx6xl7rnt1AyRlCqJCZwyKMwnHLn5K0p"
+                        + "bvr4mjhOm/hPh0DbTd+0PMQAT2WTfaT0GRdHbigB5P35sYp4uHcdVdd4gC1V+D9h"
+                        + "8F86uKWNKmxC2Nny0rTbBpj7BaX1nAOqJrJ8S98WXLdBRbhYrtR80e55zZOA+9R7"
+                        + "AgMBAAGjggGxMIIBrTAfBgNVHSMEGDAWgBRpAKHHIVj44MUbILAK3adRvxPZ5DAd"
+                        + "BgNVHQ4EFgQUrbE2uOX0ARMWjvBunRFqpY0rULEwDgYDVR0PAQH/BAQDAgWgMAwG"
+                        + "A1UdEwEB/wQCMAAwHQYDVR0lBBYwFAYIKwYBBQUHAwQGCCsGAQUFBwMCMFAGA1Ud"
+                        + "IARJMEcwOgYMKwYBBAGyMQECAQoEMCowKAYIKwYBBQUHAgEWHGh0dHBzOi8vc2Vj"
+                        + "dGlnby5jb20vU01JTUVDUFMwCQYHZ4EMAQUDAjBCBgNVHR8EOzA5MDegNaAzhjFo"
+                        + "dHRwOi8vR0VBTlQuY3JsLnNlY3RpZ28uY29tL0dFQU5UUGVyc29uYWxDQTQuY3Js"
+                        + "MHgGCCsGAQUFBwEBBGwwajA9BggrBgEFBQcwAoYxaHR0cDovL0dFQU5ULmNydC5z"
+                        + "ZWN0aWdvLmNvbS9HRUFOVFBlcnNvbmFsQ0E0LmNydDApBggrBgEFBQcwAYYdaHR0"
+                        + "cDovL0dFQU5ULm9jc3Auc2VjdGlnby5jb20wHgYDVR0RBBcwFYETYXJuby5iYWtr"
+                        + "ZXJAc3VyZi5ubDANBgkqhkiG9w0BAQwFAAOCAgEAPg5PiIkN5ZVWKeqiFZP1ECcG"
+                        + "v+c3XSwETci1DxuIAsxR9oQDRrSWG5DivHw/lcUH0S/NRF2tnLU3lD1Iu//5v9fr"
+                        + "VO97rzByHxajSxog51XzCZ4/v64tJmmY/cFS2EgI2GS+KiLDvQt521jHY0FcJK0B"
+                        + "xg8XXxm6f3cYjD6rYO9t6E6DB2b//i1tCkp0FmhEBnJ9i+VO+uIT93pwLAhxu37P"
+                        + "1rLKPwlOJVLNRm63QUPZIPAa6tIeIcpsNycjudA/DnK+PteUZbh+dywZVdEmY2+x"
+                        + "9bo4n50g9J2piRbNIBFTqhJe8uG4Dg256bolvjEkzBaCv0Ode5N/mNEaRdpoD0gZ"
+                        + "KBdchgB2IVzeoxW6R8AD3QWtc2GokwtPWiYyY8iaQYclnMYZZOpb+NDt5a+nbMGI"
+                        + "8casq10uu2eBVIzI3woGG44pDGIN341nsfbhwq2Jx2B8An2bWRiaxNP1hQC2uvkI"
+                        + "J2e07hNXUOEscHVSVnwLlZ7tMQ6vG7fKNuCarlxBYUiIWHqgJlZvD6M9G6WF4NMZ"
+                        + "BRRbBSwyceEg9hRHAstAKEl0E2xZbyilkqd0uKYJaHqquf5C9IUc0JmGcDfrkdKv"
+                        + "w5vjD0zfFB82WbPMQCXO6Xz4GDljqKyr6Ubuf1hcc34LbvzUQoBZywG2z0AcuFXI"
+                        + "HXHoFOXF1qRNDhervac="
+                        + "-----END CERTIFICATE-----";
+
         @BeforeEach
         void setUp() {
             properties.setAuthorizeDnType(AuthorizeDnType.TRAEFIK_TLS_CLIENT_CERT);
@@ -194,8 +236,7 @@ class AuthInterceptorTest {
             properties.setDistinguishedNames(List.of("CN=Good CA,O=Test Certificates 2011,C=US", chainSubjectDN));
         }
 
-        String getPemCertString() {
-            String pemString = _TRUST_ANCHOR_CERT_PEM;
+        String getPemCertString(String pemString) {
             pemString = pemString.replaceFirst("-----BEGIN CERTIFICATE-----", "");
             pemString = pemString.replaceFirst("-----END CERTIFICATE-----", "");
             return pemString.strip();
@@ -205,7 +246,8 @@ class AuthInterceptorTest {
         void allowsValidPEMHeader() {
             when(httpRequest.getHeaderNames())
                     .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
-            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(getPemCertString());
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert"))
+                    .thenReturn(getPemCertString(_AUTHORIZED_CERT_PEM));
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
@@ -214,7 +256,7 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsInvalidPEMHeader() {
-            String badPemString = getPemCertString();
+            String badPemString = getPemCertString(_AUTHORIZED_CERT_PEM);
             badPemString = badPemString.replaceFirst("[MQPXY]+", "S");
             when(httpRequest.getHeaderNames())
                     .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
@@ -224,6 +266,20 @@ class AuthInterceptorTest {
 
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
             assertTrue(fault.getMessage().contains("not contain valid PEM certificate"));
+        }
+
+        @Test
+        void rejectsUnauthorizedPEMHeader() {
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(getPemCertString(_UNAUTH_CERT_PEM));
+            ;
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+            System.out.println("UNAUTH MESSAGE " + fault.getMessage());
+            assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
         }
     }
 }

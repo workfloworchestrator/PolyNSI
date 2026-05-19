@@ -117,6 +117,9 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
         }
 
         String rfc2253Dn = tlsClientSubjectPrincipal.getName(X500Principal.RFC2253);
+
+        System.out.println("ARNO GOT DN: " + rfc2253Dn);
+
         if (!isAllowed(tlsClientSubjectPrincipal))
             throw new SoapFault(rfc2253Dn + " not in list of allowed DNs", faultCode);
         else LOG.fine(rfc2253Dn + " in list of allowed DNs");
