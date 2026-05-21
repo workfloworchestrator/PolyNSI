@@ -156,7 +156,7 @@ config:
       soap.server.connection_provider.path=/connection/provider
       soap.server.connection_requester.path=/connection/requester
       nl.surf.polynsi.verify-ssl-client-subject-dn=false
-      nl.surf.polynsi.ssl-client-subject-dn-header=ssl-client-subject-dn
+      nl.surf.polynsi.tls-client-auth-n-header=ssl-client-subject-dn
       nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
       nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
       nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL

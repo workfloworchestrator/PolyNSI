@@ -202,7 +202,7 @@ soap.server.connection_requester.path=/connection/requester
 server.port=8443
 server.ssl.enabled=true
 server.ssl.client-auth=need
-nl.surf.polynsi.client.certificate.authorize-dn=certificate
+nl.surf.polynsi.client.certificate.authorize-dn=jakarta-servlet-tls-client-cert
 nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
@@ -273,7 +273,7 @@ compare the value against a list of allowed client certificate DN.
 ~~~
 
 This requires a couple of configuration changes. On PolyNSI, disable SSL for
-incoming traffic, specify the name of the header that contains the client DN,
+incoming traffic, specify the name of the header that contains the client DN or certificate chain (Traefik),
 and enable the authorization of that DN.  Last but not least, a list of allowed
 client DN is configured. Note that, to allow PolyNSI to directly connect back
 to the requesting NSA, the trust- and keystore are still needed.
@@ -290,8 +290,8 @@ soap.server.connection_requester.path=/connection/requester
 server.port=8080
 server.ssl.enabled=false
 server.ssl.client-auth=none
-nl.surf.polynsi.client.certificate.authorize-dn=header
-nl.surf.polynsi.client.certificate.ssl-client-subject-dn-header=ssl-client-subject-dn
+nl.surf.polynsi.client.certificate.authorize-dn=nginx-tls-client-subject-dn
+nl.surf.polynsi.client.certificate.tls-client-auth-n-header=ssl-client-subject-dn
 nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
@@ -306,3 +306,13 @@ spring.grpc.server.port=9090
 spring.grpc.client.channels.connection-provider.address=static://localhost:50051
 spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
 ```
+Possible values for authorize-dn, in addition to the Jakarta certificate-based 
+authentication (`jakarta-servlet-tls-client-cert`) described above, are:
+* `nginx-tls-client-subject-dn`   = k8s + NGINX `ssl-client-subject-dn` header containing verified Subject DN.
+* `traefik-tls-client-cert`       = Traefik `X-Forwarded-Tls-Client-Cert` header containing verified client certificate chain, client cert first.
+* `traefik-tls-client-subject-dn` = Traefik `X-Forwarded-Tls-Client-Cert-Info` header containing verified Subject DN.
+
+See
+* https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+* https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/passtlsclientcert/
+* This project's ClientCertificateProperties.java

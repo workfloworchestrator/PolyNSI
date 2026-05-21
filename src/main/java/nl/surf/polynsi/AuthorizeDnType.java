@@ -1,6 +1,8 @@
 package nl.surf.polynsi;
 
 // See ClientCertificateProperties for explanation of the enum values.
+// To use these values in Spring Boot properties, convert to lower case and replace _ with -.
+// This is apparently the conversion method used: https://github.com/spring-projects/spring-tools/issues/1605
 
 public enum AuthorizeDnType {
     NO,
