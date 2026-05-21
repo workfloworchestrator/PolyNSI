@@ -159,7 +159,7 @@ soap.server.connection_requester.path=/connection/requester
 server.port=8080
 server.ssl.enabled=false
 server.ssl.client-auth=none
-nl.surf.polynsi.client.certificate.authorize-dn=no
+nl.surf.polynsi.client.certificate.`authorize-dn-type=no
 #
 # gRPC server and client configuration
 #
@@ -202,7 +202,7 @@ soap.server.connection_requester.path=/connection/requester
 server.port=8443
 server.ssl.enabled=true
 server.ssl.client-auth=need
-nl.surf.polynsi.client.certificate.authorize-dn=jakarta-servlet-tls-client-cert
+nl.surf.polynsi.client.certificate.`authorize-dn-type=jakarta-servlet-tls-client-cert
 nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
@@ -290,7 +290,7 @@ soap.server.connection_requester.path=/connection/requester
 server.port=8080
 server.ssl.enabled=false
 server.ssl.client-auth=none
-nl.surf.polynsi.client.certificate.authorize-dn=nginx-tls-client-subject-dn
+nl.surf.polynsi.client.certificate.`authorize-dn-type=nginx-tls-client-subject-dn
 nl.surf.polynsi.client.certificate.tls-client-auth-n-header=ssl-client-subject-dn
 nl.surf.polynsi.client.certificate.distinguished-names[0]=CN=CertA,OU=Dept X,O=Company 1,C=NL
 nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=Company 2,C=NL
@@ -306,7 +306,7 @@ spring.grpc.server.port=9090
 spring.grpc.client.channels.connection-provider.address=static://localhost:50051
 spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
 ```
-Possible values for authorize-dn, in addition to the Jakarta certificate-based 
+Possible values for `authorize-dn-type, in addition to the Jakarta certificate-based 
 authentication (`jakarta-servlet-tls-client-cert`) described above, are:
 * `nginx-tls-client-subject-dn`   = k8s + NGINX `ssl-client-subject-dn` header containing verified Subject DN.
 * `traefik-tls-client-cert`       = Traefik `X-Forwarded-Tls-Client-Cert` header containing verified client certificate chain, client cert first.
