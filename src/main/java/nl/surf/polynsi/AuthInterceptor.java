@@ -105,7 +105,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                         }
                     }
                 } else {
-                    LOG.fine("Expected HTTP header " + expectHeaderName + "missing.");
+                    LOG.fine("Expected HTTP header " + expectHeaderName + " missing.");
                 }
                 if (tlsClientSubjectPrincipal == null)
                     throw new SoapFault(

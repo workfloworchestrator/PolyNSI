@@ -48,10 +48,10 @@ public class ClientPrincipals {
                 // "The distinguished name must be specified using the grammar defined in RFC 1779 or RFC 2253 (either
                 // format is acceptable)."
                 Map<String, String> names2oid = new HashMap<>();
-                // Not all x509 implementations do not know the symbolic names for all OIDs.
+                // Not all x509 implementations know the symbolic names for all OIDs.
                 // This table fixes the most common ones.
                 // Keep synchronized with nsi-auth/rfc4514_cmp.py
-                // "Keywords MUST be specified in all upper-case, otherwise they will be ignored."
+                // Oracle: "Keywords MUST be specified in all upper-case, otherwise they will be ignored."
                 names2oid.put("SN", "2.5.4.4"); // surname
                 names2oid.put("GN", "2.5.4.42"); // givenname
                 names2oid.put("ORGANIZATIONIDENTIFIER", "2.5.4.97");
