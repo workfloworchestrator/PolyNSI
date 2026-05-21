@@ -119,7 +119,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                             faultCode);
                 break;
             default:
-                throw new SoapFault(clientCertificateProperties.getAuthorizeDnType() + " set to NO.", faultCode);
+                throw new SoapFault("unsupported AuthorizeDnType: " + at, faultCode);
         }
 
         String rfc2253Dn = tlsClientSubjectPrincipal.getName(X500Principal.RFC2253);
