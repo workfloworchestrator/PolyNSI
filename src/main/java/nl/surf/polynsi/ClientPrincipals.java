@@ -74,9 +74,6 @@ public class ClientPrincipals {
         for (X500Principal allowedPrincipal : allowedPrincipals) {
             // Main authentication line
             // javax.security.auth.x500.X500Principal object equals() method does comparison
-
-            System.out.println("CMP " + sslClientSubjectPrincipal + " TO " + allowedPrincipal + "#");
-
             if (sslClientSubjectPrincipal.equals(allowedPrincipal)) return true;
         }
         return false;
