@@ -14,21 +14,8 @@ import org.springframework.stereotype.Component;
  *    https://docs.oracle.com/en/java/javase/25/docs/api/java.base/javax/security/auth/x500/X500Principal.html
  *    https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/javax/security/auth/x500/X500Principal.java
  *
- * Various sources can be:
-    1. k8s ingress:
-    # Kubernetes ingress NGINX's annotation: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
-    # defined as 'The subject information of the client certificate. Example: "CN=My Client"'
-    # If we ASSUME this is the $ssl_client_s_dn variable from ngx_http_ssl_module then this is
-    # defined as (https://nginx.org/en/docs/http/ngx_http_ssl_module.html):
-    # '$ssl_client_s_dn' returns the “subject DN” string of the client certificate for an
-    #  established SSL connection according to RFC 2253 (1.11.6);'
-    # So RFC2253 format. Note that itself is obsoleted by RFC4514, so NGINX has work to do.
-    #
-
-   2. ClientCertificateProperties in the application.properties file. These are strings and we
-   want to be somewhat flexible in the format there, so if X500Principal can parse it, we accept the input.
-   @author: Arno Bakker
-*/
+ * Various sources are documented in ClientCertificateProperties.
+ */
 
 @Component
 public class ClientPrincipals {
@@ -37,9 +24,16 @@ public class ClientPrincipals {
     private List<X500Principal> allowedPrincipals;
 
     public ClientPrincipals(List<String> propDistinguishedNames) {
+        this.allowedPrincipals = new ArrayList<X500Principal>();
+
+        // Please AuthInterceptorTest.rejectsNullDistinguishedNamesList()
+        if (propDistinguishedNames == null) {
+            LOG.fine("propDistinguishedNames is null");
+            return;
+        }
+
         // Convert from application.properties input, which is assumed to be somewhat free format to normal form
         // in this case RFC2253, because RFC4514 is apparently not yet implemented by Java.
-        this.allowedPrincipals = new ArrayList<X500Principal>();
         for (String propDistinguishedName : propDistinguishedNames) {
             try {
                 // Arno: this parser is somewhat flexible regarding format. WONTFIX more flexible parsing as in
@@ -68,6 +62,10 @@ public class ClientPrincipals {
             String rfc2253DistinguishedName = p.getName(X500Principal.RFC2253);
             LOG.fine("added client certificate distinguished name: " + rfc2253DistinguishedName);
         }
+    }
+
+    public int numberOfAllowedPrincipals() {
+        return allowedPrincipals.size();
     }
 
     public boolean isAllowedPrincipal(X500Principal sslClientSubjectPrincipal) {

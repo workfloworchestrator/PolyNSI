@@ -187,7 +187,7 @@ class AuthInterceptorTest {
         AuthInterceptor interceptor = new AuthInterceptor(nullDnProps);
 
         SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
-        assertTrue(fault.getMessage().contains("list of allowed DNs is empty"));
+        assertTrue(fault.getMessage().contains("list of allowed Principals is empty"));
     }
 
     @Nested

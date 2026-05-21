@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
@@ -21,11 +22,16 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
 
     private static final Logger LOG = Logger.getLogger(AuthInterceptor.class.getName());
     private final ClientCertificateProperties clientCertificateProperties;
+    private final ClientPrincipals clientPrincipals;
     private final QName faultCode = new QName("http://schemas.xmlsoap.org/soap/envelope/", "AuthInterceptor");
 
     public AuthInterceptor(ClientCertificateProperties clientCertificateProperties) {
         super(Phase.RECEIVE);
         this.clientCertificateProperties = clientCertificateProperties;
+        List<String> distinguishedNames = new ArrayList<>();
+        if (this.clientCertificateProperties != null)
+            distinguishedNames = this.clientCertificateProperties.getDistinguishedNames();
+        this.clientPrincipals = new ClientPrincipals(distinguishedNames);
     }
 
     @Override
@@ -123,16 +129,12 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
     }
 
     private boolean isAllowed(X500Principal tlsClientSubjectPrincipal) {
-        List<String> distinguishedNames = clientCertificateProperties.getDistinguishedNames();
-        if (distinguishedNames == null) {
-            throw new SoapFault("list of allowed DNs is empty", faultCode);
-        }
-        // Not ideal to convert strings to Objects on each call, but otherwise conflicts with Properties-based
-        // config. And we must use the Principal equals() method for comparison.
-        ClientPrincipals cps = new ClientPrincipals(distinguishedNames);
-        if (cps == null) {
+
+        if (this.clientPrincipals.numberOfAllowedPrincipals() == 0) {
             throw new SoapFault("list of allowed Principals is empty", faultCode);
         }
-        return cps.isAllowedPrincipal(tlsClientSubjectPrincipal);
+
+        // MAIN AUTH CHECK
+        return this.clientPrincipals.isAllowedPrincipal(tlsClientSubjectPrincipal);
     }
 }
