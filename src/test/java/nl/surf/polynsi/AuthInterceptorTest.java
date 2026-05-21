@@ -86,7 +86,7 @@ class AuthInterceptorTest {
     }
 
     @Nested
-    class HeaderAuth {
+    class NGINXHeaderAuth {
         @BeforeEach
         void setUp() {
             properties.setAuthorizeDnType(AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN);
@@ -119,6 +119,39 @@ class AuthInterceptorTest {
         void rejectsUnauthorizedDnFromHeader() {
             when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("ssl-client-subject-dn")));
             when(httpRequest.getHeader("ssl-client-subject-dn")).thenReturn("CN=unauthorized,O=Evil,C=XX");
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+            assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
+        }
+    }
+
+    @Nested
+    class TraefikInfoHeaderAuth {
+        @BeforeEach
+        void setUp() {
+            properties.setAuthorizeDnType(AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN);
+            properties.setTlsClientAuthNHeader("X-Forwarded-Tls-Client-Cert-Info");
+            properties.setDistinguishedNames(List.of("CN=test,O=SURF,C=NL"));
+        }
+
+        @Test
+        void allowsValidHeader() {
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert-Info")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert-Info")).thenReturn("CN=test,O=SURF,C=NL");
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            assertDoesNotThrow(() -> interceptor.handleMessage(message));
+        }
+
+        @Test
+        void rejectsUnauthorizedDnFromHeader() {
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert-Info")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert-Info")).thenReturn("CN=unauthorized,O=Evil,C=XX");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
