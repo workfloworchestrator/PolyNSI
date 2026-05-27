@@ -14,7 +14,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <cxf.version>4.2.0</cxf.version>
+        <cxf.version>4.2.1</cxf.version>
         <cxf.xjc.version>4.2.0</cxf.xjc.version>
         <!-- Keep these synced -->
         <protoc.version>4.34.1</protoc.version>
@@ -256,7 +256,7 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>3.5.1</version>
                 <configuration>
                     <java>
                         <palantirJavaFormat>
