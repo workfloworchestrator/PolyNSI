@@ -62,7 +62,7 @@ public class ClientCertificateProperties {
     # Legacy: PolyNSI can also take the full client certificate from the
     # ""jakarta.servlet.request.X509Certificate" header.
     */
-    public static final String JAKARTA_SERVLET_TLS_CLIENT_CERT_HEADER = "jakarta.servlet.request.X509Certificate";
+    public static final String JAKARTA_SERVLET_TLS_CLIENT_CERT_ATTRIBUTE = "jakarta.servlet.request.X509Certificate";
 
     private static final Logger LOG = Logger.getLogger(ClientCertificateProperties.class.getName());
 

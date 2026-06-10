@@ -45,7 +45,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
         switch (at) {
             case AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT:
                 X509Certificate[] certificates = (X509Certificate[])
-                        request.getAttribute(ClientCertificateProperties.JAKARTA_SERVLET_TLS_CLIENT_CERT_HEADER);
+                        request.getAttribute(ClientCertificateProperties.JAKARTA_SERVLET_TLS_CLIENT_CERT_ATTRIBUTE);
                 if (certificates == null || certificates.length == 0) {
                     throw new SoapFault("Client certificate not found on incoming request", faultCode);
                 }
