@@ -8,12 +8,9 @@ import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
 
 /*
- * Aux class to compare Distinguished Names from various sources using the Java X500Principal class:
- *
- *    https://docs.oracle.com/en/java/javase/25/docs/api/java.base/javax/security/auth/x500/X500Principal.html
- *    https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/javax/security/auth/x500/X500Principal.java
- *
- * Various sources are documented in ClientCertificateProperties.
+ * Compares distinguished names from various sources (documented in ClientCertificateProperties)
+ * using the Java X500Principal class.
+ * https://docs.oracle.com/en/java/javase/25/docs/api/java.base/javax/security/auth/x500/X500Principal.html
  */
 
 public class ClientPrincipals {
@@ -24,7 +21,7 @@ public class ClientPrincipals {
     public ClientPrincipals(List<String> propDistinguishedNames) {
         this.allowedPrincipals = new ArrayList<X500Principal>();
 
-        // Please AuthInterceptorTest.rejectsNullDistinguishedNamesList()
+        // A null list is tolerated (see AuthInterceptorTest.rejectsNullDistinguishedNamesList).
         if (propDistinguishedNames == null) {
             LOG.fine("propDistinguishedNames is null");
             return;
@@ -70,8 +67,7 @@ public class ClientPrincipals {
 
     public boolean isAllowedPrincipal(X500Principal sslClientSubjectPrincipal) {
         for (X500Principal allowedPrincipal : allowedPrincipals) {
-            // Main authentication line
-            // javax.security.auth.x500.X500Principal object equals() method does comparison
+            // X500Principal.equals() performs the actual authentication comparison.
             if (sslClientSubjectPrincipal.equals(allowedPrincipal)) return true;
         }
         return false;

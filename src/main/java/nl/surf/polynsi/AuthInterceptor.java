@@ -44,7 +44,6 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                 if (certificates == null || certificates.length == 0) {
                     throw new SoapFault("Client certificate not found on incoming request", faultCode);
                 }
-                // Get name as Principal object from certificate
                 tlsClientSubjectPrincipal = certificates[0].getSubjectX500Principal();
                 break;
             case AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN:
@@ -71,23 +70,17 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                         try {
                             String base64String = null;
                             if (headerValue.contains(",")) {
-                                /*
-                                # Undocumented: assume client cert is first in list
-                                # This issue says client cert comes first: https://github.com/keycloak/keycloak/issues/46395#issuecomment-3915177071
-                                # Code suggest extra certs follow client cert: https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R236
-                                # "Traefik sends the client certificate and any intermediate CA certificates as PEM blocks in a single `X-Forwarded-Tls-Client-Cert` header, separated by commas."
-                                #  --- https://github.com/tdiesler/keycloak/commit/8d318c552a2c778b65265f4c46a3b30c7dc99a27#diff-4a1b33f7b0a6b8526caf3186df5ccd193f7efcb683dcff9e515de2765ec9fd19R288
-                                # If Traefik this is in PEM with some changes, see above
-                                */
+                                // A chain is sent as comma-separated PEM blocks with the client (leaf)
+                                // certificate first, intermediates following. (Undocumented by Traefik.)
+                                // https://github.com/keycloak/keycloak/issues/46395#issuecomment-3915177071
                                 String[] base64Strings = headerValue.split("[,]");
                                 base64String = base64Strings[0];
                             } else {
                                 base64String = headerValue;
                             }
-                            /* From: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/cert/CertificateFactory.html#generateCertificate(java.io.InputStream)
-                            "In the case of a certificate factory for X.509 certificates, the certificate provided in inStream must be DER-encoded and may be supplied in binary or printable (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by -----BEGIN CERTIFICATE-----, and must be bounded at the end by -----END CERTIFICATE-----."
-                            Note this does not say the PEM should be split into e.g. 64 character-wide lines, which is indeed not required.
-                            */
+                            // CertificateFactory accepts a Base64 certificate bounded by the BEGIN/END
+                            // markers; line wrapping is not required.
+                            // https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/cert/CertificateFactory.html#generateCertificate(java.io.InputStream)
                             String pemString = "-----BEGIN CERTIFICATE-----\n";
                             pemString = pemString + base64String;
                             pemString = pemString + "-----END CERTIFICATE-----\n";
