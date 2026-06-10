@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
-import org.springframework.stereotype.Component;
 
 /*
  * Aux class to compare Distinguished Names from various sources using the Java X500Principal class:
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
  * Various sources are documented in ClientCertificateProperties.
  */
 
-@Component
 public class ClientPrincipals {
 
     private static final Logger LOG = Logger.getLogger(ClientPrincipals.class.getName());
