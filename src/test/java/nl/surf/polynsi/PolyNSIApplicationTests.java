@@ -51,12 +51,12 @@ class PolyNSIApplicationTests {
 
     @Test
     void defaultAuthorizeDnIsNo() {
-        assertEquals(AuthorizeDnType.NO, clientCertificateProperties.getAuthorizeDn());
+        assertEquals(AuthorizeDnType.NO, clientCertificateProperties.getAuthorizeDnType());
     }
 
     @Test
     void defaultSslHeaderIsConfigured() {
-        assertEquals("ssl-client-subject-dn", clientCertificateProperties.getSslClientSubjectDnHeader());
+        assertEquals("ssl-client-subject-dn", clientCertificateProperties.getTlsClientAuthNHeader());
     }
 
     @Test
