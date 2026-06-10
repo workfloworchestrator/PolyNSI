@@ -190,6 +190,16 @@ class AuthInterceptorTest {
         assertTrue(fault.getMessage().contains("list of allowed Principals is empty"));
     }
 
+    @Test
+    void rejectsMalformedDistinguishedNameAtConstruction() {
+        properties.setAuthorizeDnType(AuthorizeDnType.JAKARTA_SERVLET_TLS_CLIENT_CERT);
+        properties.setDistinguishedNames(List.of("CN=test,O=SURF,C=NL", "this-is-not-a-valid-dn"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> new AuthInterceptor(properties));
+        assertTrue(ex.getMessage().contains("this-is-not-a-valid-dn"));
+    }
+
     @Nested
     class TraefikSingleCertificateAuth {
 

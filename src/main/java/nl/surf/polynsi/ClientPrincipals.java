@@ -52,8 +52,10 @@ public class ClientPrincipals {
                 X500Principal p = new X500Principal(propDistinguishedName, names2oid);
                 this.allowedPrincipals.add(p);
             } catch (Exception e) {
-                LOG.fine(propDistinguishedName + " not a proper DN:" + e);
-                // continue parsing others
+                // Fail fast: a typo in the allow-list would otherwise only surface later as an
+                // authorized client being rejected, which is hard to diagnose.
+                throw new IllegalArgumentException(
+                        "configured allowed distinguished name is not a valid DN: " + propDistinguishedName, e);
             }
         }
         for (X500Principal p : this.allowedPrincipals) {
