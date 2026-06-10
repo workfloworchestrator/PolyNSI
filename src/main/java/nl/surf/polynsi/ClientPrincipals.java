@@ -30,27 +30,9 @@ public class ClientPrincipals {
             return;
         }
 
-        // Convert from application.properties input, which is assumed to be somewhat free format to normal form
-        // in this case RFC2253, because RFC4514 is apparently not yet implemented by Java.
         for (String propDistinguishedName : propDistinguishedNames) {
             try {
-                // Arno: this parser is somewhat flexible regarding format. WONTFIX more flexible parsing as in
-                // nsi-auth.
-                // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
-                // "The distinguished name must be specified using the grammar defined in RFC 1779 or RFC 2253 (either
-                // format is acceptable)."
-                Map<String, String> names2oid = new HashMap<>();
-                // Not all x509 implementations know the symbolic names for all OIDs.
-                // This table fixes the most common ones.
-                // Keep synchronized with nsi-auth/rfc4514_cmp.py
-                // Oracle: "Keywords MUST be specified in all upper-case, otherwise they will be ignored."
-                names2oid.put("SN", "2.5.4.4"); // surname
-                names2oid.put("GN", "2.5.4.42"); // givenname
-                names2oid.put("ORGANIZATIONIDENTIFIER", "2.5.4.97");
-                names2oid.put("EMAILADDRESS", "1.2.840.113549.1.9.1");
-
-                X500Principal p = new X500Principal(propDistinguishedName, names2oid);
-                this.allowedPrincipals.add(p);
+                this.allowedPrincipals.add(parsePrincipal(propDistinguishedName));
             } catch (Exception e) {
                 // Fail fast: a typo in the allow-list would otherwise only surface later as an
                 // authorized client being rejected, which is hard to diagnose.
@@ -62,6 +44,24 @@ public class ClientPrincipals {
             String rfc2253DistinguishedName = p.getName(X500Principal.RFC2253);
             LOG.fine("added client certificate distinguished name: " + rfc2253DistinguishedName);
         }
+    }
+
+    /*
+     * Parse a distinguished name -- from application.properties or from a proxy-supplied header -- into
+     * an X500Principal. Input may be in RFC 1779 or RFC 2253 grammar (X500Principal accepts either). The
+     * names2oid map teaches X500Principal the symbolic attribute names that not all x509 implementations
+     * know; it must be applied to both the allowed DNs and the incoming DN so the two parse identically.
+     * https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
+     */
+    public static X500Principal parsePrincipal(String distinguishedName) {
+        Map<String, String> names2oid = new HashMap<>();
+        // Keep synchronized with nsi-auth/rfc4514_cmp.py
+        // Oracle: "Keywords MUST be specified in all upper-case, otherwise they will be ignored."
+        names2oid.put("SN", "2.5.4.4"); // surname
+        names2oid.put("GN", "2.5.4.42"); // givenname
+        names2oid.put("ORGANIZATIONIDENTIFIER", "2.5.4.97");
+        names2oid.put("EMAILADDRESS", "1.2.840.113549.1.9.1");
+        return new X500Principal(distinguishedName, names2oid);
     }
 
     public int numberOfAllowedPrincipals() {

@@ -61,11 +61,10 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
                     LOG.fine("Found HTTP header " + expectHeaderName + ": " + headerValue);
                     if (at == AuthorizeDnType.NGINX_TLS_CLIENT_SUBJECT_DN
                             || at == AuthorizeDnType.TRAEFIK_TLS_CLIENT_SUBJECT_DN) {
-                        // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format
+                        // ASSUME this DN has been sanitized by layer above, and is in RFC2253 format.
+                        // Parse with the same OID map as the allow-list so equivalent DNs parse identically.
                         try {
-                            // https://docs.oracle.com/en/java/javase/26/docs/api/java.base/javax/security/auth/x500/X500Principal.html#%3Cinit%3E(java.lang.String,java.util.Map)
-                            X500Principal p = new X500Principal(headerValue);
-                            tlsClientSubjectPrincipal = p;
+                            tlsClientSubjectPrincipal = ClientPrincipals.parsePrincipal(headerValue);
                         } catch (Exception e) {
                             throw new SoapFault(
                                     clientCertificateProperties.getTlsClientAuthNHeader()

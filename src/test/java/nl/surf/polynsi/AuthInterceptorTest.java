@@ -136,6 +136,19 @@ class AuthInterceptorTest {
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
             assertTrue(fault.getMessage().contains("does not contain valid RFC2253 name"));
         }
+
+        @Test
+        void allowsHeaderDnWithGivenNameAndSurname() {
+            // GN/SN are not in X500Principal's default keyword set; the incoming DN must be parsed with
+            // the same OID map as the allow-list, otherwise this authorized client would be rejected.
+            String dn = "CN=Example Client,GN=Example,SN=Client,O=Example Org,C=NL";
+            properties.setDistinguishedNames(List.of(dn));
+            when(httpRequest.getHeader("ssl-client-subject-dn")).thenReturn(dn);
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            assertDoesNotThrow(() -> interceptor.handleMessage(message));
+        }
     }
 
     @Nested
