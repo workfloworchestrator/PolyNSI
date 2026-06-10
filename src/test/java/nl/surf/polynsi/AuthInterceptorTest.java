@@ -125,6 +125,17 @@ class AuthInterceptorTest {
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
             assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
         }
+
+        @Test
+        void rejectsInvalidRfc2253Dn() {
+            when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("ssl-client-subject-dn")));
+            when(httpRequest.getHeader("ssl-client-subject-dn")).thenReturn("this-is-not-a-valid-dn");
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+            assertTrue(fault.getMessage().contains("does not contain valid RFC2253 name"));
+        }
     }
 
     @Nested
@@ -157,6 +168,18 @@ class AuthInterceptorTest {
 
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
             assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
+        }
+
+        @Test
+        void rejectsInvalidRfc2253Dn() {
+            when(httpRequest.getHeaderNames())
+                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert-Info")));
+            when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert-Info")).thenReturn("this-is-not-a-valid-dn");
+
+            AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+            SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+            assertTrue(fault.getMessage().contains("does not contain valid RFC2253 name"));
         }
     }
 
@@ -198,6 +221,18 @@ class AuthInterceptorTest {
         IllegalArgumentException ex =
                 assertThrows(IllegalArgumentException.class, () -> new AuthInterceptor(properties));
         assertTrue(ex.getMessage().contains("this-is-not-a-valid-dn"));
+    }
+
+    @Test
+    void rejectsUnsupportedAuthorizeDnType() {
+        // NO (and any future unhandled enum value) must fail closed rather than authorize.
+        properties.setAuthorizeDnType(AuthorizeDnType.NO);
+        properties.setDistinguishedNames(List.of("CN=test,O=SURF,C=NL"));
+
+        AuthInterceptor interceptor = new AuthInterceptor(properties);
+
+        SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
+        assertTrue(fault.getMessage().contains("unsupported AuthorizeDnType"));
     }
 
     @Nested
