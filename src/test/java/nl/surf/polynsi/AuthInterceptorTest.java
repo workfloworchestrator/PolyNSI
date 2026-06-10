@@ -458,8 +458,6 @@ class AuthInterceptorTest {
 
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
 
-            System.out.println("UNAUTH MESSAGE " + fault.getMessage());
-
             assertTrue(fault.getMessage().contains("not in list of allowed DNs"));
         }
     }
