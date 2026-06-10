@@ -316,3 +316,15 @@ See
 * https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
 * https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/passtlsclientcert/
 * This project's ClientCertificateProperties.java
+
+> [!WARNING]
+> With `traefik-tls-client-cert` (and `traefik-tls-client-subject-dn`) PolyNSI
+> trusts the subject DN of the certificate in the header as-is; it does not
+> re-verify the certificate against a CA. This is only safe when the proxy in
+> front of PolyNSI is configured to:
+> 1. enforce mutual TLS so the client certificate is actually verified
+>    (Traefik `RequireAndVerifyClientCert`), and
+> 2. strip the `X-Forwarded-Tls-Client-Cert` / `X-Forwarded-Tls-Client-Cert-Info`
+>    header from inbound external requests, so a client cannot spoof it.
+> The same applies to `nginx-tls-client-subject-dn` and the `ssl-client-subject-dn`
+> header.
