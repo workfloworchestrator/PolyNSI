@@ -4,8 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.namespace.QName;
@@ -28,10 +26,7 @@ public class AuthInterceptor extends AbstractPhaseInterceptor<Message> {
     public AuthInterceptor(ClientCertificateProperties clientCertificateProperties) {
         super(Phase.RECEIVE);
         this.clientCertificateProperties = clientCertificateProperties;
-        List<String> distinguishedNames = new ArrayList<>();
-        if (this.clientCertificateProperties != null)
-            distinguishedNames = this.clientCertificateProperties.getDistinguishedNames();
-        this.clientPrincipals = new ClientPrincipals(distinguishedNames);
+        this.clientPrincipals = new ClientPrincipals(clientCertificateProperties.getDistinguishedNames());
     }
 
     @Override

@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.List;
 import javax.security.auth.x500.X500Principal;
 import org.apache.cxf.binding.soap.SoapFault;
@@ -96,7 +95,6 @@ class AuthInterceptorTest {
 
         @Test
         void allowsValidHeader() {
-            when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("ssl-client-subject-dn")));
             when(httpRequest.getHeader("ssl-client-subject-dn")).thenReturn("CN=test,O=SURF,C=NL");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -106,9 +104,7 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsMissingHeader() {
-            when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("other-header")));
-            when(httpRequest.getHeader("other-header")).thenReturn("some-value");
-
+            // ssl-client-subject-dn is not stubbed, so getHeader returns null and the header is missing
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
             SoapFault fault = assertThrows(SoapFault.class, () -> interceptor.handleMessage(message));
@@ -117,7 +113,6 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsUnauthorizedDnFromHeader() {
-            when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("ssl-client-subject-dn")));
             when(httpRequest.getHeader("ssl-client-subject-dn")).thenReturn("CN=unauthorized,O=Evil,C=XX");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -128,7 +123,6 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsInvalidRfc2253Dn() {
-            when(httpRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("ssl-client-subject-dn")));
             when(httpRequest.getHeader("ssl-client-subject-dn")).thenReturn("this-is-not-a-valid-dn");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -162,8 +156,6 @@ class AuthInterceptorTest {
 
         @Test
         void allowsValidHeader() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert-Info")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert-Info")).thenReturn("CN=test,O=SURF,C=NL");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -173,8 +165,6 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsUnauthorizedDnFromHeader() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert-Info")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert-Info")).thenReturn("CN=unauthorized,O=Evil,C=XX");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -185,8 +175,6 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsInvalidRfc2253Dn() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert-Info")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert-Info")).thenReturn("this-is-not-a-valid-dn");
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -335,8 +323,6 @@ class AuthInterceptorTest {
 
         @Test
         void allowsValidPEMHeader() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert"))
                     .thenReturn(getPemCertString(_AUTHORIZED_CERT_PEM));
 
@@ -348,8 +334,6 @@ class AuthInterceptorTest {
         @Test
         void rejectsInvalidPEMHeader() {
             String badPemString = "this-is-not-a-valid-base64-certificate";
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemString);
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -360,8 +344,6 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsUnauthorizedPEMHeader() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(getPemCertString(_UNAUTH_CERT_PEM));
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -434,8 +416,6 @@ class AuthInterceptorTest {
 
         @Test
         void allowsAuthorizedPemCertWithProblematicOIDs() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert"))
                     .thenReturn(getPemCertString(_AUTHORIZED_CERT_PEM));
 
@@ -466,8 +446,6 @@ class AuthInterceptorTest {
 
         @Test
         void allowsAuthorizedPemCertChain() {
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(_AUTHORIZED_CERT_PEM_CHAIN);
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -480,8 +458,6 @@ class AuthInterceptorTest {
             String badPemChainString = _AUTHORIZED_CERT_PEM_CHAIN;
             badPemChainString = badPemChainString.replaceFirst(",", "#");
 
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemChainString);
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
@@ -496,8 +472,6 @@ class AuthInterceptorTest {
             String[] base64Strings = badPemChainString.split("[,]");
             badPemChainString = base64Strings[2] + "," + base64Strings[1] + "," + base64Strings[0];
 
-            when(httpRequest.getHeaderNames())
-                    .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemChainString);
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
