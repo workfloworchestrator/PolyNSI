@@ -299,8 +299,7 @@ class AuthInterceptorTest {
 
         @Test
         void rejectsInvalidPEMHeader() {
-            String badPemString = getPemCertString(_AUTHORIZED_CERT_PEM);
-            badPemString = badPemString.replaceFirst("[MQPXY]+", "S");
+            String badPemString = "this-is-not-a-valid-base64-certificate";
             when(httpRequest.getHeaderNames())
                     .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(badPemString);
@@ -316,7 +315,6 @@ class AuthInterceptorTest {
             when(httpRequest.getHeaderNames())
                     .thenReturn(Collections.enumeration(List.of("X-Forwarded-Tls-Client-Cert")));
             when(httpRequest.getHeader("X-Forwarded-Tls-Client-Cert")).thenReturn(getPemCertString(_UNAUTH_CERT_PEM));
-            ;
 
             AuthInterceptor interceptor = new AuthInterceptor(properties);
 
