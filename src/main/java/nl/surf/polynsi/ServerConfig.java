@@ -47,7 +47,7 @@ public class ServerConfig {
         EndpointImpl endpoint = new EndpointImpl(bus, connectionProviderPort);
         endpoint.setWsdlLocation("wsdl/connection/ogf_nsi_connection_provider_v2_0.wsdl");
         endpoint.publish(this.connectionProviderPath);
-        if (clientCertificateProperties.getAuthorizeDn() != AuthorizeDnType.NO)
+        if (clientCertificateProperties.getAuthorizeDnType() != AuthorizeDnType.NO)
             endpoint.getInInterceptors().add(authInterceptor);
         return endpoint;
     }
