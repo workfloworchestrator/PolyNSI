@@ -68,6 +68,39 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# Expose the service via gateway-api HTTPRoute instead of an Ingress.
+# Requires Gateway API CRDs and a suitable controller (e.g. Envoy Gateway).
+# Each rule may define its own backendRefs; when omitted the rule falls back
+# to this chart's own service on service.port.
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+    - name: gateway
+      sectionName: http
+  hostnames:
+    - chart-example.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /soap
+      backendRefs:
+        - name: polynsi
+          port: 80
+          weight: 1
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /discovery
+        - path:
+            type: PathPrefix
+            value: /topology
+      backendRefs:
+        - name: supa
+          port: 80
+          weight: 1
+
 # if you do not want to use ingress annotations to generate the Certificate manifest
 certificate:
   enabled: false
