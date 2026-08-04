@@ -164,8 +164,8 @@ nl.surf.polynsi.client.certificate.authorize-dn-type=no
 # gRPC server and client configuration
 #
 spring.grpc.server.port=9090
-spring.grpc.client.channels.connection-provider.address=static://localhost:50051
-spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
+spring.grpc.client.channel.connection-provider.target=static://localhost:50051
+spring.grpc.client.channel.connection-provider.ssl.enabled=false
 ```
 
 ## PolyNSI with SSL
@@ -218,8 +218,8 @@ spring.ssl.bundle.pem.nsi-soap-client.truststore.certificate=file:other-nsa-trus
 # gRPC server and client configuration
 #
 spring.grpc.server.port=9090
-spring.grpc.client.channels.connection-provider.address=static://localhost:50051
-spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
+spring.grpc.client.channel.connection-provider.target=static://localhost:50051
+spring.grpc.client.channel.connection-provider.ssl.enabled=false
 ```
 
 Both the SOAP server and client bundle can be configured with Java key- and truststores as well, with
@@ -303,8 +303,8 @@ spring.ssl.bundle.pem.nsi-soap-client.truststore.certificate=file:other-nsa-trus
 # gRPC server and client configuration
 #
 spring.grpc.server.port=9090
-spring.grpc.client.channels.connection-provider.address=static://localhost:50051
-spring.grpc.client.channels.connection-provider.negotiation-type=plaintext
+spring.grpc.client.channel.connection-provider.target=static://localhost:50051
+spring.grpc.client.channel.connection-provider.ssl.enabled=false
 ```
 Possible values for `authorize-dn-type`, in addition to the Jakarta certificate-based
 authentication (`jakarta-servlet-tls-client-cert`) described above, are:

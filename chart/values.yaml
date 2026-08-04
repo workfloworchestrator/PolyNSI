@@ -202,9 +202,9 @@ config:
       server.ssl.trust-store=/usr/local/etc/polynsi/trust/polynsi-truststore.jks
       server.ssl.trust-store-type=jks
       server.ssl.trust-store-password=secret
-      grpc.server.port=9090
-      grpc.client.connection_provider.address=static://localhost:50051
-      grpc.client.connection_provider.negotiationType=PLAINTEXT
+      spring.grpc.server.port=9090
+      spring.grpc.client.channel.connection-provider.target=static://localhost:50051
+      spring.grpc.client.channel.connection-provider.ssl.enabled=false
     logback-spring.xml: |-
       <configuration>
           <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
