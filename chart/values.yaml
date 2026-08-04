@@ -6,7 +6,7 @@ image:
   repository: ghcr.io/workfloworchestrator/polynsi
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest@sha256:a701cd3f6c39d8358cb270c9572998f5d71b8d98eaa849ca6e5eed8123aea1f5"
+  tag: "latest@sha256:2309fe05353d94ba85c2edf8ba95a7ae68bb17221da8a62bfb188ba5bfeb8bfe"
   command:
     - "java"
   args:
