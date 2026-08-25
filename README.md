@@ -117,6 +117,21 @@ docker run \
 	java -Dspring.config.additional-location=/config/application.properties -jar polynsi.jar
 ```
 
+# Versioning
+
+The release git tag is the only place a version is written by hand. The `pom.xml` version is the
+placeholder `0.0.0-SNAPSHOT`; `.github/workflows/build-push-container.yml` checks out with
+`fetch-depth: 0`, resolves the version with `git describe --tags --always`, and passes it as
+`--build-arg VERSION=...`. The `Dockerfile` then runs `mvn versions:set` before packaging, so a tag
+builds `0.6.1` and any other commit builds `0.6.1-3-g1a2b3c4`. Spring Boot reports that version at
+startup, read from the JAR manifest.
+
+A build without the argument fails rather than producing a mislabelled image:
+
+```shell
+docker build --build-arg VERSION="$(git describe --tags --always)" -t polynsi .
+```
+
 # Configuration
 
 All PolyNSI configuration is done through properties. As PolyNSI is a Spring Boot
