@@ -79,14 +79,8 @@ Create the name of the service account to use
 {{- end -}}
 {{- end }}
 
-{{/* Fail closed for enabled TLS modes and reject the removed JKS configuration. */}}
+{{/* Fail closed for enabled TLS modes: require an explicit identity Secret and CA Secret. */}}
 {{- define "PolyNSI.validateTls" -}}
-{{- if hasKey .Values.config "keystore" -}}
-{{- fail "config.keystore was removed; provide config.tls.server.identitySecretName and PEM files instead" -}}
-{{- end -}}
-{{- if hasKey .Values.config "truststore" -}}
-{{- fail "config.truststore was removed; provide config.tls.*.caSecretName and PEM files instead" -}}
-{{- end -}}
 {{- if .Values.config.tls.server.enabled -}}
 {{- $_ := required "config.tls.server identity Secret is required when server TLS is enabled" (include "PolyNSI.serverIdentitySecretName" .) -}}
 {{- $_ := required "config.tls.server.caSecretName is required when server TLS is enabled" .Values.config.tls.server.caSecretName -}}
