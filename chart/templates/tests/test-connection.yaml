@@ -11,5 +11,11 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "PolyNSI.fullname" . }}:{{ .Values.service.port }}']
+      args:
+        - "-O"
+        - "-"
+        {{- if .Values.config.tls.server.enabled }}
+        - "--no-check-certificate"
+        {{- end }}
+        - "{{ if .Values.config.tls.server.enabled }}https{{ else }}http{{ end }}://{{ include "PolyNSI.fullname" . }}:{{ .Values.service.port }}"
   restartPolicy: Never

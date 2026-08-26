@@ -30,6 +30,7 @@ import org.apache.cxf.transport.http.HTTPConduit;
 import org.ogf.nsi.grpc.connection.common.GenericAcknowledgment;
 import org.ogf.nsi.grpc.connection.requester.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ssl.NoSuchSslBundleException;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.stereotype.Component;
@@ -88,7 +89,13 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
     @Autowired
     private org.springframework.boot.ssl.SslBundles sslBundles;
 
+    @Value("${polynsi.soap.client.ssl.required:false}")
+    private boolean clientSslRequired;
+
     private ConnectionRequesterPort connectionRequesterProxy(String replyTo) {
+        if (clientSslRequired && !replyTo.toLowerCase(java.util.Locale.ROOT).startsWith("https://")) {
+            throw new IllegalArgumentException("Outbound SOAP TLS requires an HTTPS replyTo address");
+        }
         JaxWsProxyFactoryBean factory = new JaxWsProxyFactoryBean();
         factory.setServiceClass(ConnectionRequesterPort.class);
         factory.setAddress(replyTo);
@@ -103,6 +110,9 @@ public class ConnectionRequesterService extends ConnectionRequesterGrpc.Connecti
             conduit.setTlsClientParameters(tlsParams);
             LOG.finer("gRPC->SOAP using SSL Bundle 'nsi-soap-client'");
         } catch (NoSuchSslBundleException ex) {
+            if (clientSslRequired) {
+                throw ex;
+            }
             LOG.warning(
                     "gRPC->SOAP SSL Bundle 'nsi-soap-client' not found, sending message with default configuration");
         }
