@@ -223,11 +223,9 @@ nl.surf.polynsi.client.certificate.distinguished-names[1]=CN=CertB,OU=Dept Y,O=C
 nl.surf.polynsi.client.certificate.distinguished-names[2]=CN=CertC,OU=Dept Z,O=Company 3,C=NL
 spring.ssl.bundle.pem.nsi-soap-server.keystore.certificate=file:server-certificate.pem
 spring.ssl.bundle.pem.nsi-soap-server.keystore.private-key=file:server-private-key.pem
-spring.ssl.bundle.pem.nsi-soap-server.key.password=secret
 spring.ssl.bundle.pem.nsi-soap-server.truststore.certificate=file:client-nsa-trusted-bundle.pem
 spring.ssl.bundle.pem.nsi-soap-client.keystore.certificate=file:server-certificate.pem
 spring.ssl.bundle.pem.nsi-soap-client.keystore.private-key=file:server-private-key.pem
-spring.ssl.bundle.pem.nsi-soap-client.key.password=secret
 spring.ssl.bundle.pem.nsi-soap-client.truststore.certificate=file:other-nsa-trusted-bundle.pem
 #
 # gRPC server and client configuration
@@ -251,12 +249,19 @@ spring.ssl.bundle.jks.nsi-soap-server.truststore.password=secret
 spring.ssl.bundle.jks.nsi-soap-server.truststore.type=PKCS12
 ```
 
-SSL hot reloading, both for JKS and PEM bundles, is supported as well:
+SSL hot reloading, both for JKS and PEM bundles, is supported via `reload-on-update=true`:
 
 ```properties
 spring.ssl.bundle.jks.nsi-soap-server.reload-on-update=true
-spring.ssl.bundle.pem.nsi-soap-cleint.reload-on-update=true
+spring.ssl.bundle.pem.nsi-soap-client.reload-on-update=true
 ```
+
+> [!NOTE]
+> PolyNSI runs on embedded Jetty, and Spring Boot's SSL bundle reload currently only takes effect for
+> embedded Tomcat and Netty. `reload-on-update` on `nsi-soap-server` therefore refreshes the bundle
+> registry but not Jetty's active listener -- a rotated server certificate still requires a pod
+> restart. `nsi-soap-client` is unaffected by this: `ConnectionRequesterService` looks up the bundle
+> fresh on every outbound call, so its rotation is picked up immediately.
 
 > [!IMPORTANT]
 > Support for the `javax.net.ssl.` properties is removed in PolyNSI version 0.4.0
@@ -264,6 +269,47 @@ spring.ssl.bundle.pem.nsi-soap-cleint.reload-on-update=true
 > [!NOTE]
 > The use of `server.ssl.*` is deprecated in favour of `spring.ssl.bundle.*`,
 > but can still be used to configure the SOAP server.
+
+## Deploying the direct-PEM Helm configuration
+
+The Helm chart can mount PEM material directly; it no longer needs JKS or PKCS12 conversion.
+Spring Boot 4.1 loads these files through `spring.ssl.bundle.pem.*`. TLS is disabled by default,
+so existing deployments continue to use HTTP on port 8080.
+
+Enable inbound SOAP mTLS with an explicit identity Secret and a separate CA bundle Secret:
+
+```yaml
+config:
+  tls:
+    server:
+      enabled: true
+      identitySecretName: polynsi-server-tls  # tls.crt and tls.key
+      caSecretName: nsi-client-ca              # ca.crt
+```
+
+Enable outbound SOAP client mTLS independently:
+
+```yaml
+config:
+  tls:
+    client:
+      enabled: true
+      identitySecretName: polynsi-client-tls  # tls.crt and tls.key
+      caSecretName: nsi-peer-ca               # ca.crt
+```
+
+`certificate.enabled: true` can create the identity Secret with cert-manager. Reusing that Secret
+requires the explicit `identity.useCertificateSecret: true` setting for each TLS mode; the chart's
+placeholder `certificate.secretName` is never selected while cert-manager is disabled. Server and
+client CA Secrets remain independent because ACME Certificate Secrets do not reliably contain a
+`ca.crt` trust anchor. Secret-mounted files are read-only and private keys never enter a ConfigMap.
+The chart emits TLS properties in its own ConfigMap, so the settings apply even when the main
+application configuration comes from `config.configMapName` or `config.filesGlob`.
+
+Enabling server TLS switches the container and probes to HTTPS on `config.tls.server.port`; ingress
+or Gateway API routing must be configured to use that backend protocol. A rotated server certificate
+requires a pod restart because embedded Jetty does not hot-reload its active listener. Outbound SOAP
+TLS requires HTTPS `replyTo` addresses. gRPC remains plaintext and is outside this configuration.
 
 ## PolyNSI behind an SSL proxy
 

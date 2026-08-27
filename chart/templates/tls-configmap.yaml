@@ -1,0 +1,36 @@
+{{- $_ := include "PolyNSI.validateTls" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-tls" (include "PolyNSI.fullname" .) }}
+data:
+  # Loaded via -Dspring.config.additional-location from /usr/local/etc/polynsi/tls-config/tls.properties,
+  # in addition to whatever application.properties config.configMapName/filesGlob/inlineData
+  # supplies, so TLS activation does not depend on how the rest of the application configuration
+  # is delivered.
+  tls.properties: |-
+    {{- if .Values.config.tls.server.enabled }}
+    server.ssl.enabled=true
+    server.port={{ .Values.config.tls.server.port }}
+    server.ssl.client-auth=need
+    server.ssl.bundle=nsi-soap-server
+    spring.ssl.bundle.pem.nsi-soap-server.keystore.certificate=file:/usr/local/etc/polynsi/tls/server/tls.crt
+    spring.ssl.bundle.pem.nsi-soap-server.keystore.private-key=file:/usr/local/etc/polynsi/tls/server/tls.key
+    spring.ssl.bundle.pem.nsi-soap-server.truststore.certificate=file:/usr/local/etc/polynsi/tls/server-ca/ca.crt
+    {{- else }}
+    # Keep the existing plaintext default even when the main application.properties is externally managed.
+    server.ssl.enabled=false
+    server.ssl.client-auth=none
+    server.port=8080
+    {{- end }}
+    {{- if .Values.config.tls.client.enabled }}
+    spring.ssl.bundle.pem.nsi-soap-client.keystore.certificate=file:/usr/local/etc/polynsi/tls/client/tls.crt
+    spring.ssl.bundle.pem.nsi-soap-client.keystore.private-key=file:/usr/local/etc/polynsi/tls/client/tls.key
+    spring.ssl.bundle.pem.nsi-soap-client.truststore.certificate=file:/usr/local/etc/polynsi/tls/client-ca/ca.crt
+    # The client bundle is looked up fresh on every outbound call (ConnectionRequesterService), so,
+    # unlike the Jetty-hosted server bundle above, reload-on-update here genuinely picks up rotation.
+    spring.ssl.bundle.pem.nsi-soap-client.reload-on-update=true
+    polynsi.soap.client.ssl.required=true
+    {{- else }}
+    # client mTLS disabled (config.tls.client.enabled=false) -- outbound calls use no client certificate
+    {{- end }}

@@ -1,5 +1,4 @@
-{{- if .Values.config.configMapName }}
-{{- else }}
+{{- if not .Values.config.configMapName }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,7 +6,7 @@ metadata:
 #  namespace: {{ .Release.Namespace }}
 {{- if .Values.config.filesGlob }}
 binaryData:
-{{- range $path, $_ :=  .Files.Glob  .Values.config.filesGlob }}
+{{- range $path, $_ := .Files.Glob .Values.config.filesGlob }}
 {{ $path | base | indent 2 }}: |-
 {{ $.Files.Get $path | b64enc | indent 4 }}
 {{- end }}
@@ -16,14 +15,14 @@ binaryData:
 data:
 {{- end }}
 {{- if .Values.config.inline }} {{/* check inline for backwards compatibility */}}
-{{.Values.config.inline | indent 2}}
+{{ .Values.config.inline | indent 2 }}
 {{- end }}
 {{- if .Values.config.inlineData }}
-{{.Values.config.inlineData | indent 2}}
+{{ .Values.config.inlineData | indent 2 }}
 {{- end }}
 {{- if .Values.config.inlineBinaryData }}
 binaryData:
-{{.Values.config.inlineBinaryData | indent 2}}
+{{ .Values.config.inlineBinaryData | indent 2 }}
 {{- end }}
 {{- end }}
 {{- end }}
