@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
     </parent>
 
     <properties>
@@ -17,7 +17,7 @@
         <cxf.version>4.2.3</cxf.version>
         <cxf.xjc.version>4.2.0</cxf.xjc.version>
         <!-- Keep these synced -->
-        <protoc.version>4.35.1</protoc.version>
+        <protoc.version>4.36.0</protoc.version>
         <grpc.version>1.83.1</grpc.version>
         <!-- Override the versions Spring Boot manages, so runtime matches protoc/plugin above -->
         <protobuf-java.version>${protoc.version}</protobuf-java.version>
