@@ -18,7 +18,7 @@
         <cxf.xjc.version>4.2.0</cxf.xjc.version>
         <!-- Keep these synced -->
         <protoc.version>4.36.1</protoc.version>
-        <grpc.version>1.83.1</grpc.version>
+        <grpc.version>1.84.0</grpc.version>
         <!-- Override the versions Spring Boot manages, so runtime matches protoc/plugin above -->
         <protobuf-java.version>${protoc.version}</protobuf-java.version>
         <grpc-java.version>${grpc.version}</grpc-java.version>
@@ -245,7 +245,7 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.10.2</version>
                 <configuration>
                     <java>
                         <palantirJavaFormat>
