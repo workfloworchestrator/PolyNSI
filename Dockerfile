@@ -1,4 +1,4 @@
-FROM maven:3-eclipse-temurin-21@sha256:99e61abcff91a9b1333463bd8451fb18495d6eba9250ac66a338b518f8278320 AS build
+FROM maven:3-eclipse-temurin-21@sha256:8b2a6a07f4f9e412dd3648a5dd69c1a0911508005ce7af7e234cec6eb72680f4 AS build
 ARG VERSION
 WORKDIR /usr/local/src/polynsi
 COPY pom.xml .
