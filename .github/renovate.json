@@ -22,6 +22,13 @@
       "matchManagers": ["helm-values"],
       "matchPackageNames": ["ghcr.io/workfloworchestrator/polynsi"],
       "pinDigests": false
+    },
+    {
+      "description": "CI tests the Java the Dockerfile ships; move both to a new major together",
+      "matchDatasources": ["java-version"],
+      "matchPackageNames": ["java-jdk"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
