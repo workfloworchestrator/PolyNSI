@@ -1,5 +1,5 @@
 # The jar is platform-independent, so build it once natively instead of under QEMU per platform.
-FROM --platform=$BUILDPLATFORM maven:3-eclipse-temurin-21@sha256:08343b2712a8c4a71b911e734dbf4f643f0755dcf15e878ddf3d5f7e81fe7120 AS build
+FROM --platform=$BUILDPLATFORM maven:3-eclipse-temurin-21@sha256:c665c1041e0c6e28bc7d1b41254622c79cf0b3ac63b519be8b789b05b6f69661 AS build
 ARG VERSION
 WORKDIR /usr/local/src/polynsi
 COPY pom.xml .
