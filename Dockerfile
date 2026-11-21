@@ -7,7 +7,7 @@ COPY src src
 RUN mvn versions:set -DnewVersion="${VERSION:?VERSION build argument is required}" -DgenerateBackupPoms=false \
     && mvn clean package
 
-FROM gcr.io/distroless/java21@sha256:b3bff100e492754627673bd1c41e4b3f54017847523a9d07ad146aa77ea2775b
+FROM gcr.io/distroless/java21@sha256:1844b7d91a4474609dbbd1cf41a45e8650114617b7942e7fdfe23c0856822cee
 WORKDIR /usr/local/polynsi
 COPY --from=build /usr/local/src/polynsi/target/*.jar polynsi.jar
 USER nobody
